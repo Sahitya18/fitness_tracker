@@ -1,4 +1,5 @@
 import React from 'react';
+import { router } from 'expo-router';
 import { Button, StyleSheet, Text, View, ImageBackground } from 'react-native';
 
 export default function LandingScreen({ navigation }) {
@@ -13,9 +14,9 @@ export default function LandingScreen({ navigation }) {
         <Text style={styles.title}>Welcome to FitTrack!</Text>
         <View style={styles.spacer} />
         <View style={styles.buttonContainer}>
-          <Button title="Login" onPress={() => navigation.navigate('Login')} />
+          <Button title="Login" onPress={() => router.push('/login')} />
           <View style={styles.buttonSpacing} />
-          <Button title="Register" onPress={() => navigation.navigate('Register')} />
+          <Button title="Register" onPress={() => router.push('/register')} />
         </View>
       </View>
     </ImageBackground>

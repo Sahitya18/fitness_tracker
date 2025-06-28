@@ -1,35 +1,24 @@
 package com.fittracker.controller;
 
-import com.fittracker.service.AuthService;
+import com.fittracker.dto.RegisterRequest;
 import com.fittracker.service.OtpService;
+import com.fittracker.service.RegistrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import com.fittracker.dto.LoginRequest;
 import com.fittracker.dto.OtpRequest;
+import org.springframework.web.bind.annotation.*;
 
+public class RegistrationController {
 
-@RestController
-@RequestMapping("/api/auth")
-public class AuthController {
-
-    @Autowired private AuthService authService;
     @Autowired private OtpService otpService;
-
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-        return authService.login(req);
-    }
+    @Autowired private RegistrationService registrationService;
 
     @PostMapping("/send-email-otp")
     public ResponseEntity<?> sendEmailOtp(@RequestBody OtpRequest req) {
         if (!req.getEmail().matches("^[\\w.-]+@[\\w.-]+\\.\\w+$"))
             return ResponseEntity.badRequest().body("Invalid email");
         otpService.generateAndSendOtp(req.getEmail());
-        return ResponseEntity.ok("OTP sent to email");
+        return ResponseEntity.ok("OTP sent");
     }
 
     @PostMapping("/send-mobile-otp")
@@ -37,7 +26,11 @@ public class AuthController {
         if (!req.getMobile().matches("\\d{10}"))
             return ResponseEntity.badRequest().body("Invalid mobile");
         otpService.generateAndSendOtp(req.getMobile());
-        return ResponseEntity.ok("OTP sent to mobile");
+        return ResponseEntity.ok("OTP sent");
+    }
+
+    @PostMapping
+    public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
+        return registrationService.registerUser(req);
     }
 }
-

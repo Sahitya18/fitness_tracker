@@ -9,19 +9,4 @@ public class RegisterRequest {
     private String password;
     private String otp;
 
-    public String getEmail() {
-        return email;
-    }
-
-    public String getMobile() {
-        return mobile;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getOtp() {
-        return otp;
-    }
 }

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { router } from 'expo-router';
 import { View, TextInput, Button, Alert, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
-const BASE_URL = 'http://192.168.1.23:8080/api'; // Replace with your backend IP
+const BASE_URL = 'http://192.168.1.14:8080/api'; // Replace with your backend IP
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -55,7 +56,7 @@ export default function LoginScreen({ navigation }) {
 
       <Button title="Login" onPress={handleLogin} />
 
-      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+      <TouchableOpacity onPress={() => router.push('/forgot-password')}>
         <Text style={styles.link}>Forgot Password?</Text>
       </TouchableOpacity>
     </View>
