@@ -5,21 +5,38 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class OtpService {
-    private final Map<String,String> store = new ConcurrentHashMap<>();
+    private final Map<String, OtpData> otpStore = new ConcurrentHashMap<>();
+    private final Map<String, LocalDateTime> verifiedEmails = new ConcurrentHashMap<>();
     private final Random rnd = new Random();
+    private static final long OTP_VALIDITY_MINUTES = 10;
 
     @Autowired
     private JavaMailSender mailSender;
+
+    private static class OtpData {
+        String otp;
+        LocalDateTime expiryTime;
+
+        OtpData(String otp, LocalDateTime expiryTime) {
+            this.otp = otp;
+            this.expiryTime = expiryTime;
+        }
+    }
+
     public void generateAndSendOtp(String target) {
         String otp = String.format("%06d", rnd.nextInt(1_000_000));
-        store.put(target, otp);
-        // integrate with email/SMS here
+        otpStore.put(target, new OtpData(
+            otp,
+            LocalDateTime.now().plusMinutes(OTP_VALIDITY_MINUTES)
+        ));
+
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(target);
         message.setSubject("Your One-Time Password (OTP)");
@@ -32,12 +49,45 @@ public class OtpService {
         );
         message.setFrom("no-reply@fittrack.com");
 
-        // 3) Send the email
         mailSender.send(message);
-        System.out.println("OTP for " + target + ": " + otp);
     }
 
     public boolean verifyOtp(String target, String otp) {
-        return otp != null && otp.equals(store.get(target));
+        OtpData otpData = otpStore.get(target);
+        if (otpData == null) {
+            return false;
+        }
+
+        // Check if OTP is expired
+        if (LocalDateTime.now().isAfter(otpData.expiryTime)) {
+            otpStore.remove(target);
+            return false;
+        }
+
+        // Verify OTP
+        if (otp.equals(otpData.otp)) {
+            // Store verification status with new 10-minute expiry
+            verifiedEmails.put(target, LocalDateTime.now().plusMinutes(OTP_VALIDITY_MINUTES));
+            // Remove the OTP as it's no longer needed
+            otpStore.remove(target);
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean isEmailVerified(String email) {
+        LocalDateTime verificationExpiry = verifiedEmails.get(email);
+        if (verificationExpiry == null) {
+            return false;
+        }
+
+        // Check if verification is still valid
+        if (LocalDateTime.now().isAfter(verificationExpiry)) {
+            verifiedEmails.remove(email);
+            return false;
+        }
+
+        return true;
     }
 }

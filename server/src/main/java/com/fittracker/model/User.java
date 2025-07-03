@@ -25,7 +25,7 @@ public class User {
     @Column(unique = true, nullable = false)
     private String mobile;
     
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password", nullable = false)
     private String passwordHash;
     
     @Column(name = "first_name")

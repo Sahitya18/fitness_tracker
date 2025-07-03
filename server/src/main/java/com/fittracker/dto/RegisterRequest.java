@@ -18,9 +18,7 @@ public class RegisterRequest {
     @NotBlank(message = "Password is required")
     private String password;
     
-    @NotBlank(message = "OTP is required")
-    private String otp;
-    
+    // Profile fields
     private String firstName;
     private String lastName;
     private LocalDate dateOfBirth;
@@ -33,17 +31,4 @@ public class RegisterRequest {
     @DecimalMin(value = "30.0", message = "Weight must be at least 30 kg")
     @DecimalMax(value = "300.0", message = "Weight must be at most 300 kg")
     private Double weight;
-    
-    @DecimalMin(value = "30.0", message = "Target weight must be at least 30 kg")
-    @DecimalMax(value = "300.0", message = "Target weight must be at most 300 kg")
-    private Double targetWeight;
-    
-    private Double weeklyGoal;
-    private String fitnessGoal;
-    private String activityLevel;
-    private String dietaryPreference;
-    private String workoutPreference;
-    
-    // Profile fields
-    private Integer age;
 }

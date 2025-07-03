@@ -24,18 +24,20 @@ public class AuthController {
         return authService.login(req);
     }
 
-    // @PostMapping("/send-email-otp")
-    // public ResponseEntity<?> sendEmailOtp(@RequestBody OtpRequest req) {
-    //     if (!req.getEmail().matches("^[\\w.-]+@[\\w.-]+\\.\\w+$"))
-    //         return ResponseEntity.badRequest().body("Invalid email");
-    //     return otpService.generateAndSendOtp(req.getEmail());
-    // }
+    @PostMapping("/send-email-otp")
+    public ResponseEntity<?> sendEmailOtp(@RequestBody OtpRequest req) {
+        if (!req.getEmail().matches("^[\\w.-]+@[\\w.-]+\\.\\w+$"))
+            return ResponseEntity.badRequest().body("Invalid email");
+        otpService.generateAndSendOtp(req.getEmail());
+        return ResponseEntity.ok("OTP sent");
+    }
 
-    // @PostMapping("/send-mobile-otp")
-    // public ResponseEntity<?> sendMobileOtp(@RequestBody OtpRequest req) {
-    //     if (!req.getMobile().matches("\\d{10}"))
-    //         return ResponseEntity.badRequest().body("Invalid mobile");
-    //     return otpService.generateAndSendOtp(req.getMobile());
-    // }
+    @PostMapping("/send-mobile-otp")
+    public ResponseEntity<?> sendMobileOtp(@RequestBody OtpRequest req) {
+        if (!req.getMobile().matches("\\d{10}"))
+            return ResponseEntity.badRequest().body("Invalid mobile");
+        otpService.generateAndSendOtp(req.getMobile());
+        return ResponseEntity.ok("OTP sent");
+    }
 }
 

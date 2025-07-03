@@ -3,7 +3,6 @@ package com.fittracker.service;
 import com.fittracker.dto.RegisterRequest;
 import com.fittracker.model.User;
 import com.fittracker.repository.UserRepository;
-import com.fittracker.service.OtpService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,28 +19,39 @@ public class RegistrationService {
 
     @Transactional
     public ResponseEntity<?> registerUser(RegisterRequest req) {
-        // Validate OTP for email only
-        boolean emailOk = otpService.verifyOtp(req.getEmail(), req.getOtp());
-        boolean mobileOk = otpService.verifyOtp(req.getMobile(), req.getOtp());
-        if (!emailOk && !mobileOk)
-            return ResponseEntity.badRequest().body("Invalid OTP");
+        // Check if email is verified
+        if (!otpService.isEmailVerified(req.getEmail())) {
+            return ResponseEntity.badRequest().body("Email verification required or has expired. Please verify your email first.");
+        }
 
-        if (req.getPassword().length() < 6)
-            return ResponseEntity.badRequest().body("Password must be ≥6 chars");
+        // Check if email already exists
+        Optional<User> existingUser = userRepo.findByEmail(req.getEmail());
+        if (existingUser.isPresent()) {
+            return ResponseEntity.badRequest().body("Email already registered");
+        }
 
-        if (userRepo.existsByEmail(req.getEmail()))
-            return ResponseEntity.badRequest().body("Email registered");
-        if (userRepo.existsByMobile(req.getMobile()))
-            return ResponseEntity.badRequest().body("Mobile registered");
+        // Check if mobile already exists
+        existingUser = userRepo.findByMobile(req.getMobile());
+        if (existingUser.isPresent()) {
+            return ResponseEntity.badRequest().body("Mobile number already registered");
+        }
 
-        User u = new User();
-        u.setEmail(req.getEmail());
-        u.setMobile(req.getMobile());
-        u.setPasswordHash(encoder.encode(req.getPassword()));
-        u.setEmailVerified(true);
-        u.setMobileVerified(true);
-        userRepo.save(u);
-        return ResponseEntity.ok("Registered");
+        // Create new user
+        User user = new User();
+        user.setEmail(req.getEmail());
+        user.setMobile(req.getMobile());
+        user.setPasswordHash(encoder.encode(req.getPassword()));
+        
+        // Set profile fields if provided
+        if (req.getFirstName() != null) user.setFirstName(req.getFirstName());
+        if (req.getLastName() != null) user.setLastName(req.getLastName());
+        if (req.getDateOfBirth() != null) user.setDateOfBirth(req.getDateOfBirth());
+        if (req.getGender() != null) user.setGender(req.getGender());
+        if (req.getHeight() != null) user.setHeight(req.getHeight());
+        if (req.getWeight() != null) user.setWeight(req.getWeight());
+
+        userRepo.save(user);
+        return ResponseEntity.ok().body("User registered successfully");
     }
 
     public ResponseEntity<?> completeUserProfile(RegisterRequest req) {
@@ -59,12 +69,6 @@ public class RegistrationService {
             user.setGender(req.getGender());
             user.setHeight(req.getHeight());
             user.setWeight(req.getWeight());
-            user.setTargetWeight(req.getTargetWeight());
-            user.setWeeklyGoal(req.getWeeklyGoal());
-            user.setFitnessGoal(req.getFitnessGoal());
-            user.setActivityLevel(req.getActivityLevel());
-            user.setDietaryPreference(req.getDietaryPreference());
-            user.setWorkoutPreference(req.getWorkoutPreference());
             
             userRepo.save(user);
             return ResponseEntity.ok("Profile completed successfully");

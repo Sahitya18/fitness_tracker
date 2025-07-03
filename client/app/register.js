@@ -254,7 +254,11 @@ export default function RegisterScreen() {
       const res = await fetch(`${BASE_URL}/registration/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, mobile, password, otp }),
+        body: JSON.stringify({ 
+          email, 
+          mobile, 
+          password
+        }),
       });
       
       if (res.ok) {
@@ -272,7 +276,8 @@ export default function RegisterScreen() {
           ]
         );
       } else {
-        Alert.alert('Failed', await res.text());
+        const errorText = await res.text();
+        Alert.alert('Failed', errorText);
       }
     } catch (err) {
       Alert.alert('Error', err.message);

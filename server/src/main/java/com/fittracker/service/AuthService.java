@@ -19,8 +19,8 @@ public class AuthService {
     @Autowired PasswordEncoder encoder;
 
         public ResponseEntity<?> login(LoginRequest req) {
-            User u = userRepo.findByEmail(req.getEmail());
-            if (u == null || !encoder.matches(req.getPassword(), u.getPasswordHash()))
+            Optional<User> userOpt = userRepo.findByEmail(req.getEmail());
+            if (userOpt.isEmpty() || !encoder.matches(req.getPassword(), userOpt.get().getPasswordHash()))
                 return ResponseEntity.badRequest().body("Invalid credentials");
             return ResponseEntity.ok("Login successful");
         }
