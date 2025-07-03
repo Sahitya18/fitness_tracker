@@ -17,7 +17,7 @@ import { router } from 'expo-router';
 //   }
 // };
 
-const BASE_URL = 'http://192.168.1.13:8080/api';
+const BASE_URL = 'http://192.168.1.9:8080/api';
 
 export default function RegisterScreen() {
   const theme = useTheme();
@@ -28,9 +28,9 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [emailOtpSent, setEmailOtpSent] = useState(false);
-  const [mobileOtpSent, setMobileOtpSent] = useState(false);
+  // const [mobileOtpSent, setMobileOtpSent] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
-  const [mobileVerified, setMobileVerified] = useState(false);
+  // const [mobileVerified, setMobileVerified] = useState(false);
   const [secureTextEntry, setSecureTextEntry] = useState(true);
 
   const validateEmail = (email) => {
@@ -187,36 +187,36 @@ export default function RegisterScreen() {
     }
   };
 
-  const verifyMobileOtp = async () => {
-    if (!otp) {
-      Alert.alert('Validation', 'Please enter the OTP');
-      return;
-    }
+  // const verifyMobileOtp = async () => {
+  //   if (!otp) {
+  //     Alert.alert('Validation', 'Please enter the OTP');
+  //     return;
+  //   }
 
-    setLoading(true);
-    try {
-      const res = await fetch(`${BASE_URL}/registration/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: null,
-          mobile: mobile,
-          otp: otp
-        }),
-      });
-      if (res.ok) {
-        setMobileVerified(true);
-        Alert.alert('Success', 'Mobile number verified successfully');
-      } else {
-        const errorText = await res.text();
-        Alert.alert('Failed', errorText || 'Invalid OTP. Please try again.');
-      }
-    } catch (err) {
-      Alert.alert('Error', err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   setLoading(true);
+  //   try {
+  //     const res = await fetch(`${BASE_URL}/registration/verify-otp`, {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({ 
+  //         email: null,
+  //         mobile: mobile,
+  //         otp: otp
+  //       }),
+  //     });
+  //     if (res.ok) {
+  //       setMobileVerified(true);
+  //       Alert.alert('Success', 'Mobile number verified successfully');
+  //     } else {
+  //       const errorText = await res.text();
+  //       Alert.alert('Failed', errorText || 'Invalid OTP. Please try again.');
+  //     }
+  //   } catch (err) {
+  //     Alert.alert('Error', err.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleRegister = async () => {
     if (!email || !mobile || !password || !confirmPassword) {
@@ -244,8 +244,8 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (!emailVerified || !mobileVerified) {
-      Alert.alert('Validation', 'Please verify both email and mobile number');
+    if (!emailVerified) {
+      Alert.alert('Validation', 'Please verify email');
       return;
     }
 
@@ -349,44 +349,11 @@ export default function RegisterScreen() {
             mode="outlined"
             style={styles.input}
             error={mobile && !validateMobile(mobile)}
-            disabled={!emailVerified || mobileVerified}
+            disabled={!emailVerified}
           />
-          {emailVerified && !mobileVerified && (
-            <Button
-              mode="contained"
-              onPress={sendMobileOtp}
-              loading={loading}
-              disabled={loading || !validateMobile(mobile) || mobileVerified}
-              style={styles.actionButton}
-            >
-              Send Mobile OTP
-            </Button>
-          )}
         </View>
 
-        {mobileOtpSent && !mobileVerified && (
-          <View style={styles.section}>
-            <TextInput
-              label="Enter Mobile OTP"
-              value={otp}
-              onChangeText={setOtp}
-              keyboardType="number-pad"
-              mode="outlined"
-              style={styles.input}
-            />
-            <Button
-              mode="contained"
-              onPress={verifyMobileOtp}
-              loading={loading}
-              disabled={loading || !otp}
-              style={styles.actionButton}
-            >
-              Verify Mobile OTP
-            </Button>
-          </View>
-        )}
-
-        <View style={[styles.section, { opacity: emailVerified && mobileVerified ? 1 : 0.6 }]}>
+        <View style={[styles.section, { opacity: emailVerified ? 1 : 0.6 }]}>
           <TextInput
             label="Password"
             value={password}
@@ -396,7 +363,7 @@ export default function RegisterScreen() {
             right={<TextInput.Icon icon={secureTextEntry ? "eye" : "eye-off"} onPress={() => setSecureTextEntry(!secureTextEntry)} />}
             style={styles.input}
             error={password && !validatePassword(password)}
-            disabled={!emailVerified || !mobileVerified}
+            disabled={!emailVerified}
           />
 
           <TextInput
@@ -407,7 +374,7 @@ export default function RegisterScreen() {
             mode="outlined"
             style={styles.input}
             error={confirmPassword && password !== confirmPassword}
-            disabled={!emailVerified || !mobileVerified}
+            disabled={!emailVerified}
           />
         </View>
 
@@ -415,7 +382,7 @@ export default function RegisterScreen() {
           mode="contained"
           onPress={handleRegister}
           loading={loading}
-          disabled={loading || !emailVerified || !mobileVerified}
+          disabled={loading || !emailVerified}
           style={styles.registerButton}
         >
           Register
