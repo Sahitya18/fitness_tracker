@@ -1,6 +1,7 @@
 package com.fittracker.service;
 import com.fittracker.dto.ForgotPasswordRequest;
 import com.fittracker.dto.LoginRequest;
+import com.fittracker.dto.LoginResponse;
 import com.fittracker.dto.RegisterRequest;
 
 import com.fittracker.model.User;
@@ -15,13 +16,42 @@ import java.util.Optional;
 
 @Service
 public class AuthService {
-    @Autowired UserRepository userRepo;
-    @Autowired PasswordEncoder encoder;
+    @Autowired private UserRepository userRepo;
+    @Autowired private PasswordEncoder encoder;
 
-        public ResponseEntity<?> login(LoginRequest req) {
-            Optional<User> userOpt = userRepo.findByEmail(req.getEmail());
-            if (userOpt.isEmpty() || !encoder.matches(req.getPassword(), userOpt.get().getPasswordHash()))
-                return ResponseEntity.badRequest().body("Invalid credentials");
-            return ResponseEntity.ok("Login successful");
+    public ResponseEntity<?> login(LoginRequest req) {
+        // Validate input
+        if (req.getEmail() == null || req.getEmail().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Email is required");
         }
+        if (req.getPassword() == null || req.getPassword().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Password is required");
+        }
+        // Find user
+        Optional<User> userOpt = userRepo.findByEmail(req.getEmail());
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("Invalid email or password");
+        }
+
+        // Verify password
+        User user = userOpt.get();
+        System.out.println("password matches:: "+user +" "+(encoder.matches(req.getPassword(), user.getPasswordHash())));
+        if (!encoder.matches(req.getPassword(), user.getPasswordHash())) {
+            return ResponseEntity.badRequest().body("Invalid email or password");
+        }
+
+        // Create response
+        LoginResponse response = new LoginResponse();
+        response.setEmail(user.getEmail());
+        response.setMobile(user.getMobile());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setDateOfBirth(user.getDateOfBirth());
+        response.setGender(user.getGender());
+        response.setHeight(user.getHeight());
+        response.setWeight(user.getWeight());
+        response.setMessage("Login successful");
+
+        return ResponseEntity.ok(response);
+    }
 }

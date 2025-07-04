@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.fittracker.dto.LoginRequest;
 import com.fittracker.dto.OtpRequest;
-
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -20,7 +20,7 @@ public class AuthController {
     @Autowired private OtpService otpService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
         return authService.login(req);
     }
 

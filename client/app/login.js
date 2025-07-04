@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { View, TextInput, Button, Alert, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
-const BASE_URL = 'http://192.168.1.14:8080/api'; // Replace with your backend IP
+const BASE_URL = 'http://192.168.1.9:8080/api'; // Updated to your backend IP
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -24,7 +25,7 @@ export default function LoginScreen({ navigation }) {
       if (res.ok) {
         const data = await res.json();
         Alert.alert('Login Success', `Welcome! Token: ${data.token}`);
-        navigation.replace('Home'); // ✅ navigate to Home after login
+        router.replace('/home');
       } else {
         const errorText = await res.text();
         Alert.alert('Login Failed', errorText || 'Invalid credentials');

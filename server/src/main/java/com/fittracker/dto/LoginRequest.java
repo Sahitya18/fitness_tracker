@@ -1,10 +1,14 @@
 package com.fittracker.dto;
 
 import lombok.Data;
+import jakarta.validation.constraints.*;
 
 @Data
 public class LoginRequest {
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
     private String email;
-    private String password;
 
+    @NotBlank(message = "Password is required")
+    private String password;
 }

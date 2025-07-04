@@ -42,27 +42,6 @@ public class User {
     private Double height;
     
     private Double weight;
-    
-    @Column(name = "target_weight")
-    private Double targetWeight;
-    
-    @Column(name = "weekly_goal")
-    private Double weeklyGoal;
-    
-    @Column(name = "fitness_goal")
-    private String fitnessGoal;
-    
-    @Column(name = "activity_level")
-    private String activityLevel;
-    
-    @Column(name = "dietary_preference")
-    private String dietaryPreference;
-    
-    @Column(name = "workout_preference")
-    private String workoutPreference;
-    
-    private boolean emailVerified;
-    private boolean mobileVerified;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
