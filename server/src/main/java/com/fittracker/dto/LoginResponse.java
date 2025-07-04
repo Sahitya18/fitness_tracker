@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 @Data
 public class LoginResponse {
+    private String token;
     private String email;
     private String mobile;
     private String firstName;

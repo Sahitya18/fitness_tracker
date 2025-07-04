@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, TextInput, Button, Alert, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { useAuth } from '../utils/AuthContext';
 
 const BASE_URL = 'http://192.168.1.9:8080/api'; // Updated to your backend IP
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -15,6 +18,7 @@ export default function LoginScreen() {
       return;
     }
 
+    setLoading(true);
     try {
       const res = await fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
@@ -22,16 +26,20 @@ export default function LoginScreen() {
         body: JSON.stringify({ email, password }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        Alert.alert('Login Success', `Welcome! Token: ${data.token}`);
+      const data = await res.json();
+      
+      if (res.ok && data.token) {
+        // Pass the entire response as user data, it contains all necessary user information
+        await signIn(data.token, data);
         router.replace('/home');
       } else {
-        const errorText = await res.text();
-        Alert.alert('Login Failed', errorText || 'Invalid credentials');
+        Alert.alert('Login Failed', data.message || 'Invalid credentials');
       }
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', 'Failed to connect to server. Please check your internet connection.');
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,10 +63,18 @@ export default function LoginScreen() {
         style={styles.input}
       />
 
-      <Button title="Login" onPress={handleLogin} />
+      <Button 
+        title={loading ? "Logging in..." : "Login"} 
+        onPress={handleLogin}
+        disabled={loading}
+      />
 
       <TouchableOpacity onPress={() => router.push('/forgot-password')}>
         <Text style={styles.link}>Forgot Password?</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => router.push('/register')}>
+        <Text style={styles.link}>Don't have an account? Register</Text>
       </TouchableOpacity>
     </View>
   );

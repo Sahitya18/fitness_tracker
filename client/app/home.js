@@ -7,13 +7,17 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
+import { Button } from 'react-native-paper';
+import { useAuth } from '../utils/AuthContext';
 
 const screenWidth = Dimensions.get('window').width;
 
 export default function HomeScreen({ navigation }) {
+  const { signOut, userData } = useAuth();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🏋️ Welcome to FitTrack!</Text>
+      <Text style={styles.welcome}>Welcome, {userData?.email || 'User'}!</Text>
       <Text style={styles.subtitle}>Choose your zone</Text>
 
       <View style={styles.row}>
@@ -31,6 +35,14 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.columnText}>Kitchen</Text>
         </TouchableOpacity>
       </View>
+
+      <Button 
+        mode="contained" 
+        onPress={signOut}
+        style={styles.logoutButton}
+      >
+        Logout
+      </Button>
     </View>
   );
 }
@@ -43,11 +55,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#f2f2f2',
     alignItems: 'center',
   },
-  title: {
-    fontSize: 28,
+  welcome: {
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
+    marginBottom: 20,
   },
   subtitle: {
     fontSize: 16,
@@ -73,5 +84,8 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 22,
     fontWeight: 'bold',
+  },
+  logoutButton: {
+    marginTop: 20,
   },
 });
