@@ -46,6 +46,13 @@ export default function HomeScreen() {
       name: 'Fruit Bowl'
     },
   ]);
+  const [activeCard, setActiveCard] = useState(0);
+  const [workoutStats] = useState({
+    calories: 320,
+    duration: 45,
+    exercises: 8,
+    sets: 24
+  });
 
   const getDateRange = () => {
     const dates = [];
@@ -60,6 +67,13 @@ export default function HomeScreen() {
       });
     }
     return dates;
+  };
+
+  const onCardScroll = (event) => {
+    const contentOffset = event.nativeEvent.contentOffset.x;
+    const viewSize = event.nativeEvent.layoutMeasurement.width;
+    const newIndex = Math.round(contentOffset / viewSize);
+    setActiveCard(newIndex);
   };
 
   return (
@@ -117,26 +131,77 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Food Tracker */}
-      <Surface style={styles.trackerCard}>
-        <Text style={styles.cardTitle}>Food Tracker</Text>
-        <View style={styles.calorieCircle}>
-          <Text style={styles.calorieCount}>{caloriesConsumed}</Text>
-          <Text style={styles.calorieTotal}>/{caloriesGoal}</Text>
-        </View>
-        <View style={styles.macrosContainer}>
-          {Object.entries(macros).map(([key, value]) => (
-            <View key={key} style={styles.macroItem}>
-              <Text style={styles.macroLabel}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
-              <ProgressBar 
-                progress={value / 100} 
-                color="#4A90E2"
-                style={styles.macroProgress} 
-              />
+      {/* Tracker Cards */}
+      <View style={styles.cardContainer}>
+        <ScrollView 
+          horizontal 
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={onCardScroll}
+          scrollEventThrottle={16}
+        >
+          {/* Food Tracker Card */}
+          <Surface style={[styles.trackerCard, { width: width - 32 }]}>
+            <Text style={styles.cardTitle}>Food Tracker</Text>
+            <View style={styles.calorieCircle}>
+              <Text style={styles.calorieCount}>{caloriesConsumed}</Text>
+              <Text style={styles.calorieTotal}>/{caloriesGoal}</Text>
             </View>
+            <View style={styles.macrosContainer}>
+              {Object.entries(macros).map(([key, value]) => (
+                <View key={key} style={styles.macroItem}>
+                  <Text style={styles.macroLabel}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
+                  <ProgressBar 
+                    progress={value / 100} 
+                    color="#4A90E2"
+                    style={styles.macroProgress} 
+                  />
+                </View>
+              ))}
+            </View>
+          </Surface>
+
+          {/* Workout Tracker Card */}
+          <Surface style={[styles.trackerCard, { width: width - 32 }]}>
+            <Text style={styles.cardTitle}>Workout Tracker</Text>
+            <View style={styles.workoutStatsGrid}>
+              <View style={styles.workoutStatItem}>
+                <MaterialCommunityIcons name="fire" size={24} color="#FF6B35" />
+                <Text style={styles.workoutStatValue}>{workoutStats.calories}</Text>
+                <Text style={styles.workoutStatLabel}>Calories</Text>
+              </View>
+              <View style={styles.workoutStatItem}>
+                <MaterialCommunityIcons name="clock-outline" size={24} color="#4A90E2" />
+                <Text style={styles.workoutStatValue}>{workoutStats.duration}</Text>
+                <Text style={styles.workoutStatLabel}>Minutes</Text>
+              </View>
+              <View style={styles.workoutStatItem}>
+                <MaterialCommunityIcons name="dumbbell" size={24} color="#FFD700" />
+                <Text style={styles.workoutStatValue}>{workoutStats.exercises}</Text>
+                <Text style={styles.workoutStatLabel}>Exercises</Text>
+              </View>
+              <View style={styles.workoutStatItem}>
+                <MaterialCommunityIcons name="repeat" size={24} color="#4CAF50" />
+                <Text style={styles.workoutStatValue}>{workoutStats.sets}</Text>
+                <Text style={styles.workoutStatLabel}>Sets</Text>
+              </View>
+            </View>
+          </Surface>
+        </ScrollView>
+
+        {/* Page Indicators */}
+        <View style={styles.pageIndicators}>
+          {[0, 1].map((index) => (
+            <View
+              key={index}
+              style={[
+                styles.pageIndicator,
+                activeCard === index && styles.activePageIndicator
+              ]}
+            />
           ))}
         </View>
-      </Surface>
+      </View>
 
       {/* Stats Grid */}
       <View style={styles.statsGrid}>
@@ -259,11 +324,14 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: '#FFFFFF',
   },
+  cardContainer: {
+    marginBottom: 16,
+  },
   trackerCard: {
     backgroundColor: '#252830',
     borderRadius: 20,
     padding: 16,
-    marginBottom: 16,
+    marginRight: 16,
   },
   cardTitle: {
     color: '#FFFFFF',
@@ -373,5 +441,47 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     width: 100,
+  },
+  pageIndicators: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  pageIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#3A3B3F',
+    marginHorizontal: 4,
+  },
+  activePageIndicator: {
+    backgroundColor: '#4A90E2',
+    width: 24,
+  },
+  workoutStatsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  workoutStatItem: {
+    width: '48%',
+    backgroundColor: '#1A1B1E',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  workoutStatValue: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 8,
+  },
+  workoutStatLabel: {
+    color: '#8E8E93',
+    fontSize: 14,
+    marginTop: 4,
   },
 });
