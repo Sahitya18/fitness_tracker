@@ -56,6 +56,7 @@ public class AuthService {
 
         // Create response
         LoginResponse response = new LoginResponse();
+        response.setId(user.getId());
         response.setToken(token);
         response.setEmail(user.getEmail());
         response.setMobile(user.getMobile());

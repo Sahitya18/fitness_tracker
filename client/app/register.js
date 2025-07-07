@@ -17,7 +17,7 @@ import { router } from 'expo-router';
 //   }
 // };
 
-const BASE_URL = 'http://192.168.1.9:8080/api';
+const BASE_URL = 'http://192.168.1.11:8080/api';
 
 export default function RegisterScreen() {
   const theme = useTheme();

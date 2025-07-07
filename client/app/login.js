@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View, TextInput, Button, Alert, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, TextInput, Button, Alert, StyleSheet, Text, TouchableOpacity, Platform } from 'react-native';
 import { useAuth } from '../utils/AuthContext';
 
-const BASE_URL = 'http://192.168.1.9:8080/api'; // Updated to your backend IP
+const BASE_URL = 'http://192.168.1.11:8080/api'; // Updated to your backend IP
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -20,11 +20,27 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
+      // Create request options with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+      console.log('Attempting to connect to:', `${BASE_URL}/auth/login`);
+      
       const res = await fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ email, password }),
+        signal: controller.signal,
+        mode: 'cors'
       });
+
+      clearTimeout(timeoutId);
+      
+      console.log('Response status:', res.status);
+      console.log('Response headers:', JSON.stringify(Object.fromEntries([...res.headers]), null, 2));
 
       const data = await res.json();
       
@@ -35,9 +51,28 @@ export default function LoginScreen() {
       } else {
         Alert.alert('Login Failed', data.message || 'Invalid credentials');
       }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to connect to server. Please check your internet connection.');
-      console.error('Login error:', error);
+    } catch (err) {
+      console.error('Login error details:', {
+        message: err.message,
+        name: err.name,
+        stack: err.stack,
+        cause: err.cause
+      });
+      
+      if (err.name === 'AbortError') {
+        Alert.alert('Timeout', 'Request timed out. Please check your internet connection and try again.');
+      } else {
+        Alert.alert(
+          'Connection Error', 
+          `Failed to connect to server. Please check:\n\n` +
+          `1. Your internet connection\n` +
+          `2. The server is running\n` +
+          `3. You're on the same network as the server\n\n` +
+          `Technical details:\n${err.message}\n` +
+          `URL: ${BASE_URL}\n` +
+          `Platform: ${Platform.OS}`
+        );
+      }
     } finally {
       setLoading(false);
     }
