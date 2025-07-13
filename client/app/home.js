@@ -3,9 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, Image
 import { useAuth } from '../utils/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Surface, Button, ProgressBar, Avatar } from 'react-native-paper';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { StreakService } from '../utils/StreakService';
 import Svg, { Circle, G } from 'react-native-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -14,7 +15,81 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export default function HomeScreen() {
   const { signOut, userData } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [activeTab, setActiveTab] = useState('gym');
+  const [activeTab, setActiveTab] = useState('home');
+
+  // Load active tab from storage on component mount
+  useEffect(() => {
+    // Check if this is the first launch
+    checkFirstLaunch();
+  }, []);
+
+  const checkFirstLaunch = async () => {
+    try {
+      const hasLaunched = await AsyncStorage.getItem('hasLaunched');
+      if (!hasLaunched) {
+        // First launch - clear any stored tab and set to home
+        await AsyncStorage.removeItem('activeTab');
+        await AsyncStorage.setItem('hasLaunched', 'true');
+        setActiveTab('home');
+      } else {
+        // Not first launch - load saved tab
+        loadActiveTab();
+      }
+    } catch (error) {
+      console.log('Error checking first launch:', error);
+      loadActiveTab();
+    }
+  };
+
+  // Save active tab whenever it changes
+  useEffect(() => {
+    saveActiveTab(activeTab);
+  }, [activeTab]);
+
+  // Restore active tab when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      const restoreTab = async () => {
+        try {
+          const savedTab = await AsyncStorage.getItem('activeTab');
+          console.log('Screen focused, restoring tab:', savedTab);
+          if (savedTab && savedTab !== activeTab) {
+            setActiveTab(savedTab);
+          }
+        } catch (error) {
+          console.log('Error restoring active tab:', error);
+        }
+      };
+      restoreTab();
+    }, [activeTab])
+  );
+
+  const loadActiveTab = async () => {
+    try {
+      const savedTab = await AsyncStorage.getItem('activeTab');
+      console.log('Loaded saved tab:', savedTab);
+      if (savedTab) {
+        setActiveTab(savedTab);
+      } else {
+        // If no saved tab, default to home and save it
+        setActiveTab('home');
+        await AsyncStorage.setItem('activeTab', 'home');
+      }
+    } catch (error) {
+      console.log('Error loading active tab:', error);
+      // Fallback to home tab
+      setActiveTab('home');
+    }
+  };
+
+  const saveActiveTab = async (tab) => {
+    try {
+      await AsyncStorage.setItem('activeTab', tab);
+      console.log('Saved active tab:', tab);
+    } catch (error) {
+      console.log('Error saving active tab:', error);
+    }
+  };
   const [caloriesConsumed, setCaloriesConsumed] = useState(1400);
   const [caloriesGoal] = useState(2000);
   const [macros] = useState({
@@ -125,6 +200,12 @@ export default function HomeScreen() {
           <Text style={[styles.tabText, activeTab === 'kitchen' && styles.activeTabText]}>KITCHEN</Text>
         </TouchableOpacity>
         <TouchableOpacity 
+          style={[styles.tab, activeTab === 'home' && styles.activeTab]}
+          onPress={() => setActiveTab('home')}
+        >
+          <Text style={[styles.tabText, activeTab === 'home' && styles.activeTabText]}>HOME</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
           style={[styles.tab, activeTab === 'gym' && styles.activeTab]}
           onPress={() => setActiveTab('gym')}
         >
@@ -132,16 +213,121 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Tracker Cards */}
-      <View style={styles.cardContainer}>
-        <ScrollView 
-          horizontal 
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onScroll={onCardScroll}
-          scrollEventThrottle={16}
-        >
-          {/* Food Tracker Card */}
+      {/* Content based on active tab */}
+      {activeTab === 'home' && (
+        <View style={styles.cardContainer}>
+          <ScrollView 
+            horizontal 
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={onCardScroll}
+            scrollEventThrottle={16}
+          >
+            {/* Food Tracker Card */}
+            <Surface style={[styles.trackerCard, { width: width - 32, alignSelf: 'center', marginRight: 0, marginLeft: 0 }]}>
+              <View style={styles.foodTrackerRow}>
+                {/* Left: Title and Circular Progress */}
+                <View style={styles.foodTrackerLeft}>
+                  <Text style={styles.foodTrackerTitle}>Food Tracker</Text>
+                  <View style={styles.circleContainer}>
+                    <Svg width={140} height={140}>
+                      <G rotation="-90" origin="70,70">
+                        {/* Background Circle */}
+                        <Circle
+                          cx="70"
+                          cy="70"
+                          r="60"
+                          stroke="#23243A"
+                          strokeWidth="10"
+                          fill="none"
+                        />
+                        {/* Progress Circle */}
+                        <Circle
+                          cx="70"
+                          cy="70"
+                          r="60"
+                          stroke="#4A90E2"
+                          strokeWidth="10"
+                          fill="none"
+                          strokeDasharray={2 * Math.PI * 60}
+                          strokeDashoffset={
+                            2 * Math.PI * 60 * (1 - caloriesConsumed / caloriesGoal)
+                          }
+                          strokeLinecap="round"
+                        />
+                      </G>
+                    </Svg>
+                    <View style={styles.calorieTextOverlayLarge}>
+                      <Text style={styles.calorieLabel}>cal consumed</Text>
+                      <Text style={styles.calorieCountLarge}>{caloriesConsumed}</Text>
+                      <View style={styles.calorieSeparator} />
+                      <Text style={styles.calorieTotalLarge}>{caloriesGoal}</Text>
+                    </View>
+                  </View>
+                </View>
+                {/* Right: Macros */}
+                <View style={styles.foodTrackerRightCentered}>
+                  {Object.entries(macros).map(([key, value]) => (
+                    <View key={key} style={styles.macroRow}>
+                      <Text style={styles.macroLabel}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
+                      <View style={styles.macroBarBackground}>
+                        <View style={[styles.macroBarFill, { width: `${value}%` }]} />
+                      </View>
+                      <Text style={styles.macroPercent}>{value}%</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </Surface>
+
+            {/* Workout Tracker Card */}
+            <Surface style={[styles.trackerCard, styles.matchFoodCard, { width: width - 32, alignSelf: 'center', marginRight: 0, marginLeft: 0 }]}>
+              <View style={styles.workoutHeaderRow}>
+                <Text style={styles.cardTitle}>Workout Tracker</Text>
+                <View style={styles.workoutTypeBox}>
+                  <Text style={styles.workoutTypeText}>back and biceps</Text>
+                </View>
+              </View>
+              <View style={styles.workoutSimpleContent}>
+                <View style={styles.workoutStatsRow}>
+                  <View style={styles.workoutStatItem}>
+                    <MaterialCommunityIcons name="fire" size={24} color="#FF6B35" />
+                    <Text style={styles.workoutStatValue}>{workoutStats.calories}</Text>
+                    <Text style={styles.workoutStatLabel}>Calories</Text>
+                  </View>
+                  <View style={styles.workoutStatItem}>
+                    <MaterialCommunityIcons name="clock-outline" size={24} color="#4A90E2" />
+                    <Text style={styles.workoutStatValue}>{workoutStats.duration} min</Text>
+                    <Text style={styles.workoutStatLabel}>Duration</Text>
+                  </View>
+                  <View style={styles.workoutStatItem}>
+                    <MaterialCommunityIcons name="dumbbell" size={24} color="#FFD700" />
+                    <Text style={styles.workoutStatValue}>{workoutStats.exercises}</Text>
+                    <Text style={styles.workoutStatLabel}>Exercises</Text>
+                  </View>
+                </View>
+              </View>
+            </Surface>
+          </ScrollView>
+
+          {/* Page Indicators */}
+          <View style={styles.pageIndicators}>
+            {[0, 1].map((index) => (
+              <View
+                key={index}
+                style={[
+                  styles.pageIndicator,
+                  activeCard === index && styles.activePageIndicator
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+      )}
+
+      {activeTab === 'kitchen' && (
+        <View style={styles.cardContainer}>
+          {/* Food Tracker Dashboard */}
           <Surface style={[styles.trackerCard, { width: width - 32, alignSelf: 'center', marginRight: 0, marginLeft: 0 }]}>
             <View style={styles.foodTrackerRow}>
               {/* Left: Title and Circular Progress */}
@@ -198,49 +384,102 @@ export default function HomeScreen() {
             </View>
           </Surface>
 
-          {/* Workout Tracker Card */}
-          <Surface style={[styles.trackerCard, styles.matchFoodCard, { width: width - 32, alignSelf: 'center', marginRight: 0, marginLeft: 0 }]}>
-            <View style={styles.workoutHeaderRow}>
-              <Text style={styles.cardTitle}>Workout Tracker</Text>
-              <View style={styles.workoutTypeBox}>
-                <Text style={styles.workoutTypeText}>back and biceps</Text>
-              </View>
-            </View>
-            <View style={styles.workoutSimpleContent}>
-              <View style={styles.workoutStatsRow}>
-                <View style={styles.workoutStatItem}>
-                  <MaterialCommunityIcons name="fire" size={24} color="#FF6B35" />
-                  <Text style={styles.workoutStatValue}>{workoutStats.calories}</Text>
-                  <Text style={styles.workoutStatLabel}>Calories</Text>
+          {/* Section 1: Meal Summary */}
+          <Surface style={styles.trackerCard}>
+            <Text style={styles.cardTitle}>Today's Meals</Text>
+            <View style={styles.mealSummaryContainer}>
+              <TouchableOpacity onPress={() => router.push({
+                pathname: '/meal-details',
+                params: { returnTab: activeTab }
+              })} style={styles.mealItem}>
+                <View style={styles.mealIconContainer}>
+                  <MaterialCommunityIcons name="food-apple" size={20} color="#4A90E2" />
                 </View>
-                <View style={styles.workoutStatItem}>
-                  <MaterialCommunityIcons name="clock-outline" size={24} color="#4A90E2" />
-                  <Text style={styles.workoutStatValue}>{workoutStats.duration} min</Text>
-                  <Text style={styles.workoutStatLabel}>Duration</Text>
+                <View style={styles.mealInfo}>
+                  <Text style={styles.mealName}>Breakfast</Text>
+                  <Text style={styles.mealTime}>8:00 AM</Text>
                 </View>
-                <View style={styles.workoutStatItem}>
-                  <MaterialCommunityIcons name="dumbbell" size={24} color="#FFD700" />
-                  <Text style={styles.workoutStatValue}>{workoutStats.exercises}</Text>
-                  <Text style={styles.workoutStatLabel}>Exercises</Text>
+                <View style={styles.mealStatus}>
+                  <View style={[styles.statusDot, styles.completedStatus]} />
                 </View>
-              </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity onPress={() => router.push({
+                pathname: '/meal-details',
+                params: { returnTab: activeTab }
+              })} style={styles.mealItem}>
+                <View style={styles.mealIconContainer}>
+                  <MaterialCommunityIcons name="food-variant" size={20} color="#FF6B35" />
+                </View>
+                <View style={styles.mealInfo}>
+                  <Text style={styles.mealName}>Post Breakfast</Text>
+                  <Text style={styles.mealTime}>10:30 AM</Text>
+                </View>
+                <View style={styles.mealStatus}>
+                  <View style={[styles.statusDot, styles.pendingStatus]} />
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity onPress={() => router.push({
+                pathname: '/meal-details',
+                params: { returnTab: activeTab }
+              })} style={styles.mealItem}>
+                <View style={styles.mealIconContainer}>
+                  <MaterialCommunityIcons name="food-fork-drink" size={20} color="#FFD700" />
+                </View>
+                <View style={styles.mealInfo}>
+                  <Text style={styles.mealName}>Lunch</Text>
+                  <Text style={styles.mealTime}>1:00 PM</Text>
+                </View>
+                <View style={styles.mealStatus}>
+                  <View style={[styles.statusDot, styles.pendingStatus]} />
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity onPress={() => router.push({
+                pathname: '/meal-details',
+                params: { returnTab: activeTab }
+              })} style={styles.mealItem}>
+                <View style={styles.mealIconContainer}>
+                  <MaterialCommunityIcons name="food-croissant" size={20} color="#4CAF50" />
+                </View>
+                <View style={styles.mealInfo}>
+                  <Text style={styles.mealName}>Post Lunch</Text>
+                  <Text style={styles.mealTime}>3:30 PM</Text>
+                </View>
+                <View style={styles.mealStatus}>
+                  <View style={[styles.statusDot, styles.pendingStatus]} />
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity onPress={() => router.push({
+                pathname: '/meal-details',
+                params: { returnTab: activeTab }
+              })} style={styles.mealItem}>
+                <View style={styles.mealIconContainer}>
+                  <MaterialCommunityIcons name="food-turkey" size={20} color="#9C27B0" />
+                </View>
+                <View style={styles.mealInfo}>
+                  <Text style={styles.mealName}>Dinner</Text>
+                  <Text style={styles.mealTime}>7:00 PM</Text>
+                </View>
+                <View style={styles.mealStatus}>
+                  <View style={[styles.statusDot, styles.pendingStatus]} />
+                </View>
+              </TouchableOpacity>
             </View>
           </Surface>
-        </ScrollView>
-
-        {/* Page Indicators */}
-        <View style={styles.pageIndicators}>
-          {[0, 1].map((index) => (
-            <View
-              key={index}
-              style={[
-                styles.pageIndicator,
-                activeCard === index && styles.activePageIndicator
-              ]}
-            />
-          ))}
         </View>
-      </View>
+      )}
+
+      {activeTab === 'gym' && (
+        <View style={styles.cardContainer}>
+          <Surface style={styles.trackerCard}>
+            <Text style={styles.cardTitle}>Gym Dashboard</Text>
+            <Text style={styles.cardSubtitle}>Track your workouts and fitness progress</Text>
+          </Surface>
+        </View>
+      )}
 
       {/* Stats Grid */}
       <View style={styles.statsGrid}>
@@ -386,6 +625,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
+  },
+  cardSubtitle: {
+    color: '#8E8E93',
+    fontSize: 14,
+    marginBottom: 8,
   },
   calorieCircle: {
     alignItems: 'center',
@@ -781,5 +1025,53 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
     fontSize: 12,
     marginTop: 2,
+  },
+  mealSummaryContainer: {
+    gap: 12,
+  },
+  mealItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#1A1B1E',
+    borderRadius: 12,
+  },
+  mealIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#252830',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  mealInfo: {
+    flex: 1,
+  },
+  mealName: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  mealTime: {
+    color: '#8E8E93',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  mealStatus: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  completedStatus: {
+    backgroundColor: '#4CAF50',
+  },
+  pendingStatus: {
+    backgroundColor: '#FFA726',
   },
 });
