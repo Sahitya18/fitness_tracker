@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Surface, Button, ProgressBar, Avatar } from 'react-native-paper';
 import { router } from 'expo-router';
 import { StreakService } from '../utils/StreakService';
+import Svg, { Circle, G } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
 
@@ -77,12 +78,12 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Date Slider */}
       <Surface style={styles.dateSlider}>
         <Avatar.Image 
           size={40} 
-          source={{ uri: userData?.profilePic || 'https://via.placeholder.com/40' }} 
+          source={{ uri: userData?.profilePic || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&q=80' }} 
           style={styles.profilePic}
         />
         <ScrollView 
@@ -118,16 +119,16 @@ export default function HomeScreen() {
       {/* Tab Toggle */}
       <View style={styles.tabContainer}>
         <TouchableOpacity 
-          style={[styles.tab, activeTab === 'gym' && styles.activeTab]}
-          onPress={() => setActiveTab('gym')}
-        >
-          <Text style={[styles.tabText, activeTab === 'gym' && styles.activeTabText]}>GYM</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
           style={[styles.tab, activeTab === 'kitchen' && styles.activeTab]}
           onPress={() => setActiveTab('kitchen')}
         >
           <Text style={[styles.tabText, activeTab === 'kitchen' && styles.activeTabText]}>KITCHEN</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'gym' && styles.activeTab]}
+          onPress={() => setActiveTab('gym')}
+        >
+          <Text style={[styles.tabText, activeTab === 'gym' && styles.activeTabText]}>GYM</Text>
         </TouchableOpacity>
       </View>
 
@@ -141,49 +142,87 @@ export default function HomeScreen() {
           scrollEventThrottle={16}
         >
           {/* Food Tracker Card */}
-          <Surface style={[styles.trackerCard, { width: width - 32 }]}>
-            <Text style={styles.cardTitle}>Food Tracker</Text>
-            <View style={styles.calorieCircle}>
-              <Text style={styles.calorieCount}>{caloriesConsumed}</Text>
-              <Text style={styles.calorieTotal}>/{caloriesGoal}</Text>
-            </View>
-            <View style={styles.macrosContainer}>
-              {Object.entries(macros).map(([key, value]) => (
-                <View key={key} style={styles.macroItem}>
-                  <Text style={styles.macroLabel}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
-                  <ProgressBar 
-                    progress={value / 100} 
-                    color="#4A90E2"
-                    style={styles.macroProgress} 
-                  />
+          <Surface style={[styles.trackerCard, { width: width - 32, alignSelf: 'center', marginRight: 0, marginLeft: 0 }]}>
+            <View style={styles.foodTrackerRow}>
+              {/* Left: Title and Circular Progress */}
+              <View style={styles.foodTrackerLeft}>
+                <Text style={styles.foodTrackerTitle}>Food Tracker</Text>
+                <View style={styles.circleContainer}>
+                  <Svg width={140} height={140}>
+                    <G rotation="-90" origin="70,70">
+                      {/* Background Circle */}
+                      <Circle
+                        cx="70"
+                        cy="70"
+                        r="60"
+                        stroke="#23243A"
+                        strokeWidth="10"
+                        fill="none"
+                      />
+                      {/* Progress Circle */}
+                      <Circle
+                        cx="70"
+                        cy="70"
+                        r="60"
+                        stroke="#4A90E2"
+                        strokeWidth="10"
+                        fill="none"
+                        strokeDasharray={2 * Math.PI * 60}
+                        strokeDashoffset={
+                          2 * Math.PI * 60 * (1 - caloriesConsumed / caloriesGoal)
+                        }
+                        strokeLinecap="round"
+                      />
+                    </G>
+                  </Svg>
+                  <View style={styles.calorieTextOverlayLarge}>
+                    <Text style={styles.calorieLabel}>cal consumed</Text>
+                    <Text style={styles.calorieCountLarge}>{caloriesConsumed}</Text>
+                    <View style={styles.calorieSeparator} />
+                    <Text style={styles.calorieTotalLarge}>{caloriesGoal}</Text>
+                  </View>
                 </View>
-              ))}
+              </View>
+              {/* Right: Macros */}
+              <View style={styles.foodTrackerRightCentered}>
+                {Object.entries(macros).map(([key, value]) => (
+                  <View key={key} style={styles.macroRow}>
+                    <Text style={styles.macroLabel}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
+                    <View style={styles.macroBarBackground}>
+                      <View style={[styles.macroBarFill, { width: `${value}%` }]} />
+                    </View>
+                    <Text style={styles.macroPercent}>{value}%</Text>
+                  </View>
+                ))}
+              </View>
             </View>
           </Surface>
 
           {/* Workout Tracker Card */}
-          <Surface style={[styles.trackerCard, { width: width - 32 }]}>
-            <Text style={styles.cardTitle}>Workout Tracker</Text>
-            <View style={styles.workoutStatsGrid}>
-              <View style={styles.workoutStatItem}>
-                <MaterialCommunityIcons name="fire" size={24} color="#FF6B35" />
-                <Text style={styles.workoutStatValue}>{workoutStats.calories}</Text>
-                <Text style={styles.workoutStatLabel}>Calories</Text>
+          <Surface style={[styles.trackerCard, styles.matchFoodCard, { width: width - 32, alignSelf: 'center', marginRight: 0, marginLeft: 0 }]}>
+            <View style={styles.workoutHeaderRow}>
+              <Text style={styles.cardTitle}>Workout Tracker</Text>
+              <View style={styles.workoutTypeBox}>
+                <Text style={styles.workoutTypeText}>back and biceps</Text>
               </View>
-              <View style={styles.workoutStatItem}>
-                <MaterialCommunityIcons name="clock-outline" size={24} color="#4A90E2" />
-                <Text style={styles.workoutStatValue}>{workoutStats.duration}</Text>
-                <Text style={styles.workoutStatLabel}>Minutes</Text>
-              </View>
-              <View style={styles.workoutStatItem}>
-                <MaterialCommunityIcons name="dumbbell" size={24} color="#FFD700" />
-                <Text style={styles.workoutStatValue}>{workoutStats.exercises}</Text>
-                <Text style={styles.workoutStatLabel}>Exercises</Text>
-              </View>
-              <View style={styles.workoutStatItem}>
-                <MaterialCommunityIcons name="repeat" size={24} color="#4CAF50" />
-                <Text style={styles.workoutStatValue}>{workoutStats.sets}</Text>
-                <Text style={styles.workoutStatLabel}>Sets</Text>
+            </View>
+            <View style={styles.workoutSimpleContent}>
+              <View style={styles.workoutStatsRow}>
+                <View style={styles.workoutStatItem}>
+                  <MaterialCommunityIcons name="fire" size={24} color="#FF6B35" />
+                  <Text style={styles.workoutStatValue}>{workoutStats.calories}</Text>
+                  <Text style={styles.workoutStatLabel}>Calories</Text>
+                </View>
+                <View style={styles.workoutStatItem}>
+                  <MaterialCommunityIcons name="clock-outline" size={24} color="#4A90E2" />
+                  <Text style={styles.workoutStatValue}>{workoutStats.duration} min</Text>
+                  <Text style={styles.workoutStatLabel}>Duration</Text>
+                </View>
+                <View style={styles.workoutStatItem}>
+                  <MaterialCommunityIcons name="dumbbell" size={24} color="#FFD700" />
+                  <Text style={styles.workoutStatValue}>{workoutStats.exercises}</Text>
+                  <Text style={styles.workoutStatLabel}>Exercises</Text>
+                </View>
               </View>
             </View>
           </Surface>
@@ -252,7 +291,12 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
       </Surface>
-    </View>
+
+      {/* Additional Content to Enable Scrolling */}
+      <View style={styles.bottomSpacer}>
+        <Text style={styles.bottomText}>Swipe up for more content</Text>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -268,10 +312,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#252830',
     borderRadius: 20,
     padding: 10,
+    marginTop: 40,
     marginBottom: 16,
   },
   profilePic: {
     marginHorizontal: 8,
+    marginTop: 8,
   },
   dateScrollContent: {
     paddingHorizontal: 10,
@@ -331,7 +377,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#252830',
     borderRadius: 20,
     padding: 16,
-    marginRight: 16,
+    marginBottom: 16,
+    marginRight: 0,
+    marginLeft: 0,
   },
   cardTitle: {
     color: '#FFFFFF',
@@ -459,6 +507,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#4A90E2',
     width: 24,
   },
+  bottomSpacer: {
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  bottomText: {
+    color: '#8E8E93',
+    fontSize: 14,
+    textAlign: 'center',
+  },
   workoutStatsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -483,5 +542,244 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
     fontSize: 14,
     marginTop: 4,
+  },
+  foodTrackerCard: {
+    backgroundColor: '#181A20',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#4A90E2',
+    padding: 16,
+    marginBottom: 16,
+    marginRight: 1,
+  },
+  foodTrackerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  circleContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  calorieTextContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calorieLabel: {
+    color: '#8E8E93',
+    fontSize: 12,
+    marginBottom: 2,
+  },
+  calorieCount: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: 'bold',
+    lineHeight: 32,
+  },
+  calorieTotal: {
+    color: '#fff',
+    fontSize: 16,
+    lineHeight: 18,
+  },
+  foodTrackerRight: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  foodTrackerTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    alignSelf: 'flex-end',
+  },
+  macrosList: {
+    gap: 10,
+  },
+  macroRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  macroLabel: {
+    color: '#fff',
+    fontSize: 13,
+    width: 70,
+  },
+  macroBarBackground: {
+    flex: 1,
+    height: 4,
+    backgroundColor: '#23243A',
+    borderRadius: 2,
+    marginLeft: 8,
+    overflow: 'hidden',
+  },
+  macroBarFill: {
+    height: 4,
+    backgroundColor: '#4A90E2',
+    borderRadius: 2,
+  },
+  calorieTextOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 110,
+    height: 110,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  foodTrackerLeft: {
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+  },
+  calorieTextOverlayLarge: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 140,
+    height: 140,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  calorieCountLarge: {
+    color: '#fff',
+    fontSize: 36,
+    fontWeight: 'bold',
+    lineHeight: 40,
+  },
+  calorieTotalLarge: {
+    color: '#fff',
+    fontSize: 18,
+    lineHeight: 20,
+  },
+  macroPercent: {
+    color: '#fff',
+    fontSize: 13,
+    marginLeft: 8,
+    width: 40,
+    textAlign: 'right',
+  },
+  calorieSeparator: {
+    width: 60,
+    height: 1.5,
+    backgroundColor: '#fff',
+    marginVertical: 2,
+    borderRadius: 1,
+  },
+  foodTrackerRightCentered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+  },
+  matchFoodCard: {
+    padding: 12,
+    borderRadius: 20,
+    backgroundColor: '#252830',
+    minHeight: 160, // reduced to match Food Tracker card height
+    justifyContent: 'center',
+    alignItems: 'stretch',
+  },
+  workoutGridContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  workoutGridRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  workoutGridItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 8,
+    backgroundColor: 'transparent',
+  },
+  workoutHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline', // use baseline for perfect alignment
+    marginBottom: 8,
+  },
+  workoutTypeBox: {
+    backgroundColor: '#23243A',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    alignSelf: 'flex-end',
+  },
+  workoutTypeText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '500',
+    letterSpacing: 0.5,
+  },
+  workoutSimpleContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  workoutMainStat: {
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  workoutMainValue: {
+    color: '#fff',
+    fontSize: 36,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  workoutMainLabel: {
+    color: '#8E8E93',
+    fontSize: 15,
+    marginBottom: 2,
+  },
+  workoutSubStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 24,
+  },
+  workoutSubStat: {
+    alignItems: 'center',
+    marginHorizontal: 12,
+  },
+  workoutSubValue: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 2,
+  },
+  workoutSubLabel: {
+    color: '#8E8E93',
+    fontSize: 13,
+    marginTop: 0,
+  },
+  workoutStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  workoutStatItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  workoutStatValue: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 4,
+  },
+  workoutStatLabel: {
+    color: '#8E8E93',
+    fontSize: 12,
+    marginTop: 2,
   },
 });

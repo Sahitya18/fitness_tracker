@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const BASE_URL = 'http://192.168.1.9:8080/api';
+import API_CONFIG from './config';
 
 export const StreakService = {
     async getUserStreak() {
@@ -21,7 +20,7 @@ export const StreakService = {
                 return { currentStreak: 0, longestStreak: 0 };
             }
 
-            const url = `${BASE_URL}/streaks/user/${user.id}`;
+            const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STREAKS.GET_USER_STREAK}/${user.id}`;
             console.log('Fetching streak from:', url);
             
             const response = await fetch(url);
@@ -60,7 +59,7 @@ export const StreakService = {
                 throw new Error('No user ID found in stored data');
             }
 
-            const url = `${BASE_URL}/streaks/record/${user.id}`;
+            const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STREAKS.RECORD_ACTIVITY}/${user.id}`;
             console.log('Recording activity at:', url);
             
             const response = await fetch(url, {

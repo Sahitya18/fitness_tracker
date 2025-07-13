@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, TextInput, Button, Alert, StyleSheet, Text, TouchableOpacity, Platform } from 'react-native';
 import { useAuth } from '../utils/AuthContext';
-
-const BASE_URL = 'http://192.168.1.11:8080/api'; // Updated to your backend IP
+import API_CONFIG from '../utils/config';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -24,9 +23,9 @@ export default function LoginScreen() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
-      console.log('Attempting to connect to:', `${BASE_URL}/auth/login`);
+      console.log('Attempting to connect to:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.LOGIN}`);
       
-      const res = await fetch(`${BASE_URL}/auth/login`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.LOGIN}`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -69,7 +68,7 @@ export default function LoginScreen() {
           `2. The server is running\n` +
           `3. You're on the same network as the server\n\n` +
           `Technical details:\n${err.message}\n` +
-          `URL: ${BASE_URL}\n` +
+          `URL: ${API_CONFIG.BASE_URL}\n` +
           `Platform: ${Platform.OS}`
         );
       }

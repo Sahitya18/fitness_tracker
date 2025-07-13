@@ -4,8 +4,7 @@ import { TextInput, Button, Text, Surface, ProgressBar, useTheme, SegmentedButto
 import { router, useLocalSearchParams } from 'expo-router';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Picker } from '@react-native-picker/picker';
-
-const BASE_URL = 'http://192.168.1.13:8080/api'; // Updated to match your local IP
+import API_CONFIG from '../utils/config';
 
 export default function ProfileSetupScreen() {
   const theme = useTheme();
@@ -80,7 +79,7 @@ export default function ProfileSetupScreen() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/registration/complete-profile`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTRATION.COMPLETE_PROFILE}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -2,22 +2,7 @@ import React, { useState } from 'react';
 import { View, Alert, StyleSheet, ScrollView, Platform } from 'react-native';
 import { TextInput, Button, Text, Surface, ProgressBar, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
-
-// Handle different platform URLs
-// const getBaseUrl = () => {
-//   if (Platform.OS === 'android') {
-//     // Android emulator uses remote server IP
-//     return 'http://192.168.1.9:8080/api';
-//   } else if (Platform.OS === 'ios') {
-//     // iOS simulator uses remote server IP
-//     return 'http://192.168.1.9:8080/api';
-//   } else {
-//     // For web or physical devices, use remote server IP
-//     return 'http://192.168.1.9:8080/api';
-//   }
-// };
-
-const BASE_URL = 'http://192.168.1.11:8080/api';
+import API_CONFIG from '../utils/config';
 
 export default function RegisterScreen() {
   const theme = useTheme();
@@ -57,11 +42,11 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      console.log('Sending request to:', `${BASE_URL}/registration/send-email-otp`);
+      console.log('Sending request to:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTRATION.SEND_EMAIL_OTP}`);
       
       // Create request options with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
       
       const requestOptions = {
         method: 'POST',
@@ -80,7 +65,7 @@ export default function RegisterScreen() {
 
       console.log('Request options:', JSON.stringify(requestOptions, null, 2));
       
-      const res = await fetch(`${BASE_URL}/registration/send-email-otp`, requestOptions);
+      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTRATION.SEND_EMAIL_OTP}`, requestOptions);
       clearTimeout(timeoutId);
       
       console.log('Response status:', res.status);
@@ -111,7 +96,7 @@ export default function RegisterScreen() {
           `1. Your internet connection\n` +
           `2. The server is running\n\n` +
           `Technical details:\n${err.message}\n` +
-          `URL: ${BASE_URL}\n` +
+          `URL: ${API_CONFIG.BASE_URL}\n` +
           `Platform: ${Platform.OS}`
         );
       }
@@ -163,7 +148,7 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/registration/verify-otp`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTRATION.VERIFY_OTP}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -251,7 +236,7 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/registration/register`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
