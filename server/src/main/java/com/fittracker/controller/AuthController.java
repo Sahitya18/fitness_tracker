@@ -12,6 +12,9 @@ import com.fittracker.dto.LoginRequest;
 import com.fittracker.dto.OtpRequest;
 import jakarta.validation.Valid;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -21,23 +24,39 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
-        return authService.login(req);
+        try {
+            return authService.login(req);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage() != null ? e.getMessage() : "Unknown error");
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 
     @PostMapping("/send-email-otp")
     public ResponseEntity<?> sendEmailOtp(@RequestBody OtpRequest req) {
-        if (!req.getEmail().matches("^[\\w.-]+@[\\w.-]+\\.\\w+$"))
-            return ResponseEntity.badRequest().body("Invalid email");
+        if (!req.getEmail().matches("^[\\w.-]+@[\\w.-]+\\.\\w+$")) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Invalid email");
+            return ResponseEntity.badRequest().body(error);
+        }
         otpService.generateAndSendOtp(req.getEmail());
-        return ResponseEntity.ok("OTP sent");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "OTP sent");
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/send-mobile-otp")
     public ResponseEntity<?> sendMobileOtp(@RequestBody OtpRequest req) {
-        if (!req.getMobile().matches("\\d{10}"))
-            return ResponseEntity.badRequest().body("Invalid mobile");
+        if (!req.getMobile().matches("\\d{10}")) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Invalid mobile");
+            return ResponseEntity.badRequest().body(error);
+        }
         otpService.generateAndSendOtp(req.getMobile());
-        return ResponseEntity.ok("OTP sent");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "OTP sent");
+        return ResponseEntity.ok(response);
     }
 }
 

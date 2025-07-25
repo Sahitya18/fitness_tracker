@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import com.fittracker.dto.OtpRequest;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/registration")
@@ -18,10 +20,15 @@ public class RegistrationController {
 
     @PostMapping("/send-email-otp")
     public ResponseEntity<?> sendEmailOtp(@RequestBody OtpRequest req) {
-        if (!req.getEmail().matches("^[\\w.-]+@[\\w.-]+\\.\\w+$"))
-            return ResponseEntity.badRequest().body("Invalid email");
+        if (!req.getEmail().matches("^[\\w.-]+@[\\w.-]+\\.\\w+$")) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Invalid email");
+            return ResponseEntity.badRequest().body(error);
+        }
         otpService.generateAndSendOtp(req.getEmail());
-        return ResponseEntity.ok("OTP sent");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "OTP sent");
+        return ResponseEntity.ok(response);
  
     }
 
@@ -31,20 +38,30 @@ public class RegistrationController {
         String otp = req.getOtp();
         
         if (target == null || otp == null) {
-            return ResponseEntity.badRequest().body("Both target (email/mobile) and OTP are required");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Both target (email/mobile) and OTP are required");
+            return ResponseEntity.badRequest().body(error);
         }
         
         boolean isValid = otpService.verifyOtp(target, otp);
-        return isValid ? 
-            ResponseEntity.ok("OTP verified successfully") : 
-            ResponseEntity.badRequest().body("Invalid OTP");
+        if (isValid) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "OTP verified successfully");
+            return ResponseEntity.ok(response);
+        } else {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Invalid OTP");
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
         // Validate mobile number format
         if (req.getMobile() != null && !req.getMobile().matches("^[0-9]{10}$")) {
-            return ResponseEntity.badRequest().body("Invalid mobile number format. Please enter 10 digits only.");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Invalid mobile number format. Please enter 10 digits only.");
+            return ResponseEntity.badRequest().body(error);
         }
         return registrationService.registerUser(req);
     }

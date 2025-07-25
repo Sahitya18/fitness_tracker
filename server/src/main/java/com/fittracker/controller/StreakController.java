@@ -24,7 +24,9 @@ public class StreakController {
     public ResponseEntity<?> getUserStreak(@PathVariable Long userId) {
         try {
             if (userId == null) {
-                return ResponseEntity.badRequest().body("User ID is required");
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "User ID is required");
+                return ResponseEntity.badRequest().body(error);
             }
             UserStreak streak = streakService.getUserStreak(userId);
             if (streak == null) {
@@ -35,7 +37,9 @@ public class StreakController {
             }
             return ResponseEntity.ok(streak);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error fetching streak: " + e.getMessage());
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error fetching streak: " + e.getMessage());
+            return ResponseEntity.badRequest().body(error);
         }
     }
 

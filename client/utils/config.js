@@ -1,8 +1,8 @@
 // Centralized configuration for API endpoints
 // Change this IP address when your server IP changes
 const API_CONFIG = {
-  BASE_URL: 'http://192.168.1.7:8080/api',
-  TIMEOUT: 5000, // 5 seconds
+  BASE_URL: 'http://192.168.1.13:8080/api',
+  TIMEOUT: 10000, // 10 seconds
   ENDPOINTS: {
     AUTH: {
       LOGIN: '/auth/login',

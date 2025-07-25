@@ -9,6 +9,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 public class RegistrationService {
@@ -21,19 +23,25 @@ public class RegistrationService {
     public ResponseEntity<?> registerUser(RegisterRequest req) {
         // Check if email is verified
         if (!otpService.isEmailVerified(req.getEmail())) {
-            return ResponseEntity.badRequest().body("Email verification required or has expired. Please verify your email first.");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Email verification required or has expired. Please verify your email first.");
+            return ResponseEntity.badRequest().body(error);
         }
 
         // Check if email already exists
         Optional<User> existingUser = userRepo.findByEmail(req.getEmail());
         if (existingUser.isPresent()) {
-            return ResponseEntity.badRequest().body("Email already registered");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Email already registered");
+            return ResponseEntity.badRequest().body(error);
         }
 
         // Check if mobile already exists
         existingUser = userRepo.findByMobile(req.getMobile());
         if (existingUser.isPresent()) {
-            return ResponseEntity.badRequest().body("Mobile number already registered");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Mobile number already registered");
+            return ResponseEntity.badRequest().body(error);
         }
 
         // Create new user

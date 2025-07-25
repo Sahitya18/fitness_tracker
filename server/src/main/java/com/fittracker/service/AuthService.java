@@ -16,6 +16,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.util.Date;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 public class AuthService {
@@ -28,22 +30,30 @@ public class AuthService {
     public ResponseEntity<?> login(LoginRequest req) {
         // Validate input
         if (req.getEmail() == null || req.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Email is required");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Email is required");
+            return ResponseEntity.badRequest().body(error);
         }
         if (req.getPassword() == null || req.getPassword().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Password is required");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Password is required");
+            return ResponseEntity.badRequest().body(error);
         }
         // Find user
         Optional<User> userOpt = userRepo.findByEmail(req.getEmail());
         if (userOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body("Invalid email or password");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Invalid email or password");
+            return ResponseEntity.badRequest().body(error);
         }
 
         // Verify password
         User user = userOpt.get();
         System.out.println("password matches:: "+user +" "+(encoder.matches(req.getPassword(), user.getPasswordHash())));
         if (!encoder.matches(req.getPassword(), user.getPasswordHash())) {
-            return ResponseEntity.badRequest().body("Invalid email or password");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Invalid email or password");
+            return ResponseEntity.badRequest().body(error);
         }
 
         // Generate JWT token
