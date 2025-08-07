@@ -30,8 +30,7 @@ export default function MealDetailsScreen() {
   };
 
   const handleAddManually = () => {
-    // TODO: Implement manual add functionality
-    console.log('Add manually pressed');
+    router.push('/add-meal-manually');
   };
 
   return (

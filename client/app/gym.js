@@ -4,8 +4,8 @@ import { View, Text, StyleSheet, Button, ScrollView } from 'react-native';
 export default function GymScreen({ navigation }) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.heading}>🏋️ Gym Dashboard</Text>
-      <Text style={styles.subtext}>Track your workouts and training progress.</Text>
+      {/* <Text style={styles.heading}>🏋️ Gym Dashboard</Text>
+      <Text style={styles.subtext}>Track your workouts and training progress.</Text> */}
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Start Workout</Text>
