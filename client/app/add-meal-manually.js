@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert, TouchableOpacity, Modal } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import API_CONFIG from '../utils/config';
 
 const WEIGHT_UNITS = ['g', 'kg', 'oz', 'lb', 'ml'];
 
@@ -21,13 +22,61 @@ export default function AddMealManuallyScreen({ navigation }) {
     setForm({ ...form, [key]: value });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name || !form.weight || !form.calories) {
       Alert.alert('Validation', 'Please fill in all required fields.');
       return;
     }
-    Alert.alert('Success', 'Meal added manually!');
-    if (navigation && navigation.goBack) navigation.goBack();
+
+    try {
+      const mealData = {
+        mealName: form.name,
+        weight: parseFloat(form.weight),
+        weightUnit: form.weightUnit,
+        calories: parseFloat(form.calories),
+        carbs: form.carbs ? parseFloat(form.carbs) : null,
+        protein: form.protein ? parseFloat(form.protein) : null,
+        fats: form.fats ? parseFloat(form.fats) : null,
+        fiber: form.fiber ? parseFloat(form.fiber) : null,
+      };
+
+      console.log('Sending meal data:', mealData);
+      console.log('API URL:', `${API_CONFIG.BASE_URL}/manual-meals`);
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}/manual-meals`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(mealData),
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      if (response.ok) {
+        try {
+          const result = await response.json();
+          Alert.alert('Success', 'Meal added successfully to database!');
+          if (navigation && navigation.goBack) navigation.goBack();
+        } catch (jsonError) {
+          console.error('JSON Parse Error:', jsonError);
+          Alert.alert('Success', 'Meal added successfully to database!');
+          if (navigation && navigation.goBack) navigation.goBack();
+        }
+      } else {
+        try {
+          const errorData = await response.json();
+          Alert.alert('Error', `Failed to add meal: ${errorData.message || 'Unknown error'}`);
+        } catch (jsonError) {
+          console.error('Error parsing error response:', jsonError);
+          Alert.alert('Error', `Failed to add meal: HTTP ${response.status}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error adding meal:', error);
+      Alert.alert('Error', 'Failed to connect to server. Please check your internet connection.');
+    }
   };
 
   return (

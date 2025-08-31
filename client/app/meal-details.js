@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Dimensions, Alert } from 'react-native';
 import { Surface } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ScannerComponent from '../components/ScannerComponent';
 
 const { width } = Dimensions.get('window');
 
 export default function MealDetailsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [extractedText, setExtractedText] = useState('');
   const { returnTab } = useLocalSearchParams();
 
   const handleBack = async () => {
@@ -24,9 +26,30 @@ export default function MealDetailsScreen() {
     router.back();
   };
 
-  const handleScanner = () => {
-    // TODO: Implement scanner functionality
-    console.log('Scanner pressed');
+  const handleTextExtracted = (text, nutritionalData = null) => {
+    setExtractedText(text);
+    setSearchQuery(text);
+    
+    // If we have structured nutritional data, log it for debugging
+    if (nutritionalData) {
+      console.log('Structured Nutritional Data:', nutritionalData);
+      
+      // You can use this structured data for automatic macro calculations
+      if (nutritionalData.protein) {
+        console.log(`Protein: ${nutritionalData.protein.value} ${nutritionalData.protein.unit}`);
+      }
+      if (nutritionalData.carbohydrates) {
+        console.log(`Carbs: ${nutritionalData.carbohydrates.value} ${nutritionalData.carbohydrates.unit}`);
+      }
+      if (nutritionalData.total_fat) {
+        console.log(`Fat: ${nutritionalData.total_fat.value} ${nutritionalData.total_fat.unit}`);
+      }
+      if (nutritionalData.energy) {
+        console.log(`Calories: ${nutritionalData.energy.value} ${nutritionalData.energy.unit}`);
+      }
+    }
+    
+    Alert.alert('Success', 'Text extracted successfully! You can now search for this food item.');
   };
 
   const handleAddManually = () => {
@@ -58,10 +81,7 @@ export default function MealDetailsScreen() {
 
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.actionButton} onPress={handleScanner}>
-          <MaterialCommunityIcons name="qrcode-scan" size={24} color="#FFFFFF" />
-          <Text style={styles.buttonText}>Scanner</Text>
-        </TouchableOpacity>
+        <ScannerComponent onTextExtracted={handleTextExtracted} />
         
         <TouchableOpacity style={styles.actionButton} onPress={handleAddManually}>
           <MaterialCommunityIcons name="plus-circle" size={24} color="#FFFFFF" />

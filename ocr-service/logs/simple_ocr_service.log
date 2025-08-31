@@ -1,0 +1,468 @@
+2025-08-31 12:43:57,815 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:43:57,819 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:44:09,436 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:44:10,595 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:44:10,599 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:44:19,082 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:44:20,051 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:44:20,055 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:44:39,053 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:44:40,160 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:44:40,164 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:44:49,939 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:44:50,770 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:44:50,774 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:44:50,833 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:44:50,837 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:45:12,990 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:45:13,970 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:45:13,974 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:45:14,034 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:45:14,038 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:45:22,535 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:45:23,278 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:45:23,281 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:45:23,347 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:45:23,351 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:47:30,715 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:47:30,718 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:47:30,785 - werkzeug - INFO - _log:97 - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8086
+ * Running on http://192.168.1.14:8086
+2025-08-31 12:47:30,786 - werkzeug - INFO - _log:97 - [33mPress CTRL+C to quit[0m
+2025-08-31 12:47:30,788 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 12:47:31,471 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:47:31,474 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:47:31,529 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:47:31,533 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:47:56,692 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:47:56,695 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:47:56,760 - werkzeug - INFO - _log:97 - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8086
+ * Running on http://192.168.1.14:8086
+2025-08-31 12:47:56,760 - werkzeug - INFO - _log:97 - [33mPress CTRL+C to quit[0m
+2025-08-31 12:47:56,762 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 12:47:57,479 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:47:57,482 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:47:57,536 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:47:57,540 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:48:28,115 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:48:28,253 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 12:48:28,999 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:48:29,000 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 12:48:29,000 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:48:29,054 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:48:29,059 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:48:43,363 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:48:43,545 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 12:48:44,315 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:48:44,316 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 12:48:44,316 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:48:44,384 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:48:44,389 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:48:54,317 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:48:54,457 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 12:48:55,192 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:48:55,192 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 12:48:55,192 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:48:55,193 - __main__ - INFO - <module>:110 - Google Cloud credentials path: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:48:55,194 - __main__ - WARNING - <module>:114 - Google Cloud credentials file not found: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:48:55,248 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:48:55,252 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:49:08,148 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:49:08,306 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 12:49:09,109 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:49:09,109 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 12:49:09,110 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:49:09,111 - __main__ - INFO - <module>:110 - Google Cloud credentials path: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:49:09,111 - __main__ - WARNING - <module>:114 - Google Cloud credentials file not found: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:49:09,164 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:49:09,168 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:49:19,136 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:49:19,255 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 12:49:19,982 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:49:19,982 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 12:49:19,983 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:49:19,984 - __main__ - INFO - <module>:110 - Google Cloud credentials path: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:49:19,984 - __main__ - WARNING - <module>:114 - Google Cloud credentials file not found: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:49:19,988 - __main__ - INFO - <module>:347 - Simple OCR Service starting up...
+2025-08-31 12:49:19,988 - __main__ - INFO - <module>:348 - Listening on 0.0.0.0:8086
+2025-08-31 12:49:19,988 - __main__ - INFO - <module>:349 - Request logging enabled - all incoming requests will be logged
+2025-08-31 12:49:19,988 - __main__ - INFO - <module>:350 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 12:49:20,030 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:49:20,035 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:49:25,403 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:49:25,534 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 12:49:26,313 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:49:26,313 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 12:49:26,313 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:49:26,315 - __main__ - INFO - <module>:110 - Google Cloud credentials path: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:49:26,315 - __main__ - WARNING - <module>:114 - Google Cloud credentials file not found: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:49:26,319 - __main__ - INFO - <module>:347 - Simple OCR Service starting up...
+2025-08-31 12:49:26,319 - __main__ - INFO - <module>:348 - Listening on 0.0.0.0:8086
+2025-08-31 12:49:26,319 - __main__ - INFO - <module>:349 - Request logging enabled - all incoming requests will be logged
+2025-08-31 12:49:26,319 - __main__ - INFO - <module>:350 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 12:49:26,360 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:49:26,365 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:49:33,393 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:49:33,510 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 12:49:34,285 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:49:34,285 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 12:49:34,286 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:49:34,287 - __main__ - INFO - <module>:110 - Google Cloud credentials path: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:49:34,287 - __main__ - WARNING - <module>:114 - Google Cloud credentials file not found: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:49:34,291 - __main__ - INFO - <module>:347 - Simple OCR Service starting up...
+2025-08-31 12:49:34,291 - __main__ - INFO - <module>:348 - Listening on 0.0.0.0:8086
+2025-08-31 12:49:34,291 - __main__ - INFO - <module>:349 - Request logging enabled - all incoming requests will be logged
+2025-08-31 12:49:34,291 - __main__ - INFO - <module>:350 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 12:49:34,332 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:49:34,338 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:49:45,600 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:49:45,703 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 12:49:46,440 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:49:46,441 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 12:49:46,441 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:49:46,442 - __main__ - INFO - <module>:110 - Google Cloud credentials path: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:49:46,442 - __main__ - WARNING - <module>:114 - Google Cloud credentials file not found: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:49:46,447 - __main__ - INFO - <module>:347 - Simple OCR Service starting up...
+2025-08-31 12:49:46,447 - __main__ - INFO - <module>:348 - Listening on 0.0.0.0:8086
+2025-08-31 12:49:46,447 - __main__ - INFO - <module>:349 - Request logging enabled - all incoming requests will be logged
+2025-08-31 12:49:46,447 - __main__ - INFO - <module>:350 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 12:49:46,490 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:49:46,494 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:49:58,687 - __main__ - INFO - log_request:83 - ================================================================================
+2025-08-31 12:49:58,687 - __main__ - INFO - log_request:84 - INCOMING REQUEST DETECTED
+2025-08-31 12:49:58,687 - __main__ - INFO - log_request:85 - ================================================================================
+2025-08-31 12:49:58,687 - __main__ - INFO - log_request:86 - Timestamp: 2025-08-31 12:49:58.687866
+2025-08-31 12:49:58,687 - __main__ - INFO - log_request:87 - Remote Address: 192.168.1.7
+2025-08-31 12:49:58,688 - __main__ - INFO - log_request:88 - Method: POST
+2025-08-31 12:49:58,688 - __main__ - INFO - log_request:89 - URL: http://192.168.1.14:8086/extract-text
+2025-08-31 12:49:58,688 - __main__ - INFO - log_request:90 - Headers: {'Accept': 'application/json, text/plain, */*', 'Content-Type': 'multipart/form-data; boundary=ca5c687f-8a40-455c-8abc-3a78ae428ddb', 'Content-Length': '1292184', 'Host': '192.168.1.14:8086', 'Connection': 'Keep-Alive', 'Accept-Encoding': 'gzip', 'User-Agent': 'okhttp/4.12.0'}
+2025-08-31 12:49:58,849 - __main__ - INFO - log_request:91 - Files: ['image']
+2025-08-31 12:49:58,850 - __main__ - INFO - log_request:92 - Form Data: No form data
+2025-08-31 12:49:58,850 - __main__ - INFO - log_request:93 - ================================================================================
+2025-08-31 12:49:58,850 - __main__ - INFO - extract_text:199 - === TEXT EXTRACTION REQUEST STARTED ===
+2025-08-31 12:49:58,850 - __main__ - INFO - extract_text:200 - Request method: POST
+2025-08-31 12:49:58,850 - __main__ - INFO - extract_text:201 - Request headers: {'Accept': 'application/json, text/plain, */*', 'Content-Type': 'multipart/form-data; boundary=ca5c687f-8a40-455c-8abc-3a78ae428ddb', 'Content-Length': '1292184', 'Host': '192.168.1.14:8086', 'Connection': 'Keep-Alive', 'Accept-Encoding': 'gzip', 'User-Agent': 'okhttp/4.12.0'}
+2025-08-31 12:49:58,851 - __main__ - INFO - extract_text:202 - Request files keys: ['image']
+2025-08-31 12:49:58,851 - __main__ - INFO - extract_text:216 - ======================File exists: image.jpg====================================
+2025-08-31 12:49:58,851 - __main__ - INFO - extract_text:217 - File content type: image/jpeg
+2025-08-31 12:49:58,851 - __main__ - INFO - extract_text:218 - File stream: <tempfile.SpooledTemporaryFile object at 0x00000208DDF907F0>
+2025-08-31 12:49:58,851 - __main__ - INFO - extract_text:240 - ======================File size: 1291979 bytes====================================
+2025-08-31 12:49:58,851 - __main__ - INFO - extract_text:250 - Processing file: image.jpg (1291979 bytes)
+2025-08-31 12:49:58,852 - __main__ - INFO - extract_text:256 - ======================Saving image to: uploads\temp_image.jpg====================================
+2025-08-31 12:49:58,909 - __main__ - INFO - extract_text:262 - ======================Image saved successfully: uploads\temp_image.jpg====================================
+2025-08-31 12:49:58,909 - __main__ - INFO - extract_text:263 - Image dimensions: (2249, 1686)
+2025-08-31 12:49:58,910 - __main__ - INFO - extract_text:269 - ======================Starting text extraction from: uploads\temp_image.jpg====================================
+2025-08-31 12:49:58,911 - __main__ - ERROR - extract_text_from_image:155 - Text extraction failed: File D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json was not found.
+2025-08-31 12:49:58,911 - __main__ - ERROR - extract_text:299 - === TEXT EXTRACTION FAILED ===
+2025-08-31 12:49:58,911 - __main__ - ERROR - extract_text:300 - Error: File D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json was not found.
+2025-08-31 12:49:58,914 - werkzeug - INFO - _log:97 - 192.168.1.7 - - [31/Aug/2025 12:49:58] "[35m[1mPOST /extract-text HTTP/1.1[0m" 500 -
+2025-08-31 12:50:53,921 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 12:50:54,038 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 12:50:54,775 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 12:50:54,776 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 12:50:54,776 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 12:50:54,777 - __main__ - INFO - <module>:110 - Google Cloud credentials path: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:50:54,778 - __main__ - WARNING - <module>:114 - Google Cloud credentials file not found: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 12:50:54,781 - __main__ - INFO - <module>:347 - Simple OCR Service starting up...
+2025-08-31 12:50:54,781 - __main__ - INFO - <module>:348 - Listening on 0.0.0.0:8086
+2025-08-31 12:50:54,781 - __main__ - INFO - <module>:349 - Request logging enabled - all incoming requests will be logged
+2025-08-31 12:50:54,781 - __main__ - INFO - <module>:350 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 12:50:54,823 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 12:50:54,828 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 12:51:00,982 - __main__ - INFO - log_request:83 - ================================================================================
+2025-08-31 12:51:00,982 - __main__ - INFO - log_request:84 - INCOMING REQUEST DETECTED
+2025-08-31 12:51:00,982 - __main__ - INFO - log_request:85 - ================================================================================
+2025-08-31 12:51:00,982 - __main__ - INFO - log_request:86 - Timestamp: 2025-08-31 12:51:00.982735
+2025-08-31 12:51:00,982 - __main__ - INFO - log_request:87 - Remote Address: 192.168.1.7
+2025-08-31 12:51:00,982 - __main__ - INFO - log_request:88 - Method: POST
+2025-08-31 12:51:00,983 - __main__ - INFO - log_request:89 - URL: http://192.168.1.14:8086/extract-text
+2025-08-31 12:51:00,983 - __main__ - INFO - log_request:90 - Headers: {'Accept': 'application/json, text/plain, */*', 'Content-Type': 'multipart/form-data; boundary=67c36473-1a64-4428-9fc2-34b9dd0a5c55', 'Content-Length': '1292184', 'Host': '192.168.1.14:8086', 'Connection': 'Keep-Alive', 'Accept-Encoding': 'gzip', 'User-Agent': 'okhttp/4.12.0'}
+2025-08-31 12:51:01,140 - __main__ - INFO - log_request:91 - Files: ['image']
+2025-08-31 12:51:01,141 - __main__ - INFO - log_request:92 - Form Data: No form data
+2025-08-31 12:51:01,141 - __main__ - INFO - log_request:93 - ================================================================================
+2025-08-31 12:51:01,141 - __main__ - INFO - extract_text:199 - === TEXT EXTRACTION REQUEST STARTED ===
+2025-08-31 12:51:01,141 - __main__ - INFO - extract_text:200 - Request method: POST
+2025-08-31 12:51:01,141 - __main__ - INFO - extract_text:201 - Request headers: {'Accept': 'application/json, text/plain, */*', 'Content-Type': 'multipart/form-data; boundary=67c36473-1a64-4428-9fc2-34b9dd0a5c55', 'Content-Length': '1292184', 'Host': '192.168.1.14:8086', 'Connection': 'Keep-Alive', 'Accept-Encoding': 'gzip', 'User-Agent': 'okhttp/4.12.0'}
+2025-08-31 12:51:01,141 - __main__ - INFO - extract_text:202 - Request files keys: ['image']
+2025-08-31 12:51:01,141 - __main__ - INFO - extract_text:216 - ======================File exists: image.jpg====================================
+2025-08-31 12:51:01,142 - __main__ - INFO - extract_text:217 - File content type: image/jpeg
+2025-08-31 12:51:01,142 - __main__ - INFO - extract_text:218 - File stream: <tempfile.SpooledTemporaryFile object at 0x00000253DEC50520>
+2025-08-31 12:51:01,142 - __main__ - INFO - extract_text:240 - ======================File size: 1291979 bytes====================================
+2025-08-31 12:51:01,142 - __main__ - INFO - extract_text:250 - Processing file: image.jpg (1291979 bytes)
+2025-08-31 12:51:01,142 - __main__ - INFO - extract_text:256 - ======================Saving image to: uploads\temp_image.jpg====================================
+2025-08-31 12:51:01,198 - __main__ - INFO - extract_text:262 - ======================Image saved successfully: uploads\temp_image.jpg====================================
+2025-08-31 12:51:01,198 - __main__ - INFO - extract_text:263 - Image dimensions: (2249, 1686)
+2025-08-31 12:51:01,198 - __main__ - INFO - extract_text:269 - ======================Starting text extraction from: uploads\temp_image.jpg====================================
+2025-08-31 12:51:01,200 - __main__ - ERROR - extract_text_from_image:155 - Text extraction failed: File D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json was not found.
+2025-08-31 12:51:01,200 - __main__ - ERROR - extract_text:299 - === TEXT EXTRACTION FAILED ===
+2025-08-31 12:51:01,200 - __main__ - ERROR - extract_text:300 - Error: File D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json was not found.
+2025-08-31 12:51:01,202 - werkzeug - INFO - _log:97 - 192.168.1.7 - - [31/Aug/2025 12:51:01] "[35m[1mPOST /extract-text HTTP/1.1[0m" 500 -
+2025-08-31 13:06:44,660 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 13:06:44,816 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 13:06:45,610 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 13:06:45,611 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:06:45,611 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 13:06:45,612 - __main__ - INFO - <module>:110 - Google Cloud credentials path: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 13:06:45,613 - __main__ - WARNING - <module>:114 - Google Cloud credentials file not found: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 13:06:45,617 - __main__ - INFO - <module>:348 - Simple OCR Service starting up...
+2025-08-31 13:06:45,617 - __main__ - INFO - <module>:349 - Listening on 0.0.0.0:8086
+2025-08-31 13:06:45,617 - __main__ - INFO - <module>:350 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:06:45,618 - __main__ - INFO - <module>:351 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:06:45,663 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 13:06:45,667 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 13:06:58,631 - __main__ - INFO - log_request:83 - ================================================================================
+2025-08-31 13:06:58,631 - __main__ - INFO - log_request:84 - INCOMING REQUEST DETECTED
+2025-08-31 13:06:58,632 - __main__ - INFO - log_request:85 - ================================================================================
+2025-08-31 13:06:58,632 - __main__ - INFO - log_request:86 - Timestamp: 2025-08-31 13:06:58.632146
+2025-08-31 13:06:58,632 - __main__ - INFO - log_request:87 - Remote Address: 192.168.1.7
+2025-08-31 13:06:58,632 - __main__ - INFO - log_request:88 - Method: POST
+2025-08-31 13:06:58,632 - __main__ - INFO - log_request:89 - URL: http://192.168.1.14:8086/extract-text
+2025-08-31 13:06:58,632 - __main__ - INFO - log_request:90 - Headers: {'Accept': 'application/json, text/plain, */*', 'Content-Type': 'multipart/form-data; boundary=22dd655a-5beb-48bf-b440-0ea685bbf400', 'Content-Length': '1292184', 'Host': '192.168.1.14:8086', 'Connection': 'Keep-Alive', 'Accept-Encoding': 'gzip', 'User-Agent': 'okhttp/4.12.0'}
+2025-08-31 13:06:58,785 - __main__ - INFO - log_request:91 - Files: ['image']
+2025-08-31 13:06:58,785 - __main__ - INFO - log_request:92 - Form Data: No form data
+2025-08-31 13:06:58,786 - __main__ - INFO - log_request:93 - ================================================================================
+2025-08-31 13:06:58,786 - __main__ - INFO - extract_text:200 - === TEXT EXTRACTION REQUEST STARTED ===
+2025-08-31 13:06:58,786 - __main__ - INFO - extract_text:201 - Request method: POST
+2025-08-31 13:06:58,786 - __main__ - INFO - extract_text:202 - Request headers: {'Accept': 'application/json, text/plain, */*', 'Content-Type': 'multipart/form-data; boundary=22dd655a-5beb-48bf-b440-0ea685bbf400', 'Content-Length': '1292184', 'Host': '192.168.1.14:8086', 'Connection': 'Keep-Alive', 'Accept-Encoding': 'gzip', 'User-Agent': 'okhttp/4.12.0'}
+2025-08-31 13:06:58,786 - __main__ - INFO - extract_text:203 - Request files keys: ['image']
+2025-08-31 13:06:58,786 - __main__ - INFO - extract_text:217 - ======================File exists: image.jpg====================================
+2025-08-31 13:06:58,786 - __main__ - INFO - extract_text:218 - File content type: image/jpeg
+2025-08-31 13:06:58,787 - __main__ - INFO - extract_text:219 - File stream: <tempfile.SpooledTemporaryFile object at 0x000001209E772CE0>
+2025-08-31 13:06:58,787 - __main__ - INFO - extract_text:241 - ======================File size: 1291979 bytes====================================
+2025-08-31 13:06:58,787 - __main__ - INFO - extract_text:251 - Processing file: image.jpg (1291979 bytes)
+2025-08-31 13:06:58,787 - __main__ - INFO - extract_text:257 - ======================Saving image to: uploads\temp_image.jpg====================================
+2025-08-31 13:06:58,847 - __main__ - INFO - extract_text:263 - ======================Image saved successfully: uploads\temp_image.jpg====================================
+2025-08-31 13:06:58,848 - __main__ - INFO - extract_text:264 - Image dimensions: (2249, 1686)
+2025-08-31 13:06:58,848 - __main__ - INFO - extract_text:270 - ======================Starting text extraction from: uploads\temp_image.jpg====================================
+2025-08-31 13:06:58,848 - __main__ - INFO - extract_text_from_image:124 - 11111
+2025-08-31 13:06:58,849 - __main__ - ERROR - extract_text_from_image:156 - Text extraction failed: File D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json was not found.
+2025-08-31 13:06:58,850 - __main__ - ERROR - extract_text:300 - === TEXT EXTRACTION FAILED ===
+2025-08-31 13:06:58,850 - __main__ - ERROR - extract_text:301 - Error: File D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json was not found.
+2025-08-31 13:06:58,852 - werkzeug - INFO - _log:97 - 192.168.1.7 - - [31/Aug/2025 13:06:58] "[35m[1mPOST /extract-text HTTP/1.1[0m" 500 -
+2025-08-31 13:08:42,159 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 13:08:42,333 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 13:08:43,200 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 13:08:43,200 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:08:43,201 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 13:08:43,202 - __main__ - INFO - <module>:110 - Google Cloud credentials path: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 13:08:43,202 - __main__ - WARNING - <module>:114 - Google Cloud credentials file not found: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 13:08:43,206 - __main__ - INFO - <module>:362 - Simple OCR Service starting up...
+2025-08-31 13:08:43,206 - __main__ - INFO - <module>:363 - Listening on 0.0.0.0:8086
+2025-08-31 13:08:43,206 - __main__ - INFO - <module>:364 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:08:43,206 - __main__ - INFO - <module>:365 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:08:43,257 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 13:08:43,262 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 13:08:54,545 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 13:08:54,672 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 13:08:55,396 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 13:08:55,396 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:08:55,396 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 13:08:55,398 - __main__ - INFO - <module>:110 - Google Cloud credentials path: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 13:08:55,398 - __main__ - WARNING - <module>:114 - Google Cloud credentials file not found: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 13:08:55,401 - __main__ - INFO - <module>:382 - Simple OCR Service starting up...
+2025-08-31 13:08:55,401 - __main__ - INFO - <module>:383 - Listening on 0.0.0.0:8086
+2025-08-31 13:08:55,402 - __main__ - INFO - <module>:384 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:08:55,402 - __main__ - INFO - <module>:385 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:08:55,444 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 13:08:55,448 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 13:10:16,375 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 13:10:16,376 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:10:16,376 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 13:10:16,378 - __main__ - INFO - <module>:110 - Google Cloud credentials path: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 13:10:16,378 - __main__ - WARNING - <module>:114 - Google Cloud credentials file not found: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 13:10:16,395 - __main__ - INFO - <module>:382 - Simple OCR Service starting up...
+2025-08-31 13:10:16,395 - __main__ - INFO - <module>:383 - Listening on 0.0.0.0:8086
+2025-08-31 13:10:16,395 - __main__ - INFO - <module>:384 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:10:16,397 - __main__ - INFO - <module>:385 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:10:16,474 - werkzeug - INFO - _log:97 - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8086
+ * Running on http://192.168.1.14:8086
+2025-08-31 13:10:16,474 - werkzeug - INFO - _log:97 - [33mPress CTRL+C to quit[0m
+2025-08-31 13:10:16,477 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 13:10:17,246 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 13:10:17,247 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:10:17,247 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 13:10:17,248 - __main__ - INFO - <module>:110 - Google Cloud credentials path: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 13:10:17,248 - __main__ - WARNING - <module>:114 - Google Cloud credentials file not found: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 13:10:17,252 - __main__ - INFO - <module>:382 - Simple OCR Service starting up...
+2025-08-31 13:10:17,252 - __main__ - INFO - <module>:383 - Listening on 0.0.0.0:8086
+2025-08-31 13:10:17,252 - __main__ - INFO - <module>:384 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:10:17,252 - __main__ - INFO - <module>:385 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:10:17,293 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 13:10:17,297 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 13:10:51,086 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 13:10:51,257 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 13:10:52,061 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 13:10:52,061 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:10:52,062 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 13:10:52,063 - __main__ - INFO - <module>:110 - Google Cloud credentials path: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 13:10:52,063 - __main__ - WARNING - <module>:114 - Google Cloud credentials file not found: D:\projects\eighth-pursuit-470608-b4-dc6b15cd6ff8.json
+2025-08-31 13:10:52,067 - __main__ - INFO - <module>:382 - Simple OCR Service starting up...
+2025-08-31 13:10:52,067 - __main__ - INFO - <module>:383 - Listening on 0.0.0.0:8086
+2025-08-31 13:10:52,067 - __main__ - INFO - <module>:384 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:10:52,067 - __main__ - INFO - <module>:385 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:10:52,112 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 13:10:52,117 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 13:10:54,507 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 13:10:54,625 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 13:10:55,420 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 13:10:55,421 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:10:55,421 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 13:10:55,422 - __main__ - ERROR - <module>:113 - Invalid credentials file: [Errno 2] No such file or directory: 'D:\\projects\\eighth-pursuit-470608-b4-dc6b15cd6ff8.json'
+2025-08-31 13:11:28,851 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 13:11:28,851 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:11:28,851 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 13:11:28,853 - __main__ - ERROR - <module>:113 - Invalid credentials file: [Errno 2] No such file or directory: 'D:\\projects\\eighth-pursuit-470608-b4-dc6b15cd6ff8.json'
+2025-08-31 13:13:25,862 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 13:13:25,863 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:13:25,863 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 13:13:25,864 - __main__ - INFO - <module>:112 - Credentials file is valid JSON. Project ID: text-recognition1-470608
+2025-08-31 13:13:25,864 - __main__ - INFO - <module>:121 - Google Cloud credentials path: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:13:25,865 - __main__ - INFO - <module>:123 - Google Cloud credentials file found
+2025-08-31 13:13:25,868 - __main__ - INFO - <module>:393 - Simple OCR Service starting up...
+2025-08-31 13:13:25,868 - __main__ - INFO - <module>:394 - Listening on 0.0.0.0:8086
+2025-08-31 13:13:25,868 - __main__ - INFO - <module>:395 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:13:25,868 - __main__ - INFO - <module>:396 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:13:25,917 - werkzeug - INFO - _log:97 - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8086
+ * Running on http://192.168.1.14:8086
+2025-08-31 13:13:25,917 - werkzeug - INFO - _log:97 - [33mPress CTRL+C to quit[0m
+2025-08-31 13:13:25,919 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 13:13:26,590 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 13:13:26,590 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:13:26,590 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 13:13:26,592 - __main__ - INFO - <module>:112 - Credentials file is valid JSON. Project ID: text-recognition1-470608
+2025-08-31 13:13:26,592 - __main__ - INFO - <module>:121 - Google Cloud credentials path: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:13:26,592 - __main__ - INFO - <module>:123 - Google Cloud credentials file found
+2025-08-31 13:13:26,595 - __main__ - INFO - <module>:393 - Simple OCR Service starting up...
+2025-08-31 13:13:26,595 - __main__ - INFO - <module>:394 - Listening on 0.0.0.0:8086
+2025-08-31 13:13:26,595 - __main__ - INFO - <module>:395 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:13:26,596 - __main__ - INFO - <module>:396 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:13:26,633 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 13:13:26,637 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 13:13:32,227 - __main__ - INFO - log_request:83 - ================================================================================
+2025-08-31 13:13:32,227 - __main__ - INFO - log_request:84 - INCOMING REQUEST DETECTED
+2025-08-31 13:13:32,227 - __main__ - INFO - log_request:85 - ================================================================================
+2025-08-31 13:13:32,227 - __main__ - INFO - log_request:86 - Timestamp: 2025-08-31 13:13:32.227631
+2025-08-31 13:13:32,227 - __main__ - INFO - log_request:87 - Remote Address: 192.168.1.7
+2025-08-31 13:13:32,227 - __main__ - INFO - log_request:88 - Method: POST
+2025-08-31 13:13:32,228 - __main__ - INFO - log_request:89 - URL: http://192.168.1.14:8086/extract-text
+2025-08-31 13:13:32,228 - __main__ - INFO - log_request:90 - Headers: {'Accept': 'application/json, text/plain, */*', 'Content-Type': 'multipart/form-data; boundary=a1b064d8-1ec7-4998-82eb-fb7e3e3e8b8a', 'Content-Length': '1292184', 'Host': '192.168.1.14:8086', 'Connection': 'Keep-Alive', 'Accept-Encoding': 'gzip', 'User-Agent': 'okhttp/4.12.0'}
+2025-08-31 13:13:32,369 - __main__ - INFO - log_request:91 - Files: ['image']
+2025-08-31 13:13:32,369 - __main__ - INFO - log_request:92 - Form Data: No form data
+2025-08-31 13:13:32,369 - __main__ - INFO - log_request:93 - ================================================================================
+2025-08-31 13:13:32,370 - __main__ - INFO - extract_text:245 - === TEXT EXTRACTION REQUEST STARTED ===
+2025-08-31 13:13:32,370 - __main__ - INFO - extract_text:246 - Request method: POST
+2025-08-31 13:13:32,370 - __main__ - INFO - extract_text:247 - Request headers: {'Accept': 'application/json, text/plain, */*', 'Content-Type': 'multipart/form-data; boundary=a1b064d8-1ec7-4998-82eb-fb7e3e3e8b8a', 'Content-Length': '1292184', 'Host': '192.168.1.14:8086', 'Connection': 'Keep-Alive', 'Accept-Encoding': 'gzip', 'User-Agent': 'okhttp/4.12.0'}
+2025-08-31 13:13:32,370 - __main__ - INFO - extract_text:248 - Request files keys: ['image']
+2025-08-31 13:13:32,370 - __main__ - INFO - extract_text:262 - ======================File exists: image.jpg====================================
+2025-08-31 13:13:32,371 - __main__ - INFO - extract_text:263 - File content type: image/jpeg
+2025-08-31 13:13:32,371 - __main__ - INFO - extract_text:264 - File stream: <tempfile.SpooledTemporaryFile object at 0x00000191D7254490>
+2025-08-31 13:13:32,371 - __main__ - INFO - extract_text:286 - ======================File size: 1291979 bytes====================================
+2025-08-31 13:13:32,371 - __main__ - INFO - extract_text:296 - Processing file: image.jpg (1291979 bytes)
+2025-08-31 13:13:32,371 - __main__ - INFO - extract_text:302 - ======================Saving image to: uploads\temp_image.jpg====================================
+2025-08-31 13:13:32,428 - __main__ - INFO - extract_text:308 - ======================Image saved successfully: uploads\temp_image.jpg====================================
+2025-08-31 13:13:32,428 - __main__ - INFO - extract_text:309 - Image dimensions: (2249, 1686)
+2025-08-31 13:13:32,428 - __main__ - INFO - extract_text:315 - ======================Starting text extraction from: uploads\temp_image.jpg====================================
+2025-08-31 13:13:32,429 - __main__ - INFO - extract_text_from_image:135 - Starting text extraction process...
+2025-08-31 13:13:32,429 - __main__ - INFO - extract_text_from_image:136 - Image path: uploads\temp_image.jpg
+2025-08-31 13:13:32,429 - __main__ - INFO - extract_text_from_image:137 - Current working directory: D:\projects\fitness_tracker\ocr-service
+2025-08-31 13:13:32,429 - __main__ - INFO - extract_text_from_image:138 - Google credentials path: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:13:32,430 - __main__ - INFO - extract_text_from_image:143 - Credentials file exists: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:13:32,430 - __main__ - INFO - extract_text_from_image:144 - Credentials file size: 2378 bytes
+2025-08-31 13:13:32,430 - __main__ - INFO - extract_text_from_image:150 - Initializing Google Vision client...
+2025-08-31 13:13:32,451 - __main__ - INFO - extract_text_from_image:152 - Google Vision client initialized successfully
+2025-08-31 13:13:32,460 - __main__ - INFO - extract_text_from_image:156 - 3333
+2025-08-31 13:13:32,460 - __main__ - INFO - extract_text_from_image:161 - Sending request to Google Cloud Vision API...
+2025-08-31 13:13:34,774 - __main__ - INFO - extract_text_from_image:174 - Text extraction successful. Length: 317 characters
+2025-08-31 13:13:34,775 - __main__ - INFO - extract_text:317 - ======================Text extraction completed. Length: 317====================================
+2025-08-31 13:13:34,775 - __main__ - INFO - extract_text:322 - Temporary file cleaned up
+2025-08-31 13:13:34,776 - __main__ - INFO - extract_text:328 - === TEXT EXTRACTION COMPLETED SUCCESSFULLY ===
+2025-08-31 13:13:34,776 - __main__ - INFO - extract_text:329 - Extracted text preview: NUTRITIONAL INFORMATION
+Serving size 1 bar
+Serving size per pack
+Amount per serving
+Energy
+(50g)
+1 B...
+2025-08-31 13:13:34,779 - werkzeug - INFO - _log:97 - 192.168.1.7 - - [31/Aug/2025 13:13:34] "POST /extract-text HTTP/1.1" 200 -
+2025-08-31 13:13:55,480 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 13:13:55,480 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:13:55,480 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 13:13:55,482 - __main__ - INFO - <module>:112 - Credentials file is valid JSON. Project ID: text-recognition1-470608
+2025-08-31 13:13:55,482 - __main__ - INFO - <module>:121 - Google Cloud credentials path: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:13:55,482 - __main__ - INFO - <module>:123 - Google Cloud credentials file found
+2025-08-31 13:13:55,485 - __main__ - INFO - <module>:393 - Simple OCR Service starting up...
+2025-08-31 13:13:55,486 - __main__ - INFO - <module>:394 - Listening on 0.0.0.0:8086
+2025-08-31 13:13:55,486 - __main__ - INFO - <module>:395 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:13:55,486 - __main__ - INFO - <module>:396 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:13:55,539 - werkzeug - INFO - _log:97 - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8086
+ * Running on http://192.168.1.14:8086
+2025-08-31 13:13:55,539 - werkzeug - INFO - _log:97 - [33mPress CTRL+C to quit[0m
+2025-08-31 13:13:55,541 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 13:13:56,233 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 13:13:56,233 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:13:56,234 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 13:13:56,235 - __main__ - INFO - <module>:112 - Credentials file is valid JSON. Project ID: text-recognition1-470608
+2025-08-31 13:13:56,235 - __main__ - INFO - <module>:121 - Google Cloud credentials path: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:13:56,235 - __main__ - INFO - <module>:123 - Google Cloud credentials file found
+2025-08-31 13:13:56,238 - __main__ - INFO - <module>:393 - Simple OCR Service starting up...
+2025-08-31 13:13:56,239 - __main__ - INFO - <module>:394 - Listening on 0.0.0.0:8086
+2025-08-31 13:13:56,239 - __main__ - INFO - <module>:395 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:13:56,239 - __main__ - INFO - <module>:396 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:13:56,279 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 13:13:56,284 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 13:15:24,375 - __main__ - INFO - log_request:83 - ================================================================================
+2025-08-31 13:15:24,376 - __main__ - INFO - log_request:84 - INCOMING REQUEST DETECTED
+2025-08-31 13:15:24,376 - __main__ - INFO - log_request:85 - ================================================================================
+2025-08-31 13:15:24,376 - __main__ - INFO - log_request:86 - Timestamp: 2025-08-31 13:15:24.376439
+2025-08-31 13:15:24,376 - __main__ - INFO - log_request:87 - Remote Address: 192.168.1.7
+2025-08-31 13:15:24,376 - __main__ - INFO - log_request:88 - Method: POST
+2025-08-31 13:15:24,376 - __main__ - INFO - log_request:89 - URL: http://192.168.1.14:8086/extract-text
+2025-08-31 13:15:24,377 - __main__ - INFO - log_request:90 - Headers: {'Accept': 'application/json, text/plain, */*', 'Content-Type': 'multipart/form-data; boundary=6c079a1a-7985-47d8-bbde-a3ae1aa64fdd', 'Content-Length': '1952130', 'Host': '192.168.1.14:8086', 'Connection': 'Keep-Alive', 'Accept-Encoding': 'gzip', 'User-Agent': 'okhttp/4.12.0'}
+2025-08-31 13:15:24,584 - __main__ - INFO - log_request:91 - Files: ['image']
+2025-08-31 13:15:24,584 - __main__ - INFO - log_request:92 - Form Data: No form data
+2025-08-31 13:15:24,585 - __main__ - INFO - log_request:93 - ================================================================================
+2025-08-31 13:15:24,585 - __main__ - INFO - extract_text:245 - === TEXT EXTRACTION REQUEST STARTED ===
+2025-08-31 13:15:24,585 - __main__ - INFO - extract_text:246 - Request method: POST
+2025-08-31 13:15:24,585 - __main__ - INFO - extract_text:247 - Request headers: {'Accept': 'application/json, text/plain, */*', 'Content-Type': 'multipart/form-data; boundary=6c079a1a-7985-47d8-bbde-a3ae1aa64fdd', 'Content-Length': '1952130', 'Host': '192.168.1.14:8086', 'Connection': 'Keep-Alive', 'Accept-Encoding': 'gzip', 'User-Agent': 'okhttp/4.12.0'}
+2025-08-31 13:15:24,585 - __main__ - INFO - extract_text:248 - Request files keys: ['image']
+2025-08-31 13:15:24,585 - __main__ - INFO - extract_text:262 - ======================File exists: image.jpg====================================
+2025-08-31 13:15:24,586 - __main__ - INFO - extract_text:263 - File content type: image/jpeg
+2025-08-31 13:15:24,586 - __main__ - INFO - extract_text:264 - File stream: <tempfile.SpooledTemporaryFile object at 0x000002C685A6B9A0>
+2025-08-31 13:15:24,586 - __main__ - INFO - extract_text:286 - ======================File size: 1951925 bytes====================================
+2025-08-31 13:15:24,586 - __main__ - INFO - extract_text:296 - Processing file: image.jpg (1951925 bytes)
+2025-08-31 13:15:24,586 - __main__ - INFO - extract_text:302 - ======================Saving image to: uploads\temp_image.jpg====================================
+2025-08-31 13:15:24,666 - __main__ - INFO - extract_text:308 - ======================Image saved successfully: uploads\temp_image.jpg====================================
+2025-08-31 13:15:24,667 - __main__ - INFO - extract_text:309 - Image dimensions: (2920, 2191)
+2025-08-31 13:15:24,667 - __main__ - INFO - extract_text:315 - ======================Starting text extraction from: uploads\temp_image.jpg====================================
+2025-08-31 13:15:24,667 - __main__ - INFO - extract_text_from_image:135 - Starting text extraction process...
+2025-08-31 13:15:24,667 - __main__ - INFO - extract_text_from_image:136 - Image path: uploads\temp_image.jpg
+2025-08-31 13:15:24,667 - __main__ - INFO - extract_text_from_image:137 - Current working directory: D:\projects\fitness_tracker\ocr-service
+2025-08-31 13:15:24,668 - __main__ - INFO - extract_text_from_image:138 - Google credentials path: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:15:24,668 - __main__ - INFO - extract_text_from_image:143 - Credentials file exists: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:15:24,668 - __main__ - INFO - extract_text_from_image:144 - Credentials file size: 2378 bytes
+2025-08-31 13:15:24,668 - __main__ - INFO - extract_text_from_image:150 - Initializing Google Vision client...
+2025-08-31 13:15:24,689 - __main__ - INFO - extract_text_from_image:152 - Google Vision client initialized successfully
+2025-08-31 13:15:24,699 - __main__ - INFO - extract_text_from_image:156 - 3333
+2025-08-31 13:15:24,699 - __main__ - INFO - extract_text_from_image:161 - Sending request to Google Cloud Vision API...
+2025-08-31 13:15:28,266 - __main__ - INFO - extract_text_from_image:174 - Text extraction successful. Length: 317 characters
+2025-08-31 13:15:28,267 - __main__ - INFO - extract_text:317 - ======================Text extraction completed. Length: 317====================================
+2025-08-31 13:15:28,267 - __main__ - INFO - extract_text:322 - Temporary file cleaned up
+2025-08-31 13:15:28,268 - __main__ - INFO - extract_text:328 - === TEXT EXTRACTION COMPLETED SUCCESSFULLY ===
+2025-08-31 13:15:28,268 - __main__ - INFO - extract_text:329 - Extracted text preview: NUTRITIONAL INFORMATION
+Serving size 1 bar
+Serving size per pack
+Amount per serving
+Energy
+(50g)
+1 B...
+2025-08-31 13:15:28,271 - werkzeug - INFO - _log:97 - 192.168.1.7 - - [31/Aug/2025 13:15:28] "POST /extract-text HTTP/1.1" 200 -
