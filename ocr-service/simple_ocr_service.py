@@ -12,6 +12,7 @@ Usage:
 
 import os
 import io
+import re
 import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -129,6 +130,149 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def parse_nutritional_data(raw_text):
+    """Parse raw text to extract structured nutritional data"""
+    try:
+        logger.info("Parsing nutritional data from raw text...")
+        logger.info(f"Raw text length: {len(raw_text)} characters")
+        
+        # Convert to lowercase for easier matching
+        text_lower = raw_text.lower()
+        
+        # Initialize nutritional data structure
+        nutritional_data = {
+            'serving_size': None,
+            'energy': None,
+            'protein': None,
+            'carbohydrates': None,
+            'fiber': None,
+            'total_fat': None,
+            'raw_text': raw_text
+        }
+        
+        # Parse serving size
+        serving_patterns = [
+            r'serving size[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams|ml|milliliter|milliliters)',
+            r'per serving[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams|ml|milliliter|milliliters)',
+            r'([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams|ml|milliliter|milliliters)\s*per serving'
+        ]
+        
+        for pattern in serving_patterns:
+            match = re.search(pattern, text_lower)
+            if match:
+                nutritional_data['serving_size'] = {
+                    'value': float(match.group(1)),
+                    'unit': match.group(2)
+                }
+                logger.info(f"Found serving size: {match.group(1)} {match.group(2)}")
+                break
+        
+        # Parse energy/calories
+        energy_patterns = [
+            r'energy[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(kcal|calories|cal)',
+            r'calories[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(kcal|calories|cal)',
+            r'([0-9]+(?:\.[0-9]+)?)\s*(kcal|calories|cal)'
+        ]
+        
+        for pattern in energy_patterns:
+            match = re.search(pattern, text_lower)
+            if match:
+                nutritional_data['energy'] = {
+                    'value': float(match.group(1)),
+                    'unit': match.group(2)
+                }
+                logger.info(f"Found energy: {match.group(1)} {match.group(2)}")
+                break
+        
+        # Parse protein
+        protein_patterns = [
+            r'protein[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)',
+            r'([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)\s*protein'
+        ]
+        
+        for pattern in protein_patterns:
+            match = re.search(pattern, text_lower)
+            if match:
+                nutritional_data['protein'] = {
+                    'value': float(match.group(1)),
+                    'unit': match.group(2)
+                }
+                logger.info(f"Found protein: {match.group(1)} {match.group(2)}")
+                break
+        
+        # Parse carbohydrates
+        carb_patterns = [
+            r'carbohydrates?[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)',
+            r'carbs?[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)',
+            r'([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)\s*carbohydrates?',
+            r'([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)\s*carbs?'
+        ]
+        
+        for pattern in carb_patterns:
+            match = re.search(pattern, text_lower)
+            if match:
+                nutritional_data['carbohydrates'] = {
+                    'value': float(match.group(1)),
+                    'unit': match.group(2)
+                }
+                logger.info(f"Found carbohydrates: {match.group(1)} {match.group(2)}")
+                break
+        
+        # Parse fiber
+        fiber_patterns = [
+            r'fiber[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)',
+            r'dietary fiber[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)',
+            r'([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)\s*fiber',
+            r'([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)\s*dietary fiber'
+        ]
+        
+        for pattern in fiber_patterns:
+            match = re.search(pattern, text_lower)
+            if match:
+                nutritional_data['fiber'] = {
+                    'value': float(match.group(1)),
+                    'unit': match.group(2)
+                }
+                logger.info(f"Found fiber: {match.group(1)} {match.group(2)}")
+                break
+        
+        # Parse total fat
+        fat_patterns = [
+            r'total fat[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)',
+            r'fat[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)',
+            r'([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)\s*total fat',
+            r'([0-9]+(?:\.[0-9]+)?)\s*(g|gram|grams)\s*fat'
+        ]
+        
+        for pattern in fat_patterns:
+            match = re.search(pattern, text_lower)
+            if match:
+                nutritional_data['total_fat'] = {
+                    'value': float(match.group(1)),
+                    'unit': match.group(2)
+                }
+                logger.info(f"Found total fat: {match.group(1)} {match.group(2)}")
+                break
+        
+        # Count how many values were found
+        found_values = sum(1 for value in nutritional_data.values() if value is not None and value != raw_text)
+        logger.info(f"Parsed {found_values} nutritional values from text")
+        
+        return nutritional_data
+        
+    except Exception as e:
+        logger.error(f"Error parsing nutritional data: {e}")
+        return {
+            'serving_size': None,
+            'energy': None,
+            'protein': None,
+            'carbohydrates': None,
+            'fiber': None,
+            'total_fat': None,
+            'raw_text': raw_text,
+            'error': str(e)
+        }
+
 def extract_text_from_image(image_path):
     """Extracts all text from an image using Google Vision API"""
     try:
@@ -150,10 +294,12 @@ def extract_text_from_image(image_path):
         logger.info("Initializing Google Vision client...")
         client = vision.ImageAnnotatorClient()
         logger.info("Google Vision client initialized successfully")
+        
         # Load image file
         with io.open(image_path, "rb") as image_file:
             content = image_file.read()
-        logger.info("3333")
+        logger.info("Image file loaded successfully")
+        
         # Create image object
         image = vision.Image(content=content)
         
@@ -172,10 +318,29 @@ def extract_text_from_image(image_path):
             # First element contains all text
             full_text = texts[0].description
             logger.info(f"Text extraction successful. Length: {len(full_text)} characters")
-            return full_text
+            
+            # Parse the raw text into structured nutritional data
+            nutritional_data = parse_nutritional_data(full_text)
+            
+            return {
+                'raw_text': full_text,
+                'structured_data': nutritional_data
+            }
         else:
             logger.warning("No text detected in image")
-            return ""
+            return {
+                'raw_text': "",
+                'structured_data': {
+                    'serving_size': None,
+                    'energy': None,
+                    'protein': None,
+                    'carbohydrates': None,
+                    'fiber': None,
+                    'total_fat': None,
+                    'raw_text': "",
+                    'error': 'No text detected in image'
+                }
+            }
             
     except Exception as e:
         logger.error(f"Text extraction failed: {e}")
@@ -313,8 +478,8 @@ def extract_text():
         
         # Extract text
         logger.info(f"======================Starting text extraction from: {image_path}====================================")
-        extracted_text = extract_text_from_image(image_path)
-        logger.info(f"======================Text extraction completed. Length: {len(extracted_text)}====================================")
+        extraction_result = extract_text_from_image(image_path)
+        logger.info(f"======================Text extraction completed====================================")
         
         # Clean up temporary file
         try:
@@ -324,14 +489,17 @@ def extract_text():
             logger.warning(f"Failed to cleanup temp file: {cleanup_error}")
         
         # Return response
-        if extracted_text.strip():
+        if extraction_result['raw_text'].strip():
             logger.info("=== TEXT EXTRACTION COMPLETED SUCCESSFULLY ===")
-            logger.info(f"Extracted text preview: {extracted_text[:100]}...")
+            logger.info(f"Raw text preview: {extraction_result['raw_text'][:100]}...")
+            logger.info(f"Structured data: {extraction_result['structured_data']}")
+            
             return jsonify({
                 'success': True,
-                'message': 'Text extracted successfully',
-                'text': extracted_text,
-                'text_length': len(extracted_text)
+                'message': 'Text extracted and parsed successfully',
+                'raw_text': extraction_result['raw_text'],
+                'text_length': len(extraction_result['raw_text']),
+                'nutritional_data': extraction_result['structured_data']
             })
         else:
             logger.warning("No text found in image")

@@ -466,3 +466,128 @@ Energy
 (50g)
 1 B...
 2025-08-31 13:15:28,271 - werkzeug - INFO - _log:97 - 192.168.1.7 - - [31/Aug/2025 13:15:28] "POST /extract-text HTTP/1.1" 200 -
+2025-08-31 13:22:30,424 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 13:22:30,551 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 13:22:31,325 - __main__ - INFO - <module>:71 - ================================================================================
+2025-08-31 13:22:31,326 - __main__ - INFO - <module>:72 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:22:31,326 - __main__ - INFO - <module>:73 - ================================================================================
+2025-08-31 13:22:31,327 - __main__ - INFO - <module>:112 - Credentials file is valid JSON. Project ID: text-recognition1-470608
+2025-08-31 13:22:31,327 - __main__ - INFO - <module>:121 - Google Cloud credentials path: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:22:31,328 - __main__ - INFO - <module>:123 - Google Cloud credentials file found
+2025-08-31 13:22:31,331 - __main__ - INFO - <module>:557 - Simple OCR Service starting up...
+2025-08-31 13:22:31,331 - __main__ - INFO - <module>:558 - Listening on 0.0.0.0:8086
+2025-08-31 13:22:31,331 - __main__ - INFO - <module>:559 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:22:31,331 - __main__ - INFO - <module>:560 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:22:31,377 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 13:22:31,381 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 13:22:42,899 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 13:22:43,061 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 13:22:43,830 - __main__ - INFO - <module>:72 - ================================================================================
+2025-08-31 13:22:43,830 - __main__ - INFO - <module>:73 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:22:43,830 - __main__ - INFO - <module>:74 - ================================================================================
+2025-08-31 13:22:43,832 - __main__ - INFO - <module>:113 - Credentials file is valid JSON. Project ID: text-recognition1-470608
+2025-08-31 13:22:43,832 - __main__ - INFO - <module>:122 - Google Cloud credentials path: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:22:43,832 - __main__ - INFO - <module>:124 - Google Cloud credentials file found
+2025-08-31 13:22:43,835 - __main__ - INFO - <module>:558 - Simple OCR Service starting up...
+2025-08-31 13:22:43,835 - __main__ - INFO - <module>:559 - Listening on 0.0.0.0:8086
+2025-08-31 13:22:43,836 - __main__ - INFO - <module>:560 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:22:43,836 - __main__ - INFO - <module>:561 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:22:43,876 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 13:22:43,881 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 13:22:59,517 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 13:22:59,655 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 13:23:00,466 - __main__ - INFO - <module>:72 - ================================================================================
+2025-08-31 13:23:00,467 - __main__ - INFO - <module>:73 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:23:00,467 - __main__ - INFO - <module>:74 - ================================================================================
+2025-08-31 13:23:00,469 - __main__ - INFO - <module>:113 - Credentials file is valid JSON. Project ID: text-recognition1-470608
+2025-08-31 13:23:00,469 - __main__ - INFO - <module>:122 - Google Cloud credentials path: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:23:00,469 - __main__ - INFO - <module>:124 - Google Cloud credentials file found
+2025-08-31 13:23:00,473 - __main__ - INFO - <module>:561 - Simple OCR Service starting up...
+2025-08-31 13:23:00,473 - __main__ - INFO - <module>:562 - Listening on 0.0.0.0:8086
+2025-08-31 13:23:00,474 - __main__ - INFO - <module>:563 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:23:00,474 - __main__ - INFO - <module>:564 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:23:00,515 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 13:23:00,519 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 13:23:40,233 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 13:23:40,316 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 13:23:41,026 - __main__ - INFO - <module>:72 - ================================================================================
+2025-08-31 13:23:41,026 - __main__ - INFO - <module>:73 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:23:41,026 - __main__ - INFO - <module>:74 - ================================================================================
+2025-08-31 13:23:41,028 - __main__ - INFO - <module>:113 - Credentials file is valid JSON. Project ID: text-recognition1-470608
+2025-08-31 13:23:41,028 - __main__ - INFO - <module>:122 - Google Cloud credentials path: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:23:41,028 - __main__ - INFO - <module>:124 - Google Cloud credentials file found
+2025-08-31 13:23:41,031 - __main__ - INFO - <module>:561 - Simple OCR Service starting up...
+2025-08-31 13:23:41,032 - __main__ - INFO - <module>:562 - Listening on 0.0.0.0:8086
+2025-08-31 13:23:41,032 - __main__ - INFO - <module>:563 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:23:41,032 - __main__ - INFO - <module>:564 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:23:41,071 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 13:23:41,076 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 13:24:11,581 - werkzeug - INFO - _log:97 -  * Detected change in 'D:\\projects\\fitness_tracker\\ocr-service\\simple_ocr_service.py', reloading
+2025-08-31 13:24:11,695 - werkzeug - INFO - _log:97 -  * Restarting with stat
+2025-08-31 13:24:12,422 - __main__ - INFO - <module>:72 - ================================================================================
+2025-08-31 13:24:12,423 - __main__ - INFO - <module>:73 - SIMPLE OCR SERVICE LOGGING INITIALIZED
+2025-08-31 13:24:12,423 - __main__ - INFO - <module>:74 - ================================================================================
+2025-08-31 13:24:12,424 - __main__ - INFO - <module>:113 - Credentials file is valid JSON. Project ID: text-recognition1-470608
+2025-08-31 13:24:12,425 - __main__ - INFO - <module>:122 - Google Cloud credentials path: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:24:12,425 - __main__ - INFO - <module>:124 - Google Cloud credentials file found
+2025-08-31 13:24:12,428 - __main__ - INFO - <module>:561 - Simple OCR Service starting up...
+2025-08-31 13:24:12,428 - __main__ - INFO - <module>:562 - Listening on 0.0.0.0:8086
+2025-08-31 13:24:12,429 - __main__ - INFO - <module>:563 - Request logging enabled - all incoming requests will be logged
+2025-08-31 13:24:12,429 - __main__ - INFO - <module>:564 - File logging enabled - logs saved to logs/simple_ocr_service.log
+2025-08-31 13:24:12,469 - werkzeug - WARNING - _log:97 -  * Debugger is active!
+2025-08-31 13:24:12,473 - werkzeug - INFO - _log:97 -  * Debugger PIN: 847-095-502
+2025-08-31 13:25:21,886 - __main__ - INFO - log_request:84 - ================================================================================
+2025-08-31 13:25:21,887 - __main__ - INFO - log_request:85 - INCOMING REQUEST DETECTED
+2025-08-31 13:25:21,887 - __main__ - INFO - log_request:86 - ================================================================================
+2025-08-31 13:25:21,887 - __main__ - INFO - log_request:87 - Timestamp: 2025-08-31 13:25:21.887381
+2025-08-31 13:25:21,887 - __main__ - INFO - log_request:88 - Remote Address: 192.168.1.7
+2025-08-31 13:25:21,887 - __main__ - INFO - log_request:89 - Method: POST
+2025-08-31 13:25:21,887 - __main__ - INFO - log_request:90 - URL: http://192.168.1.14:8086/extract-text
+2025-08-31 13:25:21,888 - __main__ - INFO - log_request:91 - Headers: {'Accept': 'application/json, text/plain, */*', 'Content-Type': 'multipart/form-data; boundary=c4befe45-5da2-4e01-beb6-1aa816195a2f', 'Content-Length': '1926463', 'Host': '192.168.1.14:8086', 'Connection': 'Keep-Alive', 'Accept-Encoding': 'gzip', 'User-Agent': 'okhttp/4.12.0'}
+2025-08-31 13:25:22,142 - __main__ - INFO - log_request:92 - Files: ['image']
+2025-08-31 13:25:22,142 - __main__ - INFO - log_request:93 - Form Data: No form data
+2025-08-31 13:25:22,142 - __main__ - INFO - log_request:94 - ================================================================================
+2025-08-31 13:25:22,143 - __main__ - INFO - extract_text:410 - === TEXT EXTRACTION REQUEST STARTED ===
+2025-08-31 13:25:22,143 - __main__ - INFO - extract_text:411 - Request method: POST
+2025-08-31 13:25:22,143 - __main__ - INFO - extract_text:412 - Request headers: {'Accept': 'application/json, text/plain, */*', 'Content-Type': 'multipart/form-data; boundary=c4befe45-5da2-4e01-beb6-1aa816195a2f', 'Content-Length': '1926463', 'Host': '192.168.1.14:8086', 'Connection': 'Keep-Alive', 'Accept-Encoding': 'gzip', 'User-Agent': 'okhttp/4.12.0'}
+2025-08-31 13:25:22,143 - __main__ - INFO - extract_text:413 - Request files keys: ['image']
+2025-08-31 13:25:22,143 - __main__ - INFO - extract_text:427 - ======================File exists: image.jpg====================================
+2025-08-31 13:25:22,143 - __main__ - INFO - extract_text:428 - File content type: image/jpeg
+2025-08-31 13:25:22,144 - __main__ - INFO - extract_text:429 - File stream: <tempfile.SpooledTemporaryFile object at 0x0000022C875DA650>
+2025-08-31 13:25:22,144 - __main__ - INFO - extract_text:451 - ======================File size: 1926258 bytes====================================
+2025-08-31 13:25:22,144 - __main__ - INFO - extract_text:461 - Processing file: image.jpg (1926258 bytes)
+2025-08-31 13:25:22,144 - __main__ - INFO - extract_text:467 - ======================Saving image to: uploads\temp_image.jpg====================================
+2025-08-31 13:25:22,215 - __main__ - INFO - extract_text:473 - ======================Image saved successfully: uploads\temp_image.jpg====================================
+2025-08-31 13:25:22,216 - __main__ - INFO - extract_text:474 - Image dimensions: (2635, 1976)
+2025-08-31 13:25:22,216 - __main__ - INFO - extract_text:480 - ======================Starting text extraction from: uploads\temp_image.jpg====================================
+2025-08-31 13:25:22,216 - __main__ - INFO - extract_text_from_image:279 - Starting text extraction process...
+2025-08-31 13:25:22,216 - __main__ - INFO - extract_text_from_image:280 - Image path: uploads\temp_image.jpg
+2025-08-31 13:25:22,217 - __main__ - INFO - extract_text_from_image:281 - Current working directory: D:\projects\fitness_tracker\ocr-service
+2025-08-31 13:25:22,217 - __main__ - INFO - extract_text_from_image:282 - Google credentials path: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:25:22,217 - __main__ - INFO - extract_text_from_image:287 - Credentials file exists: D:/projects/text-recognition1-470608-b972c314b0fd.json
+2025-08-31 13:25:22,217 - __main__ - INFO - extract_text_from_image:288 - Credentials file size: 2378 bytes
+2025-08-31 13:25:22,217 - __main__ - INFO - extract_text_from_image:294 - Initializing Google Vision client...
+2025-08-31 13:25:22,238 - __main__ - INFO - extract_text_from_image:296 - Google Vision client initialized successfully
+2025-08-31 13:25:22,247 - __main__ - INFO - extract_text_from_image:301 - Image file loaded successfully
+2025-08-31 13:25:22,248 - __main__ - INFO - extract_text_from_image:307 - Sending request to Google Cloud Vision API...
+2025-08-31 13:25:25,603 - __main__ - INFO - extract_text_from_image:320 - Text extraction successful. Length: 316 characters
+2025-08-31 13:25:25,604 - __main__ - INFO - parse_nutritional_data:136 - Parsing nutritional data from raw text...
+2025-08-31 13:25:25,604 - __main__ - INFO - parse_nutritional_data:137 - Raw text length: 316 characters
+2025-08-31 13:25:25,605 - __main__ - INFO - parse_nutritional_data:184 - Found energy: 173 kcal
+2025-08-31 13:25:25,605 - __main__ - INFO - parse_nutritional_data:200 - Found protein: 27.8 g
+2025-08-31 13:25:25,606 - __main__ - INFO - parse_nutritional_data:218 - Found carbohydrates: 5.0 g
+2025-08-31 13:25:25,606 - __main__ - INFO - parse_nutritional_data:236 - Found fiber: 5.0 g
+2025-08-31 13:25:25,607 - __main__ - INFO - parse_nutritional_data:254 - Found total fat: 1.2 g
+2025-08-31 13:25:25,607 - __main__ - INFO - parse_nutritional_data:259 - Parsed 5 nutritional values from text
+2025-08-31 13:25:25,607 - __main__ - INFO - extract_text:482 - ======================Text extraction completed====================================
+2025-08-31 13:25:25,608 - __main__ - INFO - extract_text:487 - Temporary file cleaned up
+2025-08-31 13:25:25,608 - __main__ - INFO - extract_text:493 - === TEXT EXTRACTION COMPLETED SUCCESSFULLY ===
+2025-08-31 13:25:25,608 - __main__ - INFO - extract_text:494 - Raw text preview: NUTRITIONAL INFORMATION
+Serving size 1 bar
+Serving size per pack
+Amount per serving
+Energy
+(50g)
+1 B...
+2025-08-31 13:25:25,609 - __main__ - INFO - extract_text:495 - Structured data: {'serving_size': None, 'energy': {'value': 173.0, 'unit': 'kcal'}, 'protein': {'value': 27.8, 'unit': 'g'}, 'carbohydrates': {'value': 5.0, 'unit': 'g'}, 'fiber': {'value': 5.0, 'unit': 'g'}, 'total_fat': {'value': 1.2, 'unit': 'g'}, 'raw_text': 'NUTRITIONAL INFORMATION\nServing size 1 bar\nServing size per pack\nAmount per serving\nEnergy\n(50g)\n1 Bar\n173 Kcal\n10.0 g\nProtein\n27.8 g\nTotal Carbohydrate\n5.0 g\nDietary Fiber\nSugar (from other ingredients)\n1.5 g\n7.6 g\nPolyol (Maltitol)\n15.2 g\nNet Carbs\n5.8 g\nTotal Fat\nSaturated Fat\n1.2 g\nTrans Fat\nCholesterol\nOg\n0 mg'}
+2025-08-31 13:25:25,612 - werkzeug - INFO - _log:97 - 192.168.1.7 - - [31/Aug/2025 13:25:25] "POST /extract-text HTTP/1.1" 200 -

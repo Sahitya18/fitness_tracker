@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert, TouchableOpacity, Modal } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import API_CONFIG from '../utils/config';
+import { useRouter } from 'expo-router';
+import { useAuth } from '../utils/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const WEIGHT_UNITS = ['g', 'kg', 'oz', 'lb', 'ml'];
 
-export default function AddMealManuallyScreen({ navigation }) {
+export default function AddMealManuallyScreen() {
   const [form, setForm] = useState({
     name: '',
     weight: '',
@@ -17,6 +20,8 @@ export default function AddMealManuallyScreen({ navigation }) {
     fiber: '',
   });
   const [showUnitDropdown, setShowUnitDropdown] = useState(false);
+  const router = useRouter();
+  const { userToken } = useAuth();
 
   const handleChange = (key, value) => {
     setForm({ ...form, [key]: value });
@@ -25,6 +30,11 @@ export default function AddMealManuallyScreen({ navigation }) {
   const handleSubmit = async () => {
     if (!form.name || !form.weight || !form.calories) {
       Alert.alert('Validation', 'Please fill in all required fields.');
+      return;
+    }
+
+    if (!userToken) {
+      Alert.alert('Error', 'You must be logged in to add meals.');
       return;
     }
 
@@ -47,6 +57,7 @@ export default function AddMealManuallyScreen({ navigation }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userToken}`,
         },
         body: JSON.stringify(mealData),
       });
@@ -57,12 +68,35 @@ export default function AddMealManuallyScreen({ navigation }) {
       if (response.ok) {
         try {
           const result = await response.json();
+          
+          // Store the newly added meal locally
+          const newMeal = {
+            id: result.id || Date.now(),
+            mealName: form.name,
+            weight: parseFloat(form.weight),
+            weightUnit: form.weightUnit,
+            calories: parseFloat(form.calories),
+            carbs: form.carbs ? parseFloat(form.carbs) : null,
+            protein: form.protein ? parseFloat(form.protein) : null,
+            fats: form.fats ? parseFloat(form.fats) : null,
+            fiber: form.fiber ? parseFloat(form.fiber) : null,
+          };
+          
+          try {
+            await AsyncStorage.setItem('recentMeal', JSON.stringify(newMeal));
+            console.log('Stored recent meal locally:', newMeal);
+          } catch (storageError) {
+            console.error('Error storing meal locally:', storageError);
+          }
+          
           Alert.alert('Success', 'Meal added successfully to database!');
-          if (navigation && navigation.goBack) navigation.goBack();
+          // Navigate back to meal details page
+          router.back();
         } catch (jsonError) {
           console.error('JSON Parse Error:', jsonError);
           Alert.alert('Success', 'Meal added successfully to database!');
-          if (navigation && navigation.goBack) navigation.goBack();
+          // Navigate back to meal details page
+          router.back();
         }
       } else {
         try {

@@ -7,6 +7,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { StreakService } from '../utils/StreakService';
 import Svg, { Circle, G } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DashboardModal from '../components/DashboardModal';
 
 const { width } = Dimensions.get('window');
 
@@ -16,6 +17,7 @@ export default function HomeScreen() {
   const { signOut, userData } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState('home');
+  const [showDashboard, setShowDashboard] = useState(false);
 
   // Load active tab from storage on component mount
   useEffect(() => {
@@ -156,11 +158,13 @@ export default function HomeScreen() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Date Slider */}
       <Surface style={styles.dateSlider}>
-        <Avatar.Image 
-          size={40} 
-          source={{ uri: userData?.profilePic || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&q=80' }} 
-          style={styles.profilePic}
-        />
+        <TouchableOpacity onPress={() => setShowDashboard(true)}>
+          <Avatar.Image 
+            size={40} 
+            source={{ uri: userData?.profilePic || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&q=80' }} 
+            style={styles.profilePic}
+          />
+        </TouchableOpacity>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
@@ -184,11 +188,13 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ))}
         </ScrollView>
-        <Avatar.Image 
-          size={40} 
-          source={{ uri: userData?.profilePic || 'https://via.placeholder.com/40' }} 
-          style={styles.profilePic}
-        />
+        <TouchableOpacity onPress={() => setShowDashboard(true)}>
+          <Avatar.Image 
+            size={40} 
+            source={{ uri: userData?.profilePic || 'https://via.placeholder.com/40' }} 
+            style={styles.profilePic}
+          />
+        </TouchableOpacity>
       </Surface>
 
       {/* Tab Toggle */}
@@ -535,6 +541,12 @@ export default function HomeScreen() {
       <View style={styles.bottomSpacer}>
         <Text style={styles.bottomText}>Swipe up for more content</Text>
       </View>
+
+      {/* Dashboard Modal */}
+      <DashboardModal 
+        visible={showDashboard} 
+        onClose={() => setShowDashboard(false)} 
+      />
     </ScrollView>
   );
 }

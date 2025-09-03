@@ -7,13 +7,13 @@ import com.fittracker.dto.RegisterRequest;
 import com.fittracker.model.User;
 import com.fittracker.repository.UserRepository;
 import com.fittracker.util.PasswordEncryptor;
+import com.fittracker.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Map;
@@ -24,7 +24,6 @@ public class AuthService {
     @Autowired private UserRepository userRepo;
     @Autowired private PasswordEncoder encoder;
     
-    private static final byte[] SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256).getEncoded();
     private static final long TOKEN_VALIDITY = 24 * 60 * 60 * 1000; // 24 hours
 
     public ResponseEntity<?> login(LoginRequest req) {
@@ -57,12 +56,17 @@ public class AuthService {
         }
 
         // Generate JWT token
+        System.out.println("Generating JWT token for user: " + user.getEmail());
+        System.out.println("Using secret key: " + JwtUtil.getSecretString().substring(0, 20) + "...");
+        
         String token = Jwts.builder()
             .setSubject(user.getEmail())
             .setIssuedAt(new Date())
             .setExpiration(new Date(System.currentTimeMillis() + TOKEN_VALIDITY))
-            .signWith(Keys.hmacShaKeyFor(SECRET_KEY))
+            .signWith(JwtUtil.getSecretKey())
             .compact();
+        
+        System.out.println("Generated token: " + token.substring(0, 20) + "...");
 
         // Create response
         LoginResponse response = new LoginResponse();

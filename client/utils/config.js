@@ -1,7 +1,7 @@
 // Centralized configuration for API endpoints
 // Change this IP address when your server IP changes
 const API_CONFIG = {
-  BASE_URL: 'http://192.168.1.14:8080/api',
+  BASE_URL: 'http://192.168.1.9:8080/api',
   TIMEOUT: 10000, // 10 seconds
   ENDPOINTS: {
     AUTH: {
@@ -19,6 +19,10 @@ const API_CONFIG = {
     STREAKS: {
       GET_USER_STREAK: '/streaks/user',
       RECORD_ACTIVITY: '/streaks/record'
+    },
+    MEALS: {
+      MANUAL_MEALS: '/manual-meals',
+      GET_MANUAL_MEALS: '/manual-meals'
     }
   }
 };

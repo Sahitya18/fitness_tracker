@@ -1,0 +1,96 @@
+export const Colors = {
+  light: {
+    primary: '#2563EB', // Modern blue
+    primaryDark: '#1D4ED8',
+    secondary: '#10B981', // Fitness green
+    secondaryDark: '#059669',
+    accent: '#F59E0B', // Energetic orange
+    accentDark: '#D97706',
+    background: '#FFFFFF',
+    surface: '#F8FAFC',
+    surfaceVariant: '#F1F5F9',
+    text: '#1E293B',
+    textSecondary: '#64748B',
+    textTertiary: '#94A3B8',
+    border: '#E2E8F0',
+    borderLight: '#F1F5F9',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    info: '#3B82F6',
+    card: '#FFFFFF',
+    shadow: 'rgba(0, 0, 0, 0.1)',
+    overlay: 'rgba(0, 0, 0, 0.5)',
+    // Fitness-specific colors
+    calories: '#FF6B6B',
+    protein: '#4ECDC4',
+    carbs: '#45B7D1',
+    fats: '#96CEB4',
+    workout: '#FFA726',
+    rest: '#9FA8DA',
+  },
+  dark: {
+    primary: '#3B82F6',
+    primaryDark: '#2563EB',
+    secondary: '#34D399',
+    secondaryDark: '#10B981',
+    accent: '#FBBF24',
+    accentDark: '#F59E0B',
+    background: '#0F172A',
+    surface: '#1E293B',
+    surfaceVariant: '#334155',
+    text: '#F8FAFC',
+    textSecondary: '#CBD5E1',
+    textTertiary: '#94A3B8',
+    border: '#334155',
+    borderLight: '#475569',
+    success: '#34D399',
+    error: '#F87171',
+    warning: '#FBBF24',
+    info: '#60A5FA',
+    card: '#1E293B',
+    shadow: 'rgba(0, 0, 0, 0.3)',
+    overlay: 'rgba(0, 0, 0, 0.7)',
+    // Fitness-specific colors
+    calories: '#FF8A80',
+    protein: '#81C784',
+    carbs: '#64B5F6',
+    fats: '#A5D6A7',
+    workout: '#FFB74D',
+    rest: '#B39DDB',
+  },
+};
+
+export const Gradients = {
+  primary: ['#2563EB', '#1D4ED8'],
+  secondary: ['#10B981', '#059669'],
+  accent: ['#F59E0B', '#D97706'],
+  fitness: ['#2563EB', '#10B981'],
+  sunset: ['#FF6B6B', '#F59E0B'],
+  ocean: ['#3B82F6', '#10B981'],
+  energy: ['#F59E0B', '#EF4444'],
+};
+
+export const Shadows = {
+  small: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  medium: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6.27,
+    elevation: 8,
+  },
+  large: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10.32,
+    elevation: 15,
+  },
+};

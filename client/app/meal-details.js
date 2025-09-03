@@ -1,17 +1,38 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Dimensions, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Dimensions, Alert, ScrollView } from 'react-native';
 import { Surface } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ScannerComponent from '../components/ScannerComponent';
+import API_CONFIG from '../utils/config';
+import { useAuth } from '../utils/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 export default function MealDetailsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [extractedText, setExtractedText] = useState('');
+  const [recentMeal, setRecentMeal] = useState(null);
+  const [loading, setLoading] = useState(false);
   const { returnTab } = useLocalSearchParams();
+  const { userToken } = useAuth();
+
+  useEffect(() => {
+    // Check if there's a recent meal stored locally
+    checkRecentMeal();
+  }, []);
+
+  const checkRecentMeal = async () => {
+    try {
+      const storedMeal = await AsyncStorage.getItem('recentMeal');
+      if (storedMeal) {
+        setRecentMeal(JSON.parse(storedMeal));
+      }
+    } catch (error) {
+      console.error('Error checking recent meal:', error);
+    }
+  };
 
   const handleBack = async () => {
     // Save the return tab to AsyncStorage before going back
@@ -56,6 +77,51 @@ export default function MealDetailsScreen() {
     router.push('/add-meal-manually');
   };
 
+  const clearRecentMeal = async () => {
+    try {
+      await AsyncStorage.removeItem('recentMeal');
+      setRecentMeal(null);
+    } catch (error) {
+      console.error('Error clearing recent meal:', error);
+    }
+  };
+
+  const renderRecentMeal = (meal) => (
+    <Surface style={styles.mealCard}>
+      <View style={styles.mealHeader}>
+        <Text style={styles.mealName}>{meal.mealName}</Text>
+        <TouchableOpacity onPress={clearRecentMeal} style={styles.clearButton}>
+          <MaterialCommunityIcons name="close" size={20} color="#8E8E93" />
+        </TouchableOpacity>
+      </View>
+      
+      <View style={styles.mealInfo}>
+        <Text style={styles.mealWeight}>Weight: {meal.weight} {meal.weightUnit}</Text>
+      </View>
+      
+      <View style={styles.nutritionRow}>
+        <View style={styles.nutritionItem}>
+          <Text style={styles.nutritionLabel}>Calories</Text>
+          <Text style={styles.nutritionValue}>{meal.calories}</Text>
+        </View>
+        <View style={styles.nutritionItem}>
+          <Text style={styles.nutritionLabel}>Protein</Text>
+          <Text style={styles.nutritionValue}>{meal.protein || '0'}g</Text>
+        </View>
+        <View style={styles.nutritionItem}>
+          <Text style={styles.nutritionLabel}>Carbs</Text>
+          <Text style={styles.nutritionValue}>{meal.carbs || '0'}g</Text>
+        </View>
+        <View style={styles.nutritionItem}>
+          <Text style={styles.nutritionLabel}>Fats</Text>
+          <Text style={styles.nutritionValue}>{meal.fats || '0'}g</Text>
+        </View>
+      </View>
+      
+      
+    </Surface>
+  );
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -91,7 +157,18 @@ export default function MealDetailsScreen() {
 
       {/* Content Area */}
       <View style={styles.contentArea}>
-        <Text style={styles.contentText}>Search results will appear here</Text>
+        {recentMeal ? (
+          <View style={styles.recentMealContainer}>
+            <Text style={styles.sectionTitle}>Recently Added Meal</Text>
+            {renderRecentMeal(recentMeal)}
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="food-apple" size={48} color="#8E8E93" />
+            <Text style={styles.contentText}>No meals added yet</Text>
+            <Text style={styles.subText}>Add your first meal manually or scan a food item</Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -118,8 +195,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  placeholder: {
-    width: 40,
+  refreshButton: {
+    padding: 8,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -161,11 +238,85 @@ const styles = StyleSheet.create({
   },
   contentArea: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   contentText: {
     color: '#8E8E93',
     fontSize: 16,
+    textAlign: 'center',
+  },
+  sectionTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  mealCard: {
+    backgroundColor: '#252830',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  mealHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  mealName: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  mealWeight: {
+    color: '#8E8E93',
+    fontSize: 14,
+  },
+  nutritionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  nutritionItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  nutritionLabel: {
+    color: '#8E8E93',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  nutritionValue: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  subText: {
+    color: '#8E8E93',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  clearButton: {
+    padding: 8,
+  },
+  mealInfo: {
+    marginBottom: 12,
+  },
+  successMessage: {
+    color: '#4CAF50',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  recentMealContainer: {
+    marginTop: 16,
+  },
+  placeholder: {
+    width: 40, // Adjust as needed for spacing
   },
 }); 

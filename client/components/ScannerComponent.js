@@ -83,13 +83,29 @@ export default function ScannerComponent({ onTextExtracted }) {
       console.log('📄 Response data:', response.data);
 
       if (response.data && response.data.success) {
-        const extractedText = response.data.text;
-        console.log('📝 Extracted text:', extractedText);
-        console.log('📏 Text length:', response.data.text_length);
+        // Handle structured OCR response format
+        let extractedText = '';
+        let nutritionalData = null;
         
-        // Pass the extracted text to parent component
+        if (response.data.raw_text) {
+          // New structured OCR response
+          extractedText = response.data.raw_text;
+          nutritionalData = response.data.nutritional_data;
+          console.log('📝 Raw text:', extractedText);
+          console.log('📏 Text length:', response.data.text_length);
+          console.log('🥗 Nutritional data:', response.data.nutritional_data);
+        } else if (response.data.text) {
+          // Fallback for old format
+          extractedText = response.data.text;
+          console.log('📝 Legacy text:', extractedText);
+        } else {
+          Alert.alert("Error", "No text found in the image.");
+          return;
+        }
+        
+        // Pass both raw text and structured nutritional data
         console.log('/////////////////////////////////////////🎯 FULL EXTRACTED TEXT:////////////////////////////////////////////////////////////', extractedText);
-        onTextExtracted(extractedText);
+        onTextExtracted(extractedText, nutritionalData);
         setShowModal(false);
         setImage(null);
       } else {

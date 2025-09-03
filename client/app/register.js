@@ -1,11 +1,20 @@
 import React, { useState } from 'react';
-import { View, Alert, StyleSheet, ScrollView, Platform } from 'react-native';
-import { TextInput, Button, Text, Surface, ProgressBar, useTheme } from 'react-native-paper';
+import { View, Alert, StyleSheet, ScrollView, Platform, Dimensions, KeyboardAvoidingView, Text, TouchableOpacity } from 'react-native';
+import { TextInput, Button, Surface, ProgressBar, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import API_CONFIG from '../utils/config';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, Shadows } from '../constants/Colors';
+import { useColorScheme } from '../hooks/useColorScheme';
+
+const { height } = Dimensions.get('window');
 
 export default function RegisterScreen() {
   const theme = useTheme();
+  const colorScheme = useColorScheme();
+  const currentColors = Colors[colorScheme || 'light'];
+  
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
@@ -13,10 +22,9 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [emailOtpSent, setEmailOtpSent] = useState(false);
-  // const [mobileOtpSent, setMobileOtpSent] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
-  // const [mobileVerified, setMobileVerified] = useState(false);
   const [secureTextEntry, setSecureTextEntry] = useState(true);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(true);
 
   const validateEmail = (email) => {
     return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
@@ -105,41 +113,6 @@ export default function RegisterScreen() {
     }
   };
 
-  // const sendMobileOtp = async () => {
-  //   if (!mobile) {
-  //     Alert.alert('Validation', 'Please enter your mobile number');
-  //     return;
-  //   }
-  //   if (!validateMobile(mobile)) {
-  //     Alert.alert('Validation', 'Please enter a valid 10-digit mobile number');
-  //     return;
-  //   }
-
-  //   setLoading(true);
-  //   try {
-  //     const res = await fetch(`${BASE_URL}/registration/send-mobile-otp`, {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify({ 
-  //         email: null,
-  //         mobile: mobile,
-  //         otp: null
-  //       }),
-  //     });
-  //     if (res.ok) {
-  //       setMobileOtpSent(true);
-  //       Alert.alert('Success', 'OTP has been sent to your mobile');
-  //     } else {
-  //       const errorText = await res.text();
-  //       Alert.alert('Failed', errorText || 'Failed to send OTP');
-  //     }
-  //   } catch (err) {
-  //     Alert.alert('Error', err.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const verifyEmailOtp = async () => {
     if (!otp) {
       Alert.alert('Validation', 'Please enter the OTP');
@@ -171,37 +144,6 @@ export default function RegisterScreen() {
       setLoading(false);
     }
   };
-
-  // const verifyMobileOtp = async () => {
-  //   if (!otp) {
-  //     Alert.alert('Validation', 'Please enter the OTP');
-  //     return;
-  //   }
-
-  //   setLoading(true);
-  //   try {
-  //     const res = await fetch(`${BASE_URL}/registration/verify-otp`, {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify({ 
-  //         email: null,
-  //         mobile: mobile,
-  //         otp: otp
-  //       }),
-  //     });
-  //     if (res.ok) {
-  //       setMobileVerified(true);
-  //       Alert.alert('Success', 'Mobile number verified successfully');
-  //     } else {
-  //       const errorText = await res.text();
-  //       Alert.alert('Failed', errorText || 'Invalid OTP. Please try again.');
-  //     }
-  //   } catch (err) {
-  //     Alert.alert('Error', err.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const handleRegister = async () => {
     if (!email || !mobile || !password || !confirmPassword) {
@@ -272,145 +214,338 @@ export default function RegisterScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <Surface style={styles.surface}>
-        <Text variant="headlineMedium" style={styles.title}>Create Account</Text>
-        
-        <View style={styles.stepIndicator}>
-          <Text variant="titleMedium" style={styles.subtitle}>Step 1: Basic Information</Text>
-          <ProgressBar
-            progress={0.3}
-            color={theme.colors.primary}
-            style={styles.progressBar}
-          />
-        </View>
+    <KeyboardAvoidingView 
+      style={[styles.container, { backgroundColor: currentColors.background }]} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header Section with Gradient */}
+        <LinearGradient
+          colors={[currentColors.primary, currentColors.secondary]}
+          style={styles.headerGradient}
+        >
+          <View style={styles.headerContent}>
+            <View style={[styles.logoContainer, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
+              <MaterialCommunityIcons 
+                name="account-plus" 
+                size={48} 
+                color="white" 
+              />
+            </View>
+            <Text style={styles.appName}>Join FitMe</Text>
+            <Text style={styles.tagline}>Start Your Fitness Journey Today</Text>
+          </View>
+        </LinearGradient>
 
-        <View style={styles.section}>
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            mode="outlined"
-            style={styles.input}
-            error={email && !validateEmail(email)}
-            disabled={emailVerified}
-          />
-          <Button
-            mode="contained"
-            onPress={sendEmailOtp}
-            loading={loading}
-            disabled={loading || !validateEmail(email) || emailVerified}
-            style={styles.actionButton}
-          >
-            Send Email OTP
-          </Button>
-        </View>
+        {/* Registration Form Section */}
+        <View style={styles.formContainer}>
+          <Surface style={[styles.formCard, { backgroundColor: currentColors.card }, Shadows.medium]}>
+            <Text style={[styles.welcomeText, { color: currentColors.text }]}>Create Account</Text>
+            <Text style={[styles.subtitleText, { color: currentColors.textSecondary }]}>Step 1: Basic Information</Text>
+            
+            {/* Progress Bar */}
+            <View style={styles.progressContainer}>
+              <ProgressBar
+                progress={0.3}
+                color={currentColors.primary}
+                style={styles.progressBar}
+              />
+            </View>
 
-        {emailOtpSent && !emailVerified && (
-          <View style={styles.section}>
-            <TextInput
-              label="Enter Email OTP"
-              value={otp}
-              onChangeText={setOtp}
-              keyboardType="number-pad"
-              mode="outlined"
-              style={styles.input}
-            />
+            {/* Email Section */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Email Verification</Text>
+              <View style={[styles.inputContainer, { 
+                backgroundColor: 'transparent',
+                borderColor: currentColors.border
+              }]}>
+                <MaterialCommunityIcons 
+                  name="email-outline" 
+                  size={20} 
+                  color={currentColors.textSecondary} 
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  placeholder="Email address"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  style={[styles.input, { color: currentColors.text }]}
+                  placeholderTextColor={currentColors.textTertiary}
+                  editable={!emailVerified}
+                />
+              </View>
+              
+              {!emailVerified && (
+                <Button
+                  mode="contained"
+                  onPress={sendEmailOtp}
+                  loading={loading}
+                  disabled={loading || !validateEmail(email)}
+                  style={[styles.actionButton, { backgroundColor: currentColors.primary }]}
+                  contentStyle={styles.actionButtonContent}
+                  labelStyle={styles.actionButtonLabel}
+                >
+                  Send Email OTP
+                </Button>
+              )}
+              
+              {emailVerified && (
+                <View style={[styles.verifiedContainer, { backgroundColor: currentColors.success + '20' }]}>
+                  <MaterialCommunityIcons 
+                    name="check-circle" 
+                    size={20} 
+                    color={currentColors.success} 
+                  />
+                  <Text style={[styles.verifiedText, { color: currentColors.success }]}>
+                    Email verified successfully
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* OTP Verification Section */}
+            {emailOtpSent && !emailVerified && (
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Enter OTP</Text>
+                <View style={[styles.inputContainer, { 
+                  backgroundColor: 'transparent',
+                  borderColor: currentColors.border
+                }]}>
+                  <MaterialCommunityIcons 
+                    name="key-outline" 
+                    size={20} 
+                    color={currentColors.textSecondary} 
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    placeholder="Enter 6-digit OTP"
+                    value={otp}
+                    onChangeText={setOtp}
+                    keyboardType="number-pad"
+                    style={[styles.input, { color: currentColors.text }]}
+                    placeholderTextColor={currentColors.textTertiary}
+                    maxLength={6}
+                  />
+                </View>
+                <Button
+                  mode="contained"
+                  onPress={verifyEmailOtp}
+                  loading={loading}
+                  disabled={loading || !otp}
+                  style={[styles.actionButton, { backgroundColor: currentColors.secondary }]}
+                  contentStyle={styles.actionButtonContent}
+                  labelStyle={styles.actionButtonLabel}
+                >
+                  Verify OTP
+                </Button>
+              </View>
+            )}
+
+            {/* Additional Information Section */}
+            <View style={[styles.section, { opacity: emailVerified ? 1 : 0.6 }]}>
+              <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Account Details</Text>
+              
+              <View style={[styles.inputContainer, { 
+                backgroundColor: 'transparent',
+                borderColor: currentColors.border
+              }]}>
+                <MaterialCommunityIcons 
+                  name="phone-outline" 
+                  size={20} 
+                  color={currentColors.textSecondary} 
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  placeholder="Mobile number (10 digits)"
+                  value={mobile}
+                  onChangeText={setMobile}
+                  keyboardType="phone-pad"
+                  style={[styles.input, { color: currentColors.text }]}
+                  placeholderTextColor={currentColors.textTertiary}
+                  editable={emailVerified}
+                  maxLength={10}
+                />
+              </View>
+
+              <View style={[styles.inputContainer, { 
+                backgroundColor: 'transparent',
+                borderColor: currentColors.border
+              }]}>
+                <MaterialCommunityIcons 
+                  name="lock-outline" 
+                  size={20} 
+                  color={currentColors.textSecondary} 
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  placeholder="Password (min 6 characters)"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={secureTextEntry}
+                  style={[styles.input, { color: currentColors.text }]}
+                  placeholderTextColor={currentColors.textTertiary}
+                  editable={emailVerified}
+                />
+                <TouchableOpacity 
+                  onPress={() => setSecureTextEntry(!secureTextEntry)}
+                  style={styles.eyeIcon}
+                >
+                  <MaterialCommunityIcons 
+                    name={secureTextEntry ? "eye-off" : "eye"} 
+                    size={20} 
+                    color={currentColors.textSecondary} 
+                  />
+                </TouchableOpacity>
+              </View>
+
+              <View style={[styles.inputContainer, { 
+                backgroundColor: 'transparent',
+                borderColor: currentColors.border
+              }]}>
+                <MaterialCommunityIcons 
+                  name="lock-check-outline" 
+                  size={20} 
+                  color={currentColors.textSecondary} 
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  placeholder="Confirm password"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={showConfirmPassword}
+                  style={[styles.input, { color: currentColors.text }]}
+                  placeholderTextColor={currentColors.textTertiary}
+                  editable={emailVerified}
+                />
+                <TouchableOpacity 
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={styles.eyeIcon}
+                >
+                  <MaterialCommunityIcons 
+                    name={showConfirmPassword ? "eye-off" : "eye"} 
+                    size={20} 
+                    color={currentColors.textSecondary} 
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Register Button */}
             <Button
               mode="contained"
-              onPress={verifyEmailOtp}
+              onPress={handleRegister}
               loading={loading}
-              disabled={loading || !otp}
-              style={styles.actionButton}
+              disabled={loading || !emailVerified}
+              style={[styles.registerButton, { backgroundColor: currentColors.primary }]}
+              contentStyle={styles.registerButtonContent}
+              labelStyle={styles.registerButtonLabel}
             >
-              Verify Email OTP
+              Create Account
             </Button>
-          </View>
-        )}
 
-        <View style={[styles.section, { opacity: emailVerified ? 1 : 0.6 }]}>
-          <TextInput
-            label="Mobile Number"
-            value={mobile}
-            onChangeText={setMobile}
-            keyboardType="phone-pad"
-            mode="outlined"
-            style={styles.input}
-            error={mobile && !validateMobile(mobile)}
-            disabled={!emailVerified}
-          />
+            {/* Login Link */}
+            <View style={styles.dividerContainer}>
+              <View style={[styles.dividerLine, { backgroundColor: currentColors.border }]} />
+              <Text style={[styles.dividerText, { color: currentColors.textTertiary }]}>or</Text>
+              <View style={[styles.dividerLine, { backgroundColor: currentColors.border }]} />
+            </View>
+
+            <TouchableOpacity 
+              onPress={() => router.push('/login')}
+              style={styles.loginContainer}
+            >
+              <Text style={[styles.loginText, { color: currentColors.textSecondary }]}>
+                Already have an account?{' '}
+                <Text style={[styles.loginLink, { color: currentColors.primary }]}>Sign In</Text>
+              </Text>
+            </TouchableOpacity>
+          </Surface>
         </View>
 
-        <View style={[styles.section, { opacity: emailVerified ? 1 : 0.6 }]}>
-          <TextInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={secureTextEntry}
-            mode="outlined"
-            right={<TextInput.Icon icon={secureTextEntry ? "eye" : "eye-off"} onPress={() => setSecureTextEntry(!secureTextEntry)} />}
-            style={styles.input}
-            error={password && !validatePassword(password)}
-            disabled={!emailVerified}
+        {/* Bottom Decorative Element */}
+        <View style={styles.bottomDecoration}>
+          <MaterialCommunityIcons 
+            name="dumbbell" 
+            size={24} 
+            color={currentColors.secondary} 
           />
-
-          <TextInput
-            label="Confirm Password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry={secureTextEntry}
-            mode="outlined"
-            style={styles.input}
-            error={confirmPassword && password !== confirmPassword}
-            disabled={!emailVerified}
-          />
+          <Text style={[styles.bottomText, { color: currentColors.textTertiary }]}>
+            Ready to start your fitness journey?
+          </Text>
         </View>
-
-        <Button
-          mode="contained"
-          onPress={handleRegister}
-          loading={loading}
-          disabled={loading || !emailVerified}
-          style={styles.registerButton}
-        >
-          Register
-        </Button>
-        
-        <Button
-          mode="text"
-          onPress={() => router.push('/login')}
-          style={styles.linkButton}
-        >
-          Already have an account? Login
-        </Button>
-      </Surface>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   scrollContainer: {
     flexGrow: 1,
-    backgroundColor: '#f5f5f5',
   },
-  surface: {
-    margin: 16,
-    padding: 16,
-    borderRadius: 8,
-    elevation: 4,
+  headerGradient: {
+    height: height * 0.3,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
-  title: {
-    textAlign: 'center',
+  headerContent: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 16,
+    ...Shadows.small,
   },
-  stepIndicator: {
-    marginBottom: 24,
-  },
-  subtitle: {
+  appName: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
     marginBottom: 8,
-    opacity: 0.7,
+  },
+  tagline: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  formContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+    marginTop: -30,
+  },
+  formCard: {
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 20,
+  },
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitleText: {
+    fontSize: 14,
+    color: Colors.light.textSecondary,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  progressContainer: {
+    marginBottom: 24,
   },
   progressBar: {
     height: 8,
@@ -419,18 +554,99 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    borderWidth: 1,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
   input: {
-    marginBottom: 12,
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 16,
+  },
+  eyeIcon: {
+    padding: 8,
   },
   actionButton: {
-    marginBottom: 8,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  actionButtonContent: {
+    paddingVertical: 8,
+  },
+  actionButtonLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
+  },
+  verifiedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  verifiedText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
   },
   registerButton: {
-    marginTop: 8,
-    marginBottom: 16,
-    paddingVertical: 6,
+    borderRadius: 12,
+    marginBottom: 24,
   },
-  linkButton: {
-    marginBottom: 8,
+  registerButtonContent: {
+    paddingVertical: 8,
+  },
+  registerButtonLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+  },
+  loginContainer: {
+    alignItems: 'center',
+  },
+  loginText: {
+    fontSize: 14,
+  },
+  loginLink: {
+    fontWeight: '600',
+  },
+  bottomDecoration: {
+    alignItems: 'center',
+    paddingBottom: 40,
+    paddingTop: 20,
+    minHeight: 80,
+  },
+  bottomText: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 12,
+    opacity: 0.8,
   },
 });
