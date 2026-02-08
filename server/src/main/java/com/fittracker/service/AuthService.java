@@ -1,55 +1,87 @@
 package com.fittracker.service;
 import com.fittracker.dto.ForgotPasswordRequest;
 import com.fittracker.dto.LoginRequest;
+import com.fittracker.dto.LoginResponse;
 import com.fittracker.dto.RegisterRequest;
 
 import com.fittracker.model.User;
 import com.fittracker.repository.UserRepository;
 import com.fittracker.util.PasswordEncryptor;
+import com.fittracker.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import java.util.Date;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 public class AuthService {
-    @Autowired
-    UserRepository repo;
-    @Autowired OTPService otpService;
-
-    public ResponseEntity<?> register(RegisterRequest req) {
-        if (!otpService.verifyOtp(req.getEmail(), req.getOtp()))
-            return ResponseEntity.status(403).body("Invalid OTP");
-
-        User user = new User();
-        user.setEmail(req.getEmail());
-        user.setMobile(req.getMobile());
-        user.setPasswordHash(PasswordEncryptor.hash(req.getPassword()));
-        user.setVerified(true);
-        repo.save(user);
-        return ResponseEntity.ok("Registered");
-    }
-
-    public ResponseEntity<?> sendOtp(RegisterRequest req) {
-        otpService.sendOtp(req.getEmail()); // implement SMS/email
-        return ResponseEntity.ok("OTP sent");
-    }
+    @Autowired private UserRepository userRepo;
+    @Autowired private PasswordEncoder encoder;
+    
+    private static final long TOKEN_VALIDITY = 24 * 60 * 60 * 1000; // 24 hours
 
     public ResponseEntity<?> login(LoginRequest req) {
-        Optional<User> u = repo.findByEmail(req.getEmail());
-        if (u.isPresent() && PasswordEncryptor.matches(req.getPassword(), u.get().getPasswordHash()))
-            return ResponseEntity.ok("Login success");
-        return ResponseEntity.status(401).body("Login failed");
-    }
+        // Validate input
+        if (req.getEmail() == null || req.getEmail().trim().isEmpty()) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Email is required");
+            return ResponseEntity.badRequest().body(error);
+        }
+        if (req.getPassword() == null || req.getPassword().trim().isEmpty()) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Password is required");
+            return ResponseEntity.badRequest().body(error);
+        }
+        // Find user
+        Optional<User> userOpt = userRepo.findByEmail(req.getEmail());
+        if (userOpt.isEmpty()) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Invalid email or password");
+            return ResponseEntity.badRequest().body(error);
+        }
 
-    public ResponseEntity<?> forgotPassword(ForgotPasswordRequest req) {
-        if (!otpService.verifyOtp(req.getEmail(), req.getOtp()))
-            return ResponseEntity.status(403).body("Invalid OTP");
+        // Verify password
+        User user = userOpt.get();
+        System.out.println("password matches:: "+user +" "+(encoder.matches(req.getPassword(), user.getPasswordHash())));
+        if (!encoder.matches(req.getPassword(), user.getPasswordHash())) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Invalid email or password");
+            return ResponseEntity.badRequest().body(error);
+        }
 
-        User user = repo.findByEmail(req.getEmail()).orElseThrow();
-        user.setPasswordHash(PasswordEncryptor.hash(req.getNewPassword()));
-        repo.save(user);
-        return ResponseEntity.ok("Password reset");
+        // Generate JWT token
+        System.out.println("Generating JWT token for user: " + user.getEmail());
+        System.out.println("Using secret key: " + JwtUtil.getSecretString().substring(0, 20) + "...");
+        
+        String token = Jwts.builder()
+            .setSubject(user.getEmail())
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + TOKEN_VALIDITY))
+            .signWith(JwtUtil.getSecretKey())
+            .compact();
+        
+        System.out.println("Generated token: " + token.substring(0, 20) + "...");
+
+        // Create response
+        LoginResponse response = new LoginResponse();
+        response.setId(user.getId());
+        response.setToken(token);
+        response.setEmail(user.getEmail());
+        response.setMobile(user.getMobile());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setDateOfBirth(user.getDateOfBirth());
+        response.setGender(user.getGender());
+        response.setHeight(user.getHeight());
+        response.setWeight(user.getWeight());
+        response.setMessage("Login successful");
+
+        return ResponseEntity.ok(response);
     }
 }
