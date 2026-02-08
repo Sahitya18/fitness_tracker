@@ -10,83 +10,72 @@ import { Colors, Shadows } from '../constants/Colors';
 import { useColorScheme } from '../hooks/useColorScheme';
 
 const { width, height } = Dimensions.get('window');
-
-export default function LoginScreen() {
+export default function ForgotPasswordScreen() {
   const router = useRouter();
-  const { signIn } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const theme = useTheme();
-  const colorScheme = useColorScheme();
+    const { signIn } = useAuth();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const theme = useTheme();
+    const colorScheme = useColorScheme();
   
   // Get current theme colors
   const currentColors = Colors[colorScheme || 'light'];
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Validation', 'Email and password are required');
+  const handleForgotPassword = async () => {
+    if (!email) {
+      Alert.alert('Validation', 'Please enter your email address');
       return;
     }
 
-    setLoading(true);
-    try {
-      // Create request options with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT || 5000);
 
-      console.log('Attempting to connect to:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.LOGIN}`);
-      
-      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.LOGIN}`, {
+    try {
+      const requestOptions = {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email }),
         signal: controller.signal,
         mode: 'cors'
-      });
+      };
 
+      const response = await fetch(`${API_CONFIG.BASE_URL}/password/forgot`, requestOptions);
       clearTimeout(timeoutId);
-      
-      console.log('Response status:', res.status);
-      console.log('Response headers:', JSON.stringify(Object.fromEntries([...res.headers]), null, 2));
 
-      const data = await res.json();
-      
-      if (res.ok && data.token) {
-        // Pass the entire response as user data, it contains all necessary user information
-        await signIn(data.token, data);
-        router.replace('/home');
+      if (response.ok) {
+        Alert.alert(
+          'Success',
+          'Password reset instructions have been sent to your email.'
+        );
+        router.back(); // Go back to previous screen
       } else {
-        Alert.alert('Login Failed', data.message || 'Invalid credentials');
+        const errorText = await response.text();
+        console.error('Server error:', errorText);
+        Alert.alert('Failed', errorText || 'Something went wrong');
       }
     } catch (err) {
-      console.error('Login error details:', {
+      console.error('Network error details:', {
         message: err.message,
         name: err.name,
         stack: err.stack,
         cause: err.cause
       });
-      
       if (err.name === 'AbortError') {
         Alert.alert('Timeout', 'Request timed out. Please check your internet connection and try again.');
       } else {
         Alert.alert(
-          'Connection Error', 
+          'Network Error',
           `Failed to connect to server. Please check:\n\n` +
           `1. Your internet connection\n` +
-          `2. The server is running\n` +
-          `3. You're on the same network as the server\n\n` +
-          `Technical details:\n${err.message}\n` +
-          `URL: ${API_CONFIG.BASE_URL}\n` +
-          `Platform: ${Platform.OS}`
+          `2. The server is running\n\n` +
+          `Technical details:\n${err.message}`
         );
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -120,8 +109,8 @@ export default function LoginScreen() {
         {/* Login Form Section */}
         <View style={styles.formContainer}>
           <Surface style={[styles.formCard, { backgroundColor: currentColors.card }, Shadows.medium]}>
-            <Text style={[styles.welcomeText, { color: currentColors.text }]}>Welcome Back!</Text>
-            <Text style={[styles.subtitleText, { color: currentColors.textSecondary }]}>Sign in to continue your fitness journey</Text>
+            <Text style={[styles.welcomeText, { color: currentColors.text }]}>Forgot Password</Text>
+            <Text style={[styles.subtitleText, { color: currentColors.textSecondary }]}>Enter E-Mail address to get new password</Text>
 
             {/* Email Input */}
             <View style={[styles.inputContainer, { 
@@ -145,75 +134,18 @@ export default function LoginScreen() {
               />
             </View>
 
-            {/* Password Input */}
-            <View style={[styles.inputContainer, { 
-              backgroundColor: currentColors.surfaceVariant,
-              borderColor: currentColors.borderLight 
-            }]}>
-              <MaterialCommunityIcons 
-                name="lock-outline" 
-                size={20} 
-                color={currentColors.textSecondary} 
-                style={styles.inputIcon}
-              />
-              <TextInput
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                style={[styles.input, { color: currentColors.text }]}
-                placeholderTextColor={currentColors.textTertiary}
-              />
-              <TouchableOpacity 
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeIcon}
-              >
-                <MaterialCommunityIcons 
-                  name={showPassword ? "eye-off" : "eye"} 
-                  size={20} 
-                  color={currentColors.textSecondary} 
-                />
-              </TouchableOpacity>
-            </View>
-
-            {/* Forgot Password Link */}
-            <TouchableOpacity 
-              onPress={() => router.push('/forgot-password-new')}
-              style={styles.forgotPasswordContainer}
-            >
-              <Text style={[styles.forgotPasswordText, { color: currentColors.primary }]}>Forgot Password?</Text>
-            </TouchableOpacity>
-
             {/* Login Button */}
             <Button
               mode="contained"
-              onPress={handleLogin}
+              onPress={handleForgotPassword}
               loading={loading}
               disabled={loading}
               style={[styles.loginButton, { backgroundColor: currentColors.primary }]}
               contentStyle={styles.loginButtonContent}
               labelStyle={styles.loginButtonLabel}
             >
-              {loading ? "Signing In..." : "Sign In"}
-            </Button>
-
-            {/* Divider */}
-            <View style={styles.dividerContainer}>
-              <View style={[styles.dividerLine, { backgroundColor: currentColors.border }]} />
-              <Text style={[styles.dividerText, { color: currentColors.textTertiary }]}>or</Text>
-              <View style={[styles.dividerLine, { backgroundColor: currentColors.border }]} />
-            </View>
-
-            {/* Register Link */}
-            <TouchableOpacity 
-              onPress={() => router.push('/register')}
-              style={styles.registerContainer}
-            >
-              <Text style={[styles.registerText, { color: currentColors.textSecondary }]}>
-                Don't have an account?{' '}
-                <Text style={[styles.registerLink, { color: currentColors.primary }]}>Sign Up</Text>
-              </Text>
-            </TouchableOpacity>
+                {loading ? "Sending..." : "Send Reset Link"}
+            </Button> 
           </Surface>
         </View>
 

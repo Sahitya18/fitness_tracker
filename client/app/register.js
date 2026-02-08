@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Alert, StyleSheet, ScrollView, Platform, Dimensions, KeyboardAvoidingView, Text, TouchableOpacity } from 'react-native';
-import { TextInput, Button, Surface, ProgressBar, useTheme } from 'react-native-paper';
+import { View, Alert, StyleSheet, ScrollView,TextInput, Platform, Dimensions, KeyboardAvoidingView, Text, TouchableOpacity } from 'react-native';
+import { Button, Surface, ProgressBar, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import API_CONFIG from '../utils/config';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -249,7 +249,7 @@ export default function RegisterScreen() {
             {/* Progress Bar */}
             <View style={styles.progressContainer}>
               <ProgressBar
-                progress={0.3}
+                progress={0.1}
                 color={currentColors.primary}
                 style={styles.progressBar}
               />
@@ -259,8 +259,8 @@ export default function RegisterScreen() {
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Email Verification</Text>
               <View style={[styles.inputContainer, { 
-                backgroundColor: 'transparent',
-                borderColor: currentColors.border
+                backgroundColor: currentColors.surfaceVariant,
+                borderColor: currentColors.borderLight 
               }]}>
                 <MaterialCommunityIcons 
                   name="email-outline" 
@@ -276,11 +276,11 @@ export default function RegisterScreen() {
                   autoCapitalize="none"
                   style={[styles.input, { color: currentColors.text }]}
                   placeholderTextColor={currentColors.textTertiary}
-                  editable={!emailVerified}
+                  // editable={!emailVerified}
                 />
               </View>
               
-              {!emailVerified && (
+              {/* {!emailVerified && (
                 <Button
                   mode="contained"
                   onPress={sendEmailOtp}
@@ -292,7 +292,7 @@ export default function RegisterScreen() {
                 >
                   Send Email OTP
                 </Button>
-              )}
+              )} */}
               
               {emailVerified && (
                 <View style={[styles.verifiedContainer, { backgroundColor: currentColors.success + '20' }]}>
@@ -309,7 +309,7 @@ export default function RegisterScreen() {
             </View>
 
             {/* OTP Verification Section */}
-            {emailOtpSent && !emailVerified && (
+            {/* {emailOtpSent && !emailVerified && (
               <View style={styles.section}>
                 <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Enter OTP</Text>
                 <View style={[styles.inputContainer, { 
@@ -344,15 +344,19 @@ export default function RegisterScreen() {
                   Verify OTP
                 </Button>
               </View>
-            )}
+            )} */}
 
             {/* Additional Information Section */}
-            <View style={[styles.section, { opacity: emailVerified ? 1 : 0.6 }]}>
+
+            {/* otp section is removed to simplify the flow, we can add it back if needed in future iterations */}
+            {/* <View style={[styles.section, { opacity: emailVerified ? 1 : 0.6 }]}> */}
+            
+            <View style={[styles.section, { opacity: 1 }]}>
               <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Account Details</Text>
-              
+
               <View style={[styles.inputContainer, { 
-                backgroundColor: 'transparent',
-                borderColor: currentColors.border
+                backgroundColor: currentColors.surfaceVariant,
+                borderColor: currentColors.borderLight 
               }]}>
                 <MaterialCommunityIcons 
                   name="phone-outline" 
@@ -367,14 +371,13 @@ export default function RegisterScreen() {
                   keyboardType="phone-pad"
                   style={[styles.input, { color: currentColors.text }]}
                   placeholderTextColor={currentColors.textTertiary}
-                  editable={emailVerified}
+                  // editable={emailVerified}
                   maxLength={10}
                 />
               </View>
-
               <View style={[styles.inputContainer, { 
-                backgroundColor: 'transparent',
-                borderColor: currentColors.border
+                backgroundColor: currentColors.surfaceVariant,
+                borderColor: currentColors.borderLight 
               }]}>
                 <MaterialCommunityIcons 
                   name="lock-outline" 
@@ -389,7 +392,7 @@ export default function RegisterScreen() {
                   secureTextEntry={secureTextEntry}
                   style={[styles.input, { color: currentColors.text }]}
                   placeholderTextColor={currentColors.textTertiary}
-                  editable={emailVerified}
+                  // editable={emailVerified}
                 />
                 <TouchableOpacity 
                   onPress={() => setSecureTextEntry(!secureTextEntry)}
@@ -402,10 +405,9 @@ export default function RegisterScreen() {
                   />
                 </TouchableOpacity>
               </View>
-
               <View style={[styles.inputContainer, { 
-                backgroundColor: 'transparent',
-                borderColor: currentColors.border
+                backgroundColor: currentColors.surfaceVariant,
+                borderColor: currentColors.borderLight 
               }]}>
                 <MaterialCommunityIcons 
                   name="lock-check-outline" 
@@ -420,7 +422,7 @@ export default function RegisterScreen() {
                   secureTextEntry={showConfirmPassword}
                   style={[styles.input, { color: currentColors.text }]}
                   placeholderTextColor={currentColors.textTertiary}
-                  editable={emailVerified}
+                  // editable={emailVerified}
                 />
                 <TouchableOpacity 
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -440,7 +442,7 @@ export default function RegisterScreen() {
               mode="contained"
               onPress={handleRegister}
               loading={loading}
-              disabled={loading || !emailVerified}
+              // disabled={!emailVerified}
               style={[styles.registerButton, { backgroundColor: currentColors.primary }]}
               contentStyle={styles.registerButtonContent}
               labelStyle={styles.registerButtonLabel}
