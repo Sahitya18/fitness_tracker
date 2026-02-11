@@ -92,7 +92,7 @@ export default function HomeScreen() {
       console.log('Error saving active tab:', error);
     }
   };
-  const [caloriesConsumed, setCaloriesConsumed] = useState(1400);
+  const [caloriesConsumed, setCaloriesConsumed] = useState(0);
   const [caloriesGoal] = useState(2000);
   const [macros] = useState({
     protein: 65,

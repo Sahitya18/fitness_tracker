@@ -6,15 +6,19 @@ import com.fitness.auth_service.model.User;
 import com.fitness.auth_service.repository.UserRepository;
 import com.fitness.auth_service.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.stereotype.Service;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@Service
 public class AuthService {
 
     @Autowired
@@ -22,8 +26,11 @@ public class AuthService {
     @Autowired
     private PasswordEncoder encoder;
 
-    private static final long TOKEN_VALIDITY = 24 * 60 * 60 * 1000; // 24 hours
+    private final JwtUtil jwtUtil;
 
+    public AuthService(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
 
     public ResponseEntity<?> login(LoginRequest req) {
         // Validate input
@@ -54,23 +61,10 @@ public class AuthService {
             return ResponseEntity.badRequest().body(error);
         }
 
-        // Generate JWT token
-        System.out.println("Generating JWT token for user: " + user.getEmail());
-        System.out.println("Using secret key: " + JwtUtil.getSecretString().substring(0, 20) + "...");
-
-        String token = Jwts.builder()
-                .setSubject(user.getEmail())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + TOKEN_VALIDITY))
-                .signWith(JwtUtil.getSecretKey())
-                .compact();
-//
-//        System.out.println("Generated token: " + token.substring(0, 20) + "...");
-
         // Create response
         LoginResponse response = new LoginResponse();
         response.setId(user.getId());
-        response.setToken(token);
+        response.setToken(jwtUtil.generateToken(req.getEmail()));
         response.setEmail(user.getEmail());
         response.setMobile(user.getMobile());
         response.setFirstName(user.getFirstName());

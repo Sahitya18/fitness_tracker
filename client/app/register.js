@@ -171,14 +171,17 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (!emailVerified) {
-      Alert.alert('Validation', 'Please verify email');
-      return;
-    }
+    // if (!emailVerified) {
+    //   Alert.alert('Validation', 'Please verify email');
+    //   return;
+    // }
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`, {
+      // const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`, {
+      console.log("REGISTER URL:", API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER);
+      const res = await fetch(`${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`, {
+        
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

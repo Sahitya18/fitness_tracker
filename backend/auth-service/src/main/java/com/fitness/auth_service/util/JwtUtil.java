@@ -1,27 +1,37 @@
 package com.fitness.auth_service.util;
 
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Date;
 
+@Component
 public class JwtUtil {
 
-    private static String SECRET_STRING="";
-    @Value("${spring.jwt.secret.string}")
-    public void setSecretString(String keyString){
-        SECRET_STRING=keyString;
-    }
-    private static final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET_STRING.getBytes());
+    private final Key SECRET_KEY;
+    private static final long TOKEN_VALIDITY = 24 * 60 * 60 * 1000;
 
-    public static Key getSecretKey() {
-        return SECRET_KEY;
+    public JwtUtil(@Value("${spring.jwt.secret.string}") String secret) {
+        this.SECRET_KEY = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    // For debugging
-    public static String getSecretString() {
-        return SECRET_STRING;
+    public String generateToken(String email) {
+        // Generate JWT token
+        System.out.println("Generating JWT token for user: " + email);
+        System.out.println("Using secret key: " + SECRET_KEY + "...");
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + TOKEN_VALIDITY))
+                .signWith(SECRET_KEY)
+                .compact();
     }
 }
