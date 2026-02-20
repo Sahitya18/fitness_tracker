@@ -90,6 +90,7 @@ export default function LoginScreen() {
     }
   };
 
+
   return (
     <KeyboardAvoidingView 
       style={[styles.container, { backgroundColor: currentColors.background }]} 

@@ -51,9 +51,9 @@ export default function AddMealManuallyScreen() {
       };
 
       console.log('Sending meal data:', mealData);
-      console.log('API URL:', `${API_CONFIG.BASE_URL}/manual-meals`);
+      console.log('API URL:', `${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.MEALS.PORT}${API_CONFIG.ENDPOINTS.MEALS.MANUAL_MEALS}`);
       
-      const response = await fetch(`${API_CONFIG.BASE_URL}/manual-meals`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.MEALS.PORT}${API_CONFIG.ENDPOINTS.MEALS.MANUAL_MEALS}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

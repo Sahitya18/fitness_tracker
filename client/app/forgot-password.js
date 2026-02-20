@@ -44,7 +44,7 @@ export default function ForgotPasswordScreen() {
         mode: 'cors'
       };
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/password/forgot`, requestOptions);
+      const response = await fetch(`${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.AUTH.PORT}${API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD}`, requestOptions);
       clearTimeout(timeoutId);
 
       if (response.ok) {
