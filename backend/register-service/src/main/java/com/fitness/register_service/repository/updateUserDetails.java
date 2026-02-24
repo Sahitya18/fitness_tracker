@@ -21,7 +21,13 @@ public interface updateUserDetails extends JpaRepository<User, Long> {
                 date_of_birth = CASE WHEN :field = 'date_of_birth' THEN CAST(:fieldValue AS DATE) ELSE date_of_birth END,
                 height = CASE WHEN :field = 'height' THEN CAST(:fieldValue AS DOUBLE) ELSE height END,
                 weight = CASE WHEN :field = 'weight' THEN CAST(:fieldValue AS DOUBLE) ELSE weight END,
-                updated_at = CURRENT_TIMESTAMP
+                updated_at = CURRENT_TIMESTAMP,
+                goal = CASE WHEN :field = 'goal' THEN :fieldValue ELSE goal END,
+                mealPreference = CASE WHEN :field = 'meal_preference' THEN :fieldValue ELSE meal_preference END,
+                activityLevel = CASE WHEN :field = 'activity_level' THEN :fieldValue ELSE activity_level END,
+                age = CASE WHEN :field = 'age' THEN :fieldValue ELSE age END,
+                workoutPlace = CASE WHEN :field = 'workout_place' THEN :fieldValue ELSE workout_place END,
+                sports = CASE WHEN :field = 'sports' THEN CAST(:fieldValue AS JSON) ELSE sports END
             WHERE email = :email
             """, nativeQuery = true)
     int updateUserFieldByEmail(@Param("email") String email,

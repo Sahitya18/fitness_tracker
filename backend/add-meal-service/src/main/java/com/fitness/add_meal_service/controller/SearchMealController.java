@@ -23,6 +23,7 @@ public class SearchMealController {
 
     @GetMapping("/search")
     public ResponseEntity<List<ManualMealResponse>> searchMeals(@RequestParam String keyword) {
+        System.out.println("API hit");
         if (keyword == null || keyword.trim().length() < 1) {
             return ResponseEntity.badRequest().build();
         }
@@ -31,7 +32,7 @@ public class SearchMealController {
         return ResponseEntity.ok(results);
     }
 
-    @PostMapping("/manual")
+    @PostMapping("/manual-meals")
     public ResponseEntity<?> addManualMeal(@RequestBody ManualMealRequest manualMealRequest) {
         return manualMealService.addManualMeal(manualMealRequest);
     }

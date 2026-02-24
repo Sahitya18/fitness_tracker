@@ -28,7 +28,7 @@ export default function DashboardModal({ visible, onClose }) {
         router.replace('/login');
         return;
       }
-      const response = await fetch(`${API_CONFIG.BASE_URL}/user/profile`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.AUTH.PORT}${API_CONFIG.ENDPOINTS.REGISTRATION.GET_PROFILE}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

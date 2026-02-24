@@ -7,18 +7,19 @@ const API_CONFIG = {
   ENDPOINTS: {
     AUTH: {
       PORT:'8080',
-      LOGIN: '/auth/login',
-      FORGOT_PASSWORD: '/auth/forgot-password',
-      SEND_EMAIL_OTP: '/auth/send-email-otp',
-      SEND_MOBILE_OTP: '/auth/send-mobile-otp'
+      LOGIN: '/api/auth/login',
+      FORGOT_PASSWORD: '/api/auth/forgot-password',
+      SEND_EMAIL_OTP: '/api/auth/send-email-otp',
+      SEND_MOBILE_OTP: '/api/auth/send-mobile-otp'
     },
     REGISTRATION: {
       PORT:'8081',
       SEND_EMAIL_OTP: '/api/registration/send-email-otp',
       VERIFY_OTP: '/api/registration/verify-otp',
       REGISTER: '/api/registration/register',
-      COMPLETE_PROFILE: '/api/registration/complete-profile',
-      UPDATE_PROFILE: '/api/user/update-profile'
+      CREATE_PROFILE: '/api/user/create-profile',
+      UPDATE_PROFILE: '/api/user/update-profile',
+      GET_PROFILE: '/api/user/profile'
     },
     STREAKS: {  
       GET_USER_STREAK: '/streaks/user',
@@ -26,8 +27,9 @@ const API_CONFIG = {
     },
     MEALS: {
       PORT: '8083',
-      MANUAL_MEALS: '/manual-meals',
-      GET_MEALS: '/api/meals/search'
+      MANUAL_MEALS: '/api/meals/manual-meals',
+      GET_MEALS: '/api/meals/search',
+      UPDATE_MEAL:'/api/meals/update-meals'
     }
   }
 };

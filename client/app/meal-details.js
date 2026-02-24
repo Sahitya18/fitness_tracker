@@ -1,3 +1,12 @@
+/**
+ * MealDetailsScreen.jsx - Point 2: Date-specific data
+ * 
+ * Changes:
+ * - Storage keys now include date (e.g., recentMeals_breakfast_2024-02-20)
+ * - Loads meals for the selected date
+ * - API sync includes the selected date
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
@@ -13,8 +22,23 @@ import { useAuth } from '../utils/AuthContext';
 
 const { width } = Dimensions.get('window');
 
-const storageKey = (mealType) =>
-  mealType ? `recentMeals_${mealType}` : 'recentMeals_default';
+const ALL_MEAL_TYPES = [
+  'breakfast',
+  'post_breakfast',
+  'lunch',
+  'post_lunch',
+  'pre_workout',
+  'dinner',
+];
+
+// ═══ POINT 2: Storage key now includes date ═══
+const storageKey = (mealType, date) => {
+  if (!date) return `recentMeals_${mealType}`;
+  const dateStr = new Date(date).toISOString().split('T')[0]; // YYYY-MM-DD
+  return `recentMeals_${mealType}_${dateStr}`;
+};
+
+const toCamelCase = (str) => str.replace(/_([a-z])/g, (_, l) => l.toUpperCase());
 
 export default function MealDetailsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,19 +46,115 @@ export default function MealDetailsScreen() {
   const [loading,     setLoading]     = useState(false);
   const [results,     setResults]     = useState([]);
 
-  const { mealType, mealLabel, returnTab } = useLocalSearchParams();
-  const { userToken } = useAuth();
-  const STORAGE_KEY = storageKey(mealType);
+  // ═══ POINT 2: Get selectedDate from params ═══
+  const { mealType, mealLabel, returnTab, selectedDate } = useLocalSearchParams();
+  const { userToken, userData } = useAuth();
+  
+  // ═══ POINT 2: Storage key includes selected date ═══
+  const STORAGE_KEY = storageKey(mealType, selectedDate);
+
+  console.log('MealDetailsScreen loaded:');
+  console.log('- mealType:', mealType);
+  console.log('- selectedDate:', selectedDate);
+  console.log('- STORAGE_KEY:', STORAGE_KEY);
 
   useFocusEffect(
-    React.useCallback(() => { loadMeals(); }, [mealType])
+    React.useCallback(() => {
+      console.log('=== MEAL DETAILS SCREEN FOCUSED ===');
+      console.log('Loading meals for:', STORAGE_KEY);
+      loadMeals();
+    }, [mealType, selectedDate])
   );
 
   const loadMeals = async () => {
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      setRecentMeals(stored ? JSON.parse(stored) : []);
-    } catch (e) { console.error('loadMeals error:', e); }
+      const meals = stored ? JSON.parse(stored) : [];
+      console.log('Loaded meals count:', meals.length);
+      setRecentMeals(meals);
+    } catch (e) {
+      console.error('loadMeals error:', e);
+    }
+  };
+
+  // ═══ POINT 2: Build all meals payload for the selected date ═══
+  const buildAllMealsPayload = async (currentSlotItems) => {
+    const mealDate = selectedDate
+      ? new Date(selectedDate).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0];
+
+    const meals = [];
+
+    for (const slot of ALL_MEAL_TYPES) {
+      let items;
+      if (slot === mealType) {
+        items = currentSlotItems;
+      } else {
+        const key = storageKey(slot, selectedDate);
+        const stored = await AsyncStorage.getItem(key);
+        items = stored ? JSON.parse(stored) : [];
+      }
+
+      if (items.length === 0) continue;
+
+      const mappedItems = items.map(m => ({
+        name:     m.mealName,
+        quantity: `${m.weight}${m.weightUnit}`,
+        macros: {
+          protein:  parseFloat(m.protein)  || 0,
+          carbs:    parseFloat(m.carbs)    || 0,
+          fat:      parseFloat(m.fats)     || 0,
+          fiber:    parseFloat(m.fiber)    || 0,
+          calories: parseFloat(m.calories) || 0,
+        },
+      }));
+
+      meals.push({
+        mealType:      toCamelCase(slot),
+        items:         mappedItems,
+        totalCalories: mappedItems.reduce((s, i) => s + i.macros.calories, 0),
+      });
+    }
+
+    return { mealDate, userId: userData?.id || null, meals };
+  };
+
+  // ═══ POINT 2: Sync all meals for the selected date ═══
+  const syncAllMealsToBackend = async (currentSlotItems) => {
+    try {
+      const [token, userId] = await AsyncStorage.multiGet(['userToken', 'userId'])
+        .then(pairs => pairs.map(([, v]) => v));
+      if (!token) return;
+
+      const payload = await buildAllMealsPayload(currentSlotItems);
+      if (userId) payload.userId = userData.id;
+      
+      console.log('=== SYNCING TO BACKEND ===');
+      console.log('Date:', payload.mealDate);
+      console.log('Meals:', payload.meals.length);
+      console.log('Full payload:', JSON.stringify(payload, null, 2));
+
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.MEALS.PORT}${API_CONFIG.ENDPOINTS.MEALS.UPDATE_MEAL}`,
+        {
+          method:  'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (response.ok) {
+        console.log('✓ Backend sync successful');
+      } else {
+        const errorText = await response.text();
+        console.error('✗ Backend sync failed:', response.status, errorText);
+      }
+    } catch (error) {
+      console.error('✗ Sync error:', error);
+    }
   };
 
   const removeMeal = async (entryId) => {
@@ -42,46 +162,35 @@ export default function MealDetailsScreen() {
       const updated = recentMeals.filter(m => m.entryId !== entryId);
       setRecentMeals(updated);
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch (e) { console.error('removeMeal error:', e); }
+      await syncAllMealsToBackend(updated);
+    } catch (e) {
+      console.error('removeMeal error:', e);
+    }
   };
 
   const clearAll = async () => {
     try {
       await AsyncStorage.removeItem(STORAGE_KEY);
       setRecentMeals([]);
-    } catch (e) { console.error('clearAll error:', e); }
+      await syncAllMealsToBackend([]);
+    } catch (e) {
+      console.error('clearAll error:', e);
+    }
   };
 
-  // ── Back: navigate to home passing returnTab so HomeScreen restores kitchen ─
-  // const handleBack = () => {
-  //   router.navigate({
-  //     pathname: '/',
-  //     params: { returnTab: returnTab || 'kitchen' },
-  //   });
-  // };
-
-  const handleBack = async () => {
-    try {
-      // Always write the tab we want to return to before popping the screen.
-      // returnTab is always 'kitchen' when coming from a meal card, but we
-      // fall back to 'kitchen' defensively in case the param is ever missing.
-      await AsyncStorage.setItem('activeTab', returnTab || 'kitchen');
-    } catch (e) {
-      console.error('Error saving returnTab:', e);
-    }
+  const handleBack = () => {
     router.back();
   };
 
-  // ── NEW: Edit a meal — open FoodDetailScreen in edit mode ─────────────────
-  // We pass the existing entryId so FoodDetailScreen knows to UPDATE instead of INSERT.
   const handleEditMeal = (meal) => {
     router.push({
       pathname: '/food-detail',
       params: {
-        meal:      JSON.stringify(meal),   // full meal object (has weight, macros, etc.)
+        meal:        JSON.stringify(meal),
         mealType,
-        returnTab: returnTab || 'kitchen',
-        editEntryId: meal.entryId,         // ← signals edit mode
+        returnTab:   returnTab || 'kitchen',
+        editEntryId: meal.entryId,
+        selectedDate: selectedDate, // ═══ POINT 2: Pass date to edit screen ═══
       },
     });
   };
@@ -97,14 +206,18 @@ export default function MealDetailsScreen() {
   const searchMeals = async (keyword) => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `${API_CONFIG.ENDPOINTS.MEALS.GET_MEALS}?keyword=${encodeURIComponent(keyword)}`,
-        { method: 'GET', headers: { Accept: 'application/json', Authorization: `Bearer ${userToken}` } }
-      );
+      const url = `${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.MEALS.PORT}${API_CONFIG.ENDPOINTS.MEALS.GET_MEALS}?keyword=${encodeURIComponent(keyword)}`;
+      const response = await fetch(url, {
+        method:  'GET',
+        headers: { Accept: 'application/json', Authorization: `Bearer ${userToken}` },
+      });
       const data = await response.json();
       setResults(data.slice(0, 10));
-    } catch (e) { console.log('Search error:', e); }
-    finally { setLoading(false); }
+    } catch (e) {
+      console.error('Search error:', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSelectMeal = (item) => {
@@ -112,18 +225,20 @@ export default function MealDetailsScreen() {
     setResults([]);
     router.push({
       pathname: '/food-detail',
-      params: { meal: JSON.stringify(item), mealType, returnTab: returnTab || 'kitchen' },
+      params: { 
+        meal: JSON.stringify(item), 
+        mealType, 
+        returnTab: returnTab || 'kitchen',
+        selectedDate: selectedDate, // ═══ POINT 2: Pass date ═══
+      },
     });
   };
 
-  // ── Meal card — now has edit + delete buttons ─────────────────────────────
   const renderMealCard = (meal) => (
     <Surface key={meal.entryId} style={styles.mealCard}>
-      {/* Top row: name + action buttons */}
       <View style={styles.mealHeader}>
         <Text style={styles.mealName} numberOfLines={1}>{meal.mealName}</Text>
         <View style={styles.mealActions}>
-          {/* Edit button */}
           <TouchableOpacity
             onPress={() => handleEditMeal(meal)}
             style={[styles.actionBtn, styles.editBtn]}
@@ -131,7 +246,6 @@ export default function MealDetailsScreen() {
           >
             <MaterialCommunityIcons name="pencil" size={15} color="#4A90E2" />
           </TouchableOpacity>
-          {/* Delete button */}
           <TouchableOpacity
             onPress={() => removeMeal(meal.entryId)}
             style={[styles.actionBtn, styles.deleteBtn]}
@@ -163,7 +277,6 @@ export default function MealDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
@@ -175,7 +288,6 @@ export default function MealDetailsScreen() {
         <View style={styles.placeholder} />
       </View>
 
-      {/* Search */}
       <View style={styles.searchWrapper}>
         <Surface style={styles.searchContainer}>
           <MaterialCommunityIcons name="magnify" size={20} color="#8E8E93" style={styles.searchIcon} />
@@ -211,16 +323,35 @@ export default function MealDetailsScreen() {
         )}
       </View>
 
-      {/* Buttons */}
       <View style={styles.buttonContainer}>
         <ScannerComponent onTextExtracted={(text) => setSearchQuery(text)} />
-        <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/add-meal-manually')}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => {
+            console.log('=== ADD MANUALLY BUTTON PRESSED ===');
+            console.log('Passing params:', {
+              mealType,
+              mealLabel,
+              returnTab: returnTab || 'kitchen',
+              selectedDate: selectedDate,
+            });
+            
+            router.push({
+              pathname: '/add-meal-manually',
+              params: { 
+                mealType, 
+                mealLabel, 
+                returnTab: returnTab || 'kitchen',
+                selectedDate: selectedDate, // ═══ POINT 2: Pass date ═══
+              },
+            });
+          }}
+        >
           <MaterialCommunityIcons name="plus-circle" size={24} color="#FFFFFF" />
           <Text style={styles.buttonText}>Add Manually</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Meal list */}
       <View style={styles.contentArea}>
         {recentMeals.length > 0 ? (
           <>
@@ -254,7 +385,6 @@ const styles = StyleSheet.create({
   headerTitle:  { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
   headerSub:    { color: '#8E8E93', fontSize: 12, marginTop: 2 },
   placeholder:  { width: 40 },
-
   searchWrapper:    { marginBottom: 16, zIndex: 999 },
   searchContainer:  { flexDirection: 'row', alignItems: 'center', backgroundColor: '#252830', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12 },
   searchIcon:       { marginRight: 12 },
@@ -264,32 +394,25 @@ const styles = StyleSheet.create({
   resultItemLast:   { borderBottomWidth: 0 },
   resultIcon:       { marginRight: 10 },
   resultText:       { color: '#FFFFFF', fontSize: 15, flex: 1 },
-
   buttonContainer: { flexDirection: 'row', gap: 16, marginBottom: 16 },
   actionButton:    { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#4A90E2', borderRadius: 12, paddingVertical: 16 },
   buttonText:      { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', marginLeft: 8 },
-
   contentArea:   { flex: 1 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   sectionTitle:  { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
   clearAllText:  { color: '#FF6B35', fontSize: 13, fontWeight: '600' },
-
   mealCard:   { backgroundColor: '#252830', borderRadius: 12, padding: 14, marginBottom: 10 },
   mealHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   mealName:   { color: '#FFFFFF', fontSize: 15, fontWeight: 'bold', flex: 1, marginRight: 8 },
-
-  // ── NEW: edit / delete action buttons ──
   mealActions: { flexDirection: 'row', gap: 6 },
   actionBtn:   { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   editBtn:     { backgroundColor: 'rgba(74,144,226,0.15)' },
   deleteBtn:   { backgroundColor: 'rgba(255,107,107,0.12)' },
-
   mealWeight:     { color: '#8E8E93', fontSize: 12, marginBottom: 10 },
   nutritionRow:   { flexDirection: 'row', justifyContent: 'space-between' },
   nutritionItem:  { alignItems: 'center', flex: 1 },
   nutritionLabel: { color: '#8E8E93', fontSize: 11, marginBottom: 2 },
   nutritionValue: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
-
   emptyState:  { flex: 1, justifyContent: 'center', alignItems: 'center' },
   contentText: { color: '#8E8E93', fontSize: 16, textAlign: 'center', marginTop: 12 },
   subText:     { color: '#8E8E93', fontSize: 14, textAlign: 'center', marginTop: 8 },

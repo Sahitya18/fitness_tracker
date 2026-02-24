@@ -1,8 +1,9 @@
 package com.fitness.register_service.controller;
 
+import com.fitness.register_service.dto.CreateProfileRequest;
 import com.fitness.register_service.dto.RegisterRequest;
-import com.fitness.register_service.dto.UpdateRequest;
 import com.fitness.register_service.dto.UpdateProfileRequest;
+import com.fitness.register_service.service.CreateProfile;
 import com.fitness.register_service.service.UpdateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,23 +13,27 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
-public class UpdateProfile {
+@RequestMapping("/api/user")
+public class Profile {
 
     @Autowired
     UpdateService updateService;
 
-    @PutMapping("/update/profile")
-    public ResponseEntity<?> register(@RequestBody UpdateRequest request) {
-        if (request.getKeyValuePairList().get(0).value==null || request.getKeyValuePairList().get(1).value==null) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Email id or field value is empty.");
-            return ResponseEntity.badRequest().body(error);
+    @Autowired
+    CreateProfile createProfile;
+
+    @PutMapping("/create-profile")
+    public ResponseEntity<?> register(@RequestBody CreateProfileRequest request) {
+        System.out.println("🔥 UPDATE USER PROFILE API HIT: ");
+        try {
+            createProfile.completeUserProfile(request);
+            return ResponseEntity.ok("Profile created successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return updateService.updateUser(request);
     }
 
-    @PutMapping("/user/update-profile")
+    @PutMapping("/update-profile")
     public ResponseEntity<?> updateUserProfile(@RequestBody UpdateProfileRequest request) {
         System.out.println("🔥 UPDATE USER PROFILE API HIT: " + request.getEmail() + " - " + request.getField());
         try {

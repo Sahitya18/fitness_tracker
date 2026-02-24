@@ -19,7 +19,8 @@ public class CorsConfig {
                 "http://localhost:8082",
                 "http://192.168.1.14:8082",
                 "http://192.168.1.9:8082",
-                "http://122.177.246.43"
+                "http://122.177.246.43:8082",
+                "http://122.177.242.229:8082"
         ));
 
         config.setAllowedMethods(List.of(

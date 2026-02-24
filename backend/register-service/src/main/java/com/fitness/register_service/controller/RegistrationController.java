@@ -33,10 +33,6 @@ public class RegistrationController {
         }
         return registrationService.registerUser(request);
     }
-    @PostMapping("/complete-profile")
-    public ResponseEntity<?> completeProfile( @RequestBody RegisterRequest request) {
-        return registrationService.completeUserProfile(request);
-    }
 
 //    @PostMapping("/send-email-otp")
 //    public ResponseEntity<?> sendEmailOtp(@RequestBody OtpRequest req) {

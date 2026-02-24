@@ -1,7 +1,11 @@
 /**
- * HomeScreen.jsx — fully combined
- * Changes:
- *   • CalorieRing turns red gradient when consumed > goal
+ * HomeScreen.jsx - Point 1 + Point 2 Complete
+ * 
+ * Point 1: Date persistence when navigating back from meal details
+ * Point 2: Fetch date-specific meal data from API for selected date
+ * 
+ * FIX: processMealData now handles flat API response object:
+ *   { breakfast: {...}, postBreakfast: {...}, lunch: {...}, ... }
  */
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
@@ -17,6 +21,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DashboardModal from '../components/DashboardModal';
+import API_CONFIG from '../utils/config';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 32;
@@ -30,7 +35,27 @@ const ALL_MEAL_OPTIONS = [
   { mealType: 'dinner',         name: 'Dinner',         icon: 'food-turkey',     time: '7:00 PM',  color: '#E8537A' },
 ];
 
-const storageKey = (mealType) => `recentMeals_${mealType}`;
+// Maps API camelCase keys → local snake_case storage keys
+const API_KEY_TO_STORAGE_KEY = {
+  breakfast:      'breakfast',
+  postBreakfast:  'post_breakfast',
+  lunch:          'lunch',
+  postLunch:      'post_lunch',
+  preWorkout:     'pre_workout',
+  dinner:         'dinner',
+};
+
+// Non-meal keys in the API response to skip
+const SKIP_API_KEYS = new Set([
+  'id', 'mealDate', 'createdAt', 'updatedAt', 'totalCalories',
+  'breakfastCalories', 'postBreakfastCalories', 'lunchCalories',
+  'postLunchCalories', 'preWorkoutCalories', 'dinnerCalories',
+]);
+
+const storageKey = (mealType, date) => {
+  const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+  return `recentMeals_${mealType}_${dateStr}`;
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATE SLIDER
@@ -69,19 +94,24 @@ function DateItem({ item, isSelected, onPress }) {
   );
 }
 
-function DateSlider({ onDateChange }) {
-  const [dates]       = useState(buildDates);
-  const [selectedKey, setSelectedKey] = useState(dates.find(d => d.isToday)?.key ?? dates[DAYS_BEFORE].key);
+function DateSlider({ selectedDate, onDateChange }) {
+  const [dates] = useState(buildDates);
   const listRef = useRef(null);
+  const selectedKey = selectedDate.toDateString();
 
   const scrollToIndex = useCallback((index, animated = true) => {
     listRef.current?.scrollToIndex({ index, animated, viewPosition: 0.5 });
   }, []);
 
-  useEffect(() => { const t = setTimeout(() => scrollToIndex(DAYS_BEFORE, false), 50); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    const selectedItem = dates.find(d => d.key === selectedKey);
+    if (selectedItem) {
+      const t = setTimeout(() => scrollToIndex(selectedItem.index, false), 50);
+      return () => clearTimeout(t);
+    }
+  }, [selectedKey]);
 
   const handleSelect = useCallback((item) => {
-    setSelectedKey(item.key);
     scrollToIndex(item.index);
     onDateChange?.(item.full);
   }, [onDateChange, scrollToIndex]);
@@ -90,7 +120,8 @@ function DateSlider({ onDateChange }) {
   const renderItem    = useCallback(({ item }) => (
     <DateItem item={item} isSelected={selectedKey === item.key} onPress={() => handleSelect(item)} />
   ), [selectedKey, handleSelect]);
-  const selectedItem  = dates.find(d => d.key === selectedKey);
+  
+  const selectedItem = dates.find(d => d.key === selectedKey);
 
   return (
     <View style={dsStyles.sliderRoot}>
@@ -167,17 +198,13 @@ function MacroBar({ label, consumed, goal, colors, glow }) {
   );
 }
 
-// ── NEW: CalorieRing switches to warm-red gradient when over goal ─────────────
 function CalorieRing({ consumed, goal }) {
   const animProg = useRef(new Animated.Value(0)).current;
   const r = 52, cx = 64, cy = 64, circ = 2 * Math.PI * r;
   const [offset, setOffset] = useState(circ);
 
   const isOver = consumed > goal;
-
-  // Normal (blue) colours
   const normalColors  = { start: '#4A90E2', end: '#7BBCFF' };
-  // Over-goal: warm rose-red → soft coral — easy on the eye, clearly a warning
   const overColors    = { start: '#C0392B', end: '#FF6B6B' };
   const activeColors  = isOver ? overColors : normalColors;
 
@@ -203,9 +230,7 @@ function CalorieRing({ consumed, goal }) {
             <Stop offset="100%" stopColor={activeColors.end}   />
           </SvgGradient>
         </Defs>
-        {/* Track */}
         <Circle cx={cx} cy={cy} r={r} fill="none" stroke="#1E2130" strokeWidth={10} />
-        {/* Progress */}
         <Circle
           cx={cx} cy={cy} r={r}
           fill="none"
@@ -218,14 +243,10 @@ function CalorieRing({ consumed, goal }) {
       </Svg>
       <View style={ftStyles.ringOverlay}>
         <Text style={ftStyles.ringCaption}>CALORIES</Text>
-        {/* Count turns red when over goal */}
         <Text style={[ftStyles.ringCount, isOver && { color: '#FF6B6B' }]}>{consumed}</Text>
         <View style={ftStyles.ringDivider} />
         <Text style={ftStyles.ringGoal}>{goal}</Text>
-        {/* Small "over goal" label */}
-        {isOver && (
-          <Text style={ftStyles.ringOverLabel}>Over!</Text>
-        )}
+        {isOver && <Text style={ftStyles.ringOverLabel}>Over!</Text>}
       </View>
     </View>
   );
@@ -265,7 +286,6 @@ const ftStyles = StyleSheet.create({
   badgeTextOver:  { color: '#FF6B6B' },
   cardBody:   { flexDirection: 'row', alignItems: 'center', gap: 14 },
   barsCol:    { flex: 1, justifyContent: 'center' },
-
   macroRow:   { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   macroLabel: { color: '#9BA3B2', fontSize: 11, fontWeight: '600', width: 48, letterSpacing: 0.2 },
   trackWrap:  { flex: 1, height: 8, position: 'relative' },
@@ -277,7 +297,6 @@ const ftStyles = StyleSheet.create({
   consumed:   { fontSize: 13, fontWeight: '800', lineHeight: 16 },
   slash:      { color: '#3A4050', fontSize: 11, marginHorizontal: 2 },
   goalText:   { color: '#4A5060', fontSize: 10, fontWeight: '500' },
-
   ringWrap:     { width: 128, height: 128, position: 'relative', flexShrink: 0 },
   ringOverlay:  { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
   ringCaption:  { color: '#7A8499', fontSize: 8, fontWeight: '700', letterSpacing: 0.8, marginBottom: 2 },
@@ -297,7 +316,7 @@ const formatTime = (min) => {
 };
 
 export default function HomeScreen() {
-  const { userData } = useAuth();
+  const { userData, userToken } = useAuth();
   const { returnTab: returnTabParam } = useLocalSearchParams();
   const pendingTabRef = useRef(null);
 
@@ -312,6 +331,8 @@ export default function HomeScreen() {
   const [mealCounts,       setMealCounts]       = useState({});
   const [caloriesConsumed, setCaloriesConsumed] = useState(0);
   const [macros,           setMacros]           = useState({ protein: 0, carbs: 0, fats: 0, fiber: 0 });
+  const [loading,          setLoading]          = useState(false);
+  
   const [caloriesGoal]  = useState(2000);
   const [sleepHours]    = useState(6);
   const [steps]         = useState(8104);
@@ -323,6 +344,33 @@ export default function HomeScreen() {
     { id: 4, image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=200&h=200&fit=crop&q=80', name: 'Fruit Bowl' },
   ]);
 
+  // ═══ POINT 1: Load saved date on mount ═══
+  useEffect(() => {
+    const loadSavedDate = async () => {
+      try {
+        const savedDate = await AsyncStorage.getItem('selectedDate');
+        if (savedDate) {
+          setSelectedDate(new Date(savedDate));
+          console.log('Loaded saved date:', savedDate);
+        }
+      } catch (e) {
+        console.error('Error loading saved date:', e);
+      }
+    };
+    loadSavedDate();
+  }, []);
+
+  // ═══ POINT 1: Save date whenever it changes ═══
+  const handleDateChange = async (date) => {
+    try {
+      setSelectedDate(date);
+      await AsyncStorage.setItem('selectedDate', date.toISOString());
+      console.log('Date changed to:', date.toISOString());
+    } catch (e) {
+      console.error('Error saving date:', e);
+    }
+  };
+
   useEffect(() => {
     AsyncStorage.getItem('numberOfMeals').then(s => { if (s) setNumberOfMeals(parseInt(s)); }).catch(() => {});
   }, []);
@@ -332,22 +380,165 @@ export default function HomeScreen() {
     catch (e) { console.error(e); }
   };
 
-  // Tab restore via params + ref (no AsyncStorage race)
   useEffect(() => { if (returnTabParam) pendingTabRef.current = returnTabParam; }, [returnTabParam]);
 
-  useFocusEffect(React.useCallback(() => {
-    if (pendingTabRef.current) { setActiveTab(pendingTabRef.current); pendingTabRef.current = null; }
-    aggregateMeals();
-  }, [numberOfMeals]));
+  // ═══ POINT 2: Fetch date-specific data whenever date or numberOfMeals changes ═══
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('=== HOME SCREEN FOCUSED ===');
+      console.log('Selected date:', selectedDate.toISOString());
+      if (pendingTabRef.current) { 
+        setActiveTab(pendingTabRef.current); 
+        pendingTabRef.current = null; 
+      }
+      fetchMealDataForDate();
+    }, [selectedDate, numberOfMeals])
+  );
 
-  const aggregateMeals = async () => {
+  // ═══ POINT 2: Fetch meal data from API for selected date ═══
+  const fetchMealDataForDate = async () => {
+    try {
+      setLoading(true);
+      const dateStr = selectedDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      const token = userToken || await AsyncStorage.getItem('userToken');
+      
+      if (!token) {
+        console.warn('No token found, falling back to local storage');
+        await aggregateMealsFromLocalStorage();
+        return;
+      }
+
+      console.log(`Fetching meals for date: ${dateStr}`);
+      
+      const url = `${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.MEALS.PORT}/api/meals/date/${dateStr}`;
+      console.log('API URL:', url);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('API Response:', data);
+        await processMealData(data);
+      } else {
+        console.warn('API failed with status', response.status, '— falling back to local storage');
+        await aggregateMealsFromLocalStorage();
+      }
+    } catch (error) {
+      console.error('Error fetching meal data:', error);
+      await aggregateMealsFromLocalStorage();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * ═══ POINT 2: Process flat API response object ═══
+   *
+   * API shape (flat object, NOT an array):
+   * {
+   *   breakfast:     { mealType, totalCalories, items: [{name, quantity, macros}] },
+   *   postBreakfast: { ... },
+   *   lunch:         { ... },
+   *   postLunch:     { ... },
+   *   preWorkout:    { ... },
+   *   dinner:        { ... },
+   *   totalCalories: 1598,
+   *   mealDate:      "2026-02-04",
+   *   id, createdAt, updatedAt, breakfastCalories, ...
+   * }
+   */
+  const processMealData = async (apiData) => {
     try {
       let totalCal = 0, totalProt = 0, totalCarbs = 0, totalFats = 0, totalFiber = 0;
       const counts = {};
+
+      for (const [apiKey, storageSlotKey] of Object.entries(API_KEY_TO_STORAGE_KEY)) {
+        const slotData = apiData[apiKey]; // e.g. apiData.postBreakfast
+
+        if (!slotData || !Array.isArray(slotData.items) || slotData.items.length === 0) {
+          counts[storageSlotKey] = 0;
+          // Clear stale local storage for this date+slot so MealDetailsScreen
+          // doesn't show old entries when the server says none exist.
+          const key = storageKey(storageSlotKey, selectedDate);
+          await AsyncStorage.setItem(key, JSON.stringify([]));
+          continue;
+        }
+
+        const items = slotData.items;
+        counts[storageSlotKey] = items.length;
+
+        // Transform API items → local storage format used by MealDetailsScreen
+        const transformedMeals = items.map((item, index) => {
+          // Parse numeric part and unit from quantity string e.g. "200g" → 200, "g"
+          const quantityStr = String(item.quantity || '');
+          const weightNum   = parseFloat(quantityStr) || 100;
+          const weightUnit  = quantityStr.replace(/[0-9.\s]/g, '') || 'g';
+
+          return {
+            id:         `api_${apiKey}_${index}`,
+            entryId:    `api_${apiKey}_${index}_${Date.now()}`,
+            mealName:   item.name,
+            weight:     weightNum,
+            weightUnit: weightUnit,
+            calories:   item.macros?.calories ?? 0,
+            protein:    item.macros?.protein  ?? 0,
+            carbs:      item.macros?.carbs    ?? 0,
+            fats:       item.macros?.fat      ?? 0,  // API uses "fat", storage uses "fats"
+            fiber:      item.macros?.fiber    ?? 0,
+            photoUrl:   '',
+            category:   'API',
+          };
+        });
+
+        // Persist to date-specific local storage so MealDetailsScreen can read it
+        const key = storageKey(storageSlotKey, selectedDate);
+        await AsyncStorage.setItem(key, JSON.stringify(transformedMeals));
+
+        // Accumulate totals from API macros
+        items.forEach(item => {
+          totalCal   += item.macros?.calories ?? 0;
+          totalProt  += item.macros?.protein  ?? 0;
+          totalCarbs += item.macros?.carbs    ?? 0;
+          totalFats  += item.macros?.fat      ?? 0;
+          totalFiber += item.macros?.fiber    ?? 0;
+        });
+      }
+
+      console.log('Processed meal counts:', counts);
+      console.log('Total calories:', totalCal);
+
+      setMealCounts(counts);
+      setCaloriesConsumed(Math.round(totalCal));
+      setMacros({
+        protein: Math.round(totalProt),
+        carbs:   Math.round(totalCarbs),
+        fats:    Math.round(totalFats),
+        fiber:   Math.round(totalFiber),
+      });
+    } catch (error) {
+      console.error('Error processing meal data:', error);
+    }
+  };
+
+  // ═══ POINT 2: Fallback to local storage (date-specific) ═══
+  const aggregateMealsFromLocalStorage = async () => {
+    try {
+      let totalCal = 0, totalProt = 0, totalCarbs = 0, totalFats = 0, totalFiber = 0;
+      const counts = {};
+
       for (const slot of ALL_MEAL_OPTIONS.slice(0, numberOfMeals)) {
-        const stored = await AsyncStorage.getItem(storageKey(slot.mealType));
-        const meals  = stored ? JSON.parse(stored) : [];
+        const key = storageKey(slot.mealType, selectedDate);
+        const stored = await AsyncStorage.getItem(key);
+        const meals = stored ? JSON.parse(stored) : [];
+        
         counts[slot.mealType] = meals.length;
+
         meals.forEach(meal => {
           totalCal   += parseFloat(meal.calories) || 0;
           totalProt  += parseFloat(meal.protein)  || 0;
@@ -356,10 +547,18 @@ export default function HomeScreen() {
           totalFiber += parseFloat(meal.fiber)    || 0;
         });
       }
+
       setMealCounts(counts);
       setCaloriesConsumed(Math.round(totalCal));
-      setMacros({ protein: Math.round(totalProt), carbs: Math.round(totalCarbs), fats: Math.round(totalFats), fiber: Math.round(totalFiber) });
-    } catch (e) { console.error('Error aggregating meals:', e); }
+      setMacros({
+        protein: Math.round(totalProt),
+        carbs:   Math.round(totalCarbs),
+        fats:    Math.round(totalFats),
+        fiber:   Math.round(totalFiber),
+      });
+    } catch (e) {
+      console.error('Error aggregating meals from local storage:', e);
+    }
   };
 
   const renderGymCard = () => (
@@ -407,7 +606,9 @@ export default function HomeScreen() {
         <TouchableOpacity onPress={() => setShowDashboard(true)} style={hsStyles.avatarBtn}>
           <Avatar.Image size={38} source={{ uri: userData?.profilePic || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&q=80' }} />
         </TouchableOpacity>
-        <View style={hsStyles.sliderContainer}><DateSlider onDateChange={setSelectedDate} /></View>
+        <View style={hsStyles.sliderContainer}>
+          <DateSlider selectedDate={selectedDate} onDateChange={handleDateChange} />
+        </View>
         <TouchableOpacity onPress={() => setShowDashboard(true)} style={hsStyles.avatarBtn}>
           <Avatar.Image size={38} source={{ uri: userData?.profilePic || 'https://via.placeholder.com/40' }} />
         </TouchableOpacity>
@@ -420,6 +621,12 @@ export default function HomeScreen() {
           </TouchableOpacity>
         ))}
       </View>
+
+      {loading && (
+        <View style={hsStyles.loadingOverlay}>
+          <Text style={hsStyles.loadingText}>Loading meals...</Text>
+        </View>
+      )}
 
       {activeTab === 'home' && (
         <View style={hsStyles.cardContainer}>
@@ -440,7 +647,11 @@ export default function HomeScreen() {
           <FoodTrackerCard caloriesConsumed={caloriesConsumed} caloriesGoal={caloriesGoal} macros={macros} />
           <Surface style={hsStyles.trackerCard}>
             <View style={hsStyles.mealHeader}>
-              <Text style={hsStyles.sectionTitle}>Today's Meals</Text>
+              <Text style={hsStyles.sectionTitle}>
+                {selectedDate.toDateString() === new Date().toDateString() 
+                  ? "Today's Meals" 
+                  : `Meals for ${selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+              </Text>
               <TouchableOpacity onPress={() => setShowMealSelector(true)} style={hsStyles.mealConfigBtn}>
                 <MaterialCommunityIcons name="cog" size={20} color="#4A90E2" />
                 <Text style={hsStyles.mealConfigText}>{numberOfMeals} meals</Text>
@@ -451,7 +662,15 @@ export default function HomeScreen() {
                 const count = mealCounts[m.mealType] || 0;
                 return (
                   <TouchableOpacity key={m.mealType} style={hsStyles.mealItem}
-                    onPress={() => router.push({ pathname: '/meal-details', params: { mealType: m.mealType, mealLabel: m.name, returnTab: 'kitchen' } })}>
+                    onPress={() => router.push({
+                      pathname: '/meal-details',
+                      params: {
+                        mealType:     m.mealType,
+                        mealLabel:    m.name,
+                        returnTab:    'kitchen',
+                        selectedDate: selectedDate.toISOString(),
+                      },
+                    })}>
                     <View style={hsStyles.mealIconWrap}>
                       <MaterialCommunityIcons name={m.icon} size={20} color={m.color} />
                     </View>
@@ -538,6 +757,8 @@ const hsStyles = StyleSheet.create({
   headerSurface:  { flexDirection: 'row', alignItems: 'center', backgroundColor: '#252830', borderRadius: 20, padding: 10, marginTop: 40, marginBottom: 16, gap: 8 },
   avatarBtn:      { padding: 2 },
   sliderContainer:{ flex: 1 },
+  loadingOverlay: { backgroundColor: 'rgba(37,40,48,0.9)', borderRadius: 12, padding: 16, marginBottom: 16, alignItems: 'center' },
+  loadingText:    { color: '#4A90E2', fontSize: 14, fontWeight: '600' },
   tabContainer:   { flexDirection: 'row', backgroundColor: '#252830', borderRadius: 20, padding: 4, marginBottom: 16 },
   tab:            { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 16 },
   activeTab:      { backgroundColor: '#4A90E2' },
@@ -562,7 +783,7 @@ const hsStyles = StyleSheet.create({
   gymSubItem:     { flex: 1, alignItems: 'center' },
   gymSubVal:      { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
   gymSubLabel:    { color: '#8E8E93', fontSize: 10, marginTop: 2 },
-  gymSubDivider:  { width: 1, backgroundColor: '#3A3D4A', marginVertical: 4 },
+  gymSubDivider:  { width: 1, backgroundColor: '#3A4A', marginVertical: 4 },
   pageIndicators: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 8 },
   pageIndicator:  { width: 8, height: 8, borderRadius: 4, backgroundColor: '#3A3B3F', marginHorizontal: 4 },
   activePageIndicator: { backgroundColor: '#4A90E2', width: 24 },

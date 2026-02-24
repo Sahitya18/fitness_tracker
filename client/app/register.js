@@ -179,8 +179,8 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       // const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`, {
-      console.log("REGISTER URL:", API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER);
-      const res = await fetch(`${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`, {
+      console.log("REGISTER URL:", `${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.REGISTRATION.PORT}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`);
+      const res = await fetch(`${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.REGISTRATION.PORT}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`, {
         
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

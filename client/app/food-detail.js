@@ -1,3 +1,9 @@
+/**
+ * FoodDetailScreen.jsx - Updated for date-specific storage
+ * 
+ * Change: Now uses date-specific storage keys
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
@@ -6,6 +12,7 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import API_CONFIG from '../utils/config';
 
 const { width } = Dimensions.get('window');
 
@@ -21,21 +28,27 @@ const UNIT_TO_G    = { g: 1, oz: 28.3495, lbs: 453.592 };
 const UNITS        = ['g', 'oz', 'lbs'];
 const GRAM_PRESETS = [50, 100, 150, 200, 250];
 
-const storageKey = (mealType) =>
-  mealType ? `recentMeals_${mealType}` : 'recentMeals_default';
+// ═══ POINT 2: Storage key includes date ═══
+const storageKey = (mealType, date) => {
+  if (!date) return `recentMeals_${mealType}`;
+  const dateStr = new Date(date).toISOString().split('T')[0];
+  return `recentMeals_${mealType}_${dateStr}`;
+};
+
+const ALL_MEAL_TYPES = [
+  'breakfast', 'post_breakfast', 'lunch', 'post_lunch', 'pre_workout', 'dinner',
+];
+
+const toCamelCase = (str) => str.replace(/_([a-z])/g, (_, l) => l.toUpperCase());
 
 export default function FoodDetailScreen() {
-  // ── Params ─────────────────────────────────────────────────────────────────
-  // editEntryId: present only in edit mode — the entryId of the meal to replace
-  const { meal: mealParam, mealType, returnTab, editEntryId } = useLocalSearchParams();
+  const { meal: mealParam, mealType, returnTab, editEntryId, selectedDate } = useLocalSearchParams();
   const meal        = JSON.parse(mealParam || '{}');
   const isEditMode  = !!editEntryId;
 
-  const STORAGE_KEY  = storageKey(mealType);
+  const STORAGE_KEY  = storageKey(mealType, selectedDate);
   const baseWeightG  = parseFloat(meal.weight) || 100;
 
-  // ── In edit mode, pre-fill with the saved weight/unit ─────────────────────
-  // meal.weightUnit might be 'oz' or 'lbs' if it was saved that way
   const initialUnit  = isEditMode ? (meal.weightUnit || 'g') : 'g';
   const initialW     = isEditMode
     ? parseFloat((baseWeightG / UNIT_TO_G[initialUnit]).toFixed(2))
@@ -49,20 +62,24 @@ export default function FoodDetailScreen() {
   const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
+    console.log('FoodDetailScreen loaded:');
+    console.log('- mealType:', mealType);
+    console.log('- selectedDate:', selectedDate);
+    console.log('- STORAGE_KEY:', STORAGE_KEY);
+    console.log('- isEditMode:', isEditMode);
+    
     Animated.parallel([
       Animated.timing(fadeAnim,  { toValue: 1, duration: 500, useNativeDriver: true }),
       Animated.timing(slideAnim, { toValue: 0, duration: 500, useNativeDriver: true }),
     ]).start();
   }, []);
 
-  // ── Unit switching ─────────────────────────────────────────────────────────
   const handleUnitChange = (newUnit) => {
     const converted = parseFloat((weightInG / UNIT_TO_G[newUnit]).toFixed(2));
     setUnit(newUnit);
     setInputVal(String(converted));
   };
 
-  // ── Weight input ───────────────────────────────────────────────────────────
   const handleWeightInput = (val) => {
     setInputVal(val);
     const n = parseFloat(val);
@@ -80,9 +97,6 @@ export default function FoodDetailScreen() {
     setWeightInG(newG);
   };
 
-  // ── Macro scaling ──────────────────────────────────────────────────────────
-  // In edit mode, the base macros are the ORIGINAL per-baseWeightG values
-  // stored in meal. We scale from there just like add mode.
   const scale = (val) => {
     const base = parseFloat(val) || 0;
     if (!baseWeightG) return '0';
@@ -96,14 +110,9 @@ export default function FoodDetailScreen() {
   const displayWeight = parseFloat(inputVal) || 0;
   const baseDisplay   = parseFloat((baseWeightG / UNIT_TO_G[unit]).toFixed(2));
 
-  // ── Save ──────────────────────────────────────────────────────────────────
-  // Add mode  → prepend new entry
-  // Edit mode → find by entryId and replace in-place (preserves list order)
   const handleSave = async () => {
     const updatedMeal = {
       ...meal,
-      // In edit mode keep the same entryId so the item stays in its position.
-      // In add mode generate a fresh one.
       entryId:    isEditMode ? editEntryId : `${meal.id}_${Date.now()}`,
       weight:     displayWeight,
       weightUnit: unit,
@@ -119,28 +128,99 @@ export default function FoodDetailScreen() {
       let arr = existing ? JSON.parse(existing) : [];
 
       if (isEditMode) {
-        // Replace the entry that has the matching entryId
         const idx = arr.findIndex(m => m.entryId === editEntryId);
         if (idx !== -1) {
-          arr[idx] = updatedMeal;          // update in-place → keeps list order
+          arr[idx] = updatedMeal;
         } else {
-          arr.unshift(updatedMeal);        // safety: not found → prepend
+          arr.unshift(updatedMeal);
         }
       } else {
-        arr.unshift(updatedMeal);          // new entry → add to top
+        arr.unshift(updatedMeal);
       }
 
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
-      router.back(); // back to MealDetailsScreen
+      console.log('Saved meal to:', STORAGE_KEY);
+      console.log('Total meals:', arr.length);
+
+      // ═══ Sync to backend ═══
+      await syncMealSlotToBackend(arr);
+
+      router.back();
     } catch (e) {
       console.error('Error saving meal:', e);
       Alert.alert('Error', 'Could not save meal. Please try again.');
     }
   };
 
+  // ═══ POINT 2: Sync with selected date ═══
+  const syncMealSlotToBackend = async (meals) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) return;
+
+      // Build complete payload for all meal slots
+      const mealDate = selectedDate
+        ? new Date(selectedDate).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0];
+
+      const allMeals = [];
+
+      for (const slot of ALL_MEAL_TYPES) {
+        let items;
+        if (slot === mealType) {
+          items = meals;
+        } else {
+          const key = storageKey(slot, selectedDate);
+          const stored = await AsyncStorage.getItem(key);
+          items = stored ? JSON.parse(stored) : [];
+        }
+
+        if (items.length === 0) continue;
+
+        const mappedItems = items.map(m => ({
+          name: m.mealName,
+          quantity: `${m.weight}${m.weightUnit}`,
+          macros: {
+            protein: parseFloat(m.protein) || 0,
+            carbs: parseFloat(m.carbs) || 0,
+            fat: parseFloat(m.fats) || 0,
+            fiber: parseFloat(m.fiber) || 0,
+            calories: parseFloat(m.calories) || 0,
+          },
+        }));
+
+        allMeals.push({
+          mealType: toCamelCase(slot),
+          items: mappedItems,
+          totalCalories: mappedItems.reduce((s, i) => s + i.macros.calories, 0),
+        });
+      }
+
+      const payload = { mealDate, meals: allMeals };
+      
+      console.log('Syncing to backend:', {
+        date: mealDate,
+        mealsCount: allMeals.length,
+      });
+
+      await fetch(
+        `${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.MEALS.PORT}${API_CONFIG.ENDPOINTS.MEALS.UPDATE_MEAL}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+    } catch (error) {
+      console.error('Sync error:', error);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* Header — shows "Edit Food" vs "Food Details" */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
@@ -152,8 +232,6 @@ export default function FoodDetailScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-
-        {/* Hero */}
         <Animated.View style={[styles.heroCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <View style={styles.imageContainer}>
             {meal.photoUrl ? (
@@ -171,7 +249,6 @@ export default function FoodDetailScreen() {
           <Text style={styles.mealName}>{meal.mealName}</Text>
           {meal.category && <Text style={styles.mealCategory}>{meal.category}</Text>}
 
-          {/* Edit mode banner */}
           {isEditMode && (
             <View style={styles.editBanner}>
               <MaterialCommunityIcons name="pencil-circle" size={16} color="#F5A623" />
@@ -180,7 +257,6 @@ export default function FoodDetailScreen() {
           )}
         </Animated.View>
 
-        {/* Serving Size */}
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <Text style={styles.sectionTitle}>Serving Size</Text>
 
@@ -234,7 +310,6 @@ export default function FoodDetailScreen() {
           </View>
         </Animated.View>
 
-        {/* Nutrition Facts */}
         <Animated.View style={[styles.section, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <Text style={styles.sectionTitle}>Nutrition Facts</Text>
           <Text style={styles.sectionSubtitle}>Per {displayWeight}{unit} serving</Text>
@@ -252,7 +327,6 @@ export default function FoodDetailScreen() {
           </Text>
         </View>
 
-        {/* Save button — label adapts to mode */}
         <TouchableOpacity style={[styles.addButton, isEditMode && styles.editButton]} onPress={handleSave} activeOpacity={0.85}>
           <MaterialCommunityIcons
             name={isEditMode ? 'content-save-edit-outline' : 'plus-circle-outline'}
@@ -290,7 +364,6 @@ const styles = StyleSheet.create({
   header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 52, paddingBottom: 12, backgroundColor: '#1A1B1E' },
   backBtn:     { padding: 8 },
   headerTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
-
   heroCard:         { backgroundColor: '#252830', borderRadius: 20, overflow: 'hidden', marginBottom: 16 },
   imageContainer:   { position: 'relative' },
   foodImage:        { width: '100%', height: 200 },
@@ -300,21 +373,16 @@ const styles = StyleSheet.create({
   calorieBadgeUnit: { color: '#FFD4C2', fontSize: 11 },
   mealName:         { color: '#FFFFFF', fontSize: 22, fontWeight: '800', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 },
   mealCategory:     { color: '#8E8E93', fontSize: 13, paddingHorizontal: 16, paddingBottom: 8 },
-
-  // ── Edit banner ──
   editBanner:     { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(245,166,35,0.10)', marginHorizontal: 16, marginBottom: 14, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
   editBannerText: { color: '#F5A623', fontSize: 12, fontWeight: '600', flex: 1 },
-
   section:         { backgroundColor: '#252830', borderRadius: 20, padding: 16, marginBottom: 16 },
   sectionTitle:    { color: '#FFFFFF', fontSize: 16, fontWeight: '700', marginBottom: 4 },
   sectionSubtitle: { color: '#8E8E93', fontSize: 12, marginBottom: 12 },
-
   unitRow:            { flexDirection: 'row', gap: 8, marginBottom: 14 },
   unitChip:           { flex: 1, paddingVertical: 8, borderRadius: 10, backgroundColor: '#1A1B1E', borderWidth: 1, borderColor: '#3A3D4A', alignItems: 'center', justifyContent: 'center' },
   unitChipActive:     { backgroundColor: '#4A90E2', borderColor: '#4A90E2' },
   unitChipText:       { color: '#8E8E93', fontSize: 14, fontWeight: '700' },
   unitChipTextActive: { color: '#FFFFFF' },
-
   weightRow:         { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   weightInputWrapper:{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1B1E', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, flex: 1, borderWidth: 1, borderColor: '#3A3D4A' },
   weightInput:       { color: '#FFFFFF', fontSize: 24, fontWeight: '800', flex: 1 },
@@ -322,24 +390,20 @@ const styles = StyleSheet.create({
   steppers:          { flexDirection: 'row', gap: 8 },
   stepBtn:           { width: 44, height: 44, borderRadius: 12, backgroundColor: '#3A3D4A', alignItems: 'center', justifyContent: 'center' },
   stepBtnPlus:       { backgroundColor: '#4A90E2' },
-
   presetsRow:       { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   presetChip:       { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: '#1A1B1E', borderWidth: 1, borderColor: '#3A3D4A' },
   presetChipActive: { backgroundColor: '#4A90E2', borderColor: '#4A90E2' },
   presetText:       { color: '#8E8E93', fontSize: 13, fontWeight: '600' },
   presetTextActive: { color: '#FFFFFF' },
-
   macroGrid:    { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   macroCard:    { width: (width - 32 - 32 - 10) / 2 - 2, backgroundColor: '#1E2028', borderRadius: 14, padding: 14, borderLeftWidth: 3 },
   macroIconWrap:{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   macroValue:   { color: '#FFFFFF', fontSize: 22, fontWeight: '800', lineHeight: 26 },
   macroUnit:    { color: '#8E8E93', fontSize: 13, fontWeight: '400' },
   macroLabel:   { color: '#8E8E93', fontSize: 12, marginTop: 2 },
-
   baseInfo:     { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 20, paddingHorizontal: 4 },
   baseInfoText: { color: '#8E8E93', fontSize: 12 },
-
   addButton:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#4A90E2', borderRadius: 16, paddingVertical: 18, gap: 10, shadowColor: '#4A90E2', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8 },
-  editButton:    { backgroundColor: '#E8953A' }, // amber for edit mode
+  editButton:    { backgroundColor: '#E8953A' },
   addButtonText: { color: '#FFFFFF', fontSize: 17, fontWeight: '800', letterSpacing: 0.3 },
 });

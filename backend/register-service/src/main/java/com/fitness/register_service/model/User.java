@@ -41,6 +41,9 @@ public class User {
 
     private Double weight;
 
+    @Column(name = "target_weight")
+    private Double targetWeight;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -57,4 +60,19 @@ public class User {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    private String goal;
+
+    @Column(name = "meal_preference")
+    private String mealPreference;
+
+    @Column(name = "activity_level")
+    private String activityLevel;
+
+    private int age;
+
+    @Column(name = "workout_place")
+    private String workoutPlace;
+
+    private String sports;
 }

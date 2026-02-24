@@ -1,6 +1,5 @@
 package com.fitness.register_service.service;
 
-import com.fitness.register_service.dto.UpdateRequest;
 import com.fitness.register_service.dto.UpdateProfileRequest;
 import com.fitness.register_service.repository.updateUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,25 +18,6 @@ public class UpdateService {
 
     @Autowired
     private updateUserDetails updateUserDetailsRepository;
-
-    @Transactional
-    public ResponseEntity<?> updateUser(UpdateRequest request){
-        String emailId = request.getKeyValuePairList().get(0).value.toString();
-        String field = request.getKeyValuePairList().get(1).key;
-        String fieldValue = request.getKeyValuePairList().get(1).value.toString();
-
-        int updated = updateUserDetailsRepository.updateUserFieldByEmail(emailId, field, fieldValue);
-
-        if (updated == 0) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "User not found or field not updated");
-            return ResponseEntity.badRequest().body(error);
-        }
-
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "User updated successfully");
-        return ResponseEntity.ok(response);
-    }
 
     @Transactional
     public ResponseEntity<?> updateUserProfile(UpdateProfileRequest request) {
