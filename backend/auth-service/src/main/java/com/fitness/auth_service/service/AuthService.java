@@ -2,6 +2,7 @@ package com.fitness.auth_service.service;
 
 import com.fitness.auth_service.dto.LoginRequest;
 import com.fitness.auth_service.dto.LoginResponse;
+import com.fitness.auth_service.dto.UserProfileResponse;
 import com.fitness.auth_service.model.User;
 import com.fitness.auth_service.repository.UserRepository;
 import com.fitness.auth_service.util.JwtUtil;
@@ -77,5 +78,66 @@ public class AuthService {
 
         return ResponseEntity.ok(response);
 
+    }
+
+    public ResponseEntity<?> getUserProfile(String token) {
+        try {
+            // Extract email from token
+            String email = jwtUtil.extractEmailFromToken(token);
+            
+            // Find user by email
+            Optional<User> userOpt = userRepo.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "User not found");
+                return ResponseEntity.badRequest().body(error);
+            }
+
+            User user = userOpt.get();
+            
+            // Build response
+            UserProfileResponse response = new UserProfileResponse();
+            response.setId(user.getId());
+            response.setEmail(user.getEmail());
+            response.setMobile(user.getMobile());
+            response.setFirstName(user.getFirstName());
+            response.setLastName(user.getLastName());
+            
+            // Combine first and last name for 'name' field
+            String fullName = "";
+            if (user.getFirstName() != null && !user.getFirstName().trim().isEmpty()) {
+                fullName = user.getFirstName();
+            }
+            if (user.getLastName() != null && !user.getLastName().trim().isEmpty()) {
+                fullName = fullName.isEmpty() ? user.getLastName() : fullName + " " + user.getLastName();
+            }
+            response.setName(fullName.isEmpty() ? null : fullName);
+            
+            response.setDateOfBirth(user.getDateOfBirth());
+            response.setGender(user.getGender());
+            response.setHeight(user.getHeight());
+            response.setWeight(user.getWeight());
+            
+            // Additional fields (set to null if not in DB - frontend handles defaults)
+            response.setTargetWeight(null);
+            response.setFitnessGoal(null);
+            response.setActivityLevel(null);
+            response.setCurrentStreak(null);
+            response.setTotalWorkouts(null);
+            response.setCaloriesBurned(null);
+            response.setWeightLost(null);
+            response.setGoalProgress(null);
+            response.setAvgDailyCalories(null);
+            response.setWeeklyWorkouts(null);
+            response.setWaterIntake(null);
+            response.setSleepAverage(null);
+            response.setStepsAverage(null);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage() != null ? e.getMessage() : "Failed to fetch user profile");
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 }

@@ -179,8 +179,8 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       // const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`, {
-      console.log("REGISTER URL:", API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER);
-      const res = await fetch(`${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`, {
+      console.log("REGISTER URL:", `${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.REGISTRATION.PORT}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`);
+      const res = await fetch(`${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.REGISTRATION.PORT}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`, {
         
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -190,24 +190,32 @@ export default function RegisterScreen() {
           password
         }),
       });
-      
       if (res.ok) {
-        Alert.alert(
-          'Success', 
-          'Registration successful! Let\'s set up your fitness profile.', 
-          [
-            {
-              text: 'Continue',
-              onPress: () => router.push({
-                pathname: '/profile-setup',
-                params: { email }
-              })
-            }
-          ]
-        );
-      } else {
-        const errorText = await res.text();
-        Alert.alert('Failed', errorText);
+          console.log('Registration successful for email:', email);
+          if(Platform.OS === 'web'){
+            window.alert("Registration successful!");
+            router.push({
+              pathname: '/profile-setup',
+              params: { email }
+            });
+          }else if(Platform.OS === 'android' || Platform.OS === 'ios'){
+          Alert.alert(
+            'Success', 
+            'Registration successful! Let\'s set up your fitness profile.', 
+            [
+              {
+                text: 'Continue',
+                onPress: () => router.push({
+                  pathname: '/profile-setup',
+                  params: { email }
+                })
+              }
+            ]
+          );
+        } else {
+          const errorText = await res.text();
+          Alert.alert('Failed', errorText);
+        }
       }
     } catch (err) {
       Alert.alert('Error', err.message);

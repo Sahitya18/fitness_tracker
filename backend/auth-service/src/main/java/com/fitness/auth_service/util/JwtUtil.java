@@ -34,4 +34,20 @@ public class JwtUtil {
                 .signWith(SECRET_KEY)
                 .compact();
     }
+
+    public String extractEmailFromToken(String token) {
+        try {
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+            return Jwts.parserBuilder()
+                    .setSigningKey(SECRET_KEY)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid or expired token", e);
+        }
+    }
 }

@@ -3,7 +3,7 @@ import { View, Text, Image, ActivityIndicator, Alert, StyleSheet, TouchableOpaci
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
-import OCR_CONFIG from '../utils/ocrConfig';
+// import OCR_CONFIG from '../utils/ocrConfig';
 
 export default function ScannerComponent({ onTextExtracted }) {
   const [image, setImage] = useState(null);
@@ -58,7 +58,7 @@ export default function ScannerComponent({ onTextExtracted }) {
 
     setLoading(true);
     console.log('🔍 Starting text extraction...');
-    console.log('📡 Sending request to:', `${OCR_CONFIG.BASE_URL}${OCR_CONFIG.ENDPOINTS.EXTRACT_TEXT}`);
+    // console.log('📡 Sending request to:', `${OCR_CONFIG.BASE_URL}${OCR_CONFIG.ENDPOINTS.EXTRACT_TEXT}`);
     
     try {
       const formData = new FormData();
@@ -70,14 +70,14 @@ export default function ScannerComponent({ onTextExtracted }) {
 
       console.log('📦 FormData created with image:', image.uri);
 
-      const response = await axios.post(
-        `${OCR_CONFIG.BASE_URL}${OCR_CONFIG.ENDPOINTS.EXTRACT_TEXT}`, 
-        formData, 
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          timeout: OCR_CONFIG.TIMEOUT,
-        }
-      );
+      // const response = await axios.post(
+      //   `${OCR_CONFIG.BASE_URL}${OCR_CONFIG.ENDPOINTS.EXTRACT_TEXT}`, 
+      //   formData, 
+      //   {
+      //     headers: { 'Content-Type': 'multipart/form-data' },
+      //     timeout: OCR_CONFIG.TIMEOUT,
+      //   }
+      // );
 
       console.log('✅ Response received:', response.status);
       console.log('📄 Response data:', response.data);

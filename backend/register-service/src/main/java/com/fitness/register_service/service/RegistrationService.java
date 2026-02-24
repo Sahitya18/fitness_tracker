@@ -55,37 +55,7 @@ public class RegistrationService {
         System.out.println("password: "+passHash);
         user.setPasswordHash(passHash);
 
-        // Set profile fields if provided
-        if (req.getFirstName() != null) user.setFirstName(req.getFirstName());
-        if (req.getLastName() != null) user.setLastName(req.getLastName());
-        if (req.getDateOfBirth() != null) user.setDateOfBirth(req.getDateOfBirth());
-        if (req.getGender() != null) user.setGender(req.getGender());
-        if (req.getHeight() != null) user.setHeight(req.getHeight());
-        if (req.getWeight() != null) user.setWeight(req.getWeight());
-
         userRepo.save(user);
         return ResponseEntity.ok().body("User registered successfully");
-    }
-    public ResponseEntity<?> completeUserProfile(RegisterRequest req) {
-        try {
-            Optional<User> userOpt = userRepo.findByEmail(req.getEmail());
-            if (userOpt.isEmpty()) {
-                return ResponseEntity.badRequest().body("User not found");
-            }
-
-            User user = userOpt.get();
-            // Update user profile fields
-            user.setFirstName(req.getFirstName());
-            user.setLastName(req.getLastName());
-            user.setDateOfBirth(req.getDateOfBirth());
-            user.setGender(req.getGender());
-            user.setHeight(req.getHeight());
-            user.setWeight(req.getWeight());
-
-            userRepo.save(user);
-            return ResponseEntity.ok("Profile completed successfully");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
     }
 }
