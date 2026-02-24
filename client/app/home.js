@@ -1,13 +1,3 @@
-/**
- * HomeScreen.jsx - Point 1 + Point 2 Complete
- * 
- * Point 1: Date persistence when navigating back from meal details
- * Point 2: Fetch date-specific meal data from API for selected date
- * 
- * FIX: processMealData now handles flat API response object:
- *   { breakfast: {...}, postBreakfast: {...}, lunch: {...}, ... }
- */
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,

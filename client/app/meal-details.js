@@ -1,12 +1,3 @@
-/**
- * MealDetailsScreen.jsx - Point 2: Date-specific data
- * 
- * Changes:
- * - Storage keys now include date (e.g., recentMeals_breakfast_2024-02-20)
- * - Loads meals for the selected date
- * - API sync includes the selected date
- */
-
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
@@ -31,7 +22,7 @@ const ALL_MEAL_TYPES = [
   'dinner',
 ];
 
-// ═══ POINT 2: Storage key now includes date ═══
+
 const storageKey = (mealType, date) => {
   if (!date) return `recentMeals_${mealType}`;
   const dateStr = new Date(date).toISOString().split('T')[0]; // YYYY-MM-DD
@@ -46,11 +37,9 @@ export default function MealDetailsScreen() {
   const [loading,     setLoading]     = useState(false);
   const [results,     setResults]     = useState([]);
 
-  // ═══ POINT 2: Get selectedDate from params ═══
   const { mealType, mealLabel, returnTab, selectedDate } = useLocalSearchParams();
   const { userToken, userData } = useAuth();
   
-  // ═══ POINT 2: Storage key includes selected date ═══
   const STORAGE_KEY = storageKey(mealType, selectedDate);
 
   console.log('MealDetailsScreen loaded:');
@@ -77,7 +66,6 @@ export default function MealDetailsScreen() {
     }
   };
 
-  // ═══ POINT 2: Build all meals payload for the selected date ═══
   const buildAllMealsPayload = async (currentSlotItems) => {
     const mealDate = selectedDate
       ? new Date(selectedDate).toISOString().split('T')[0]
@@ -119,7 +107,6 @@ export default function MealDetailsScreen() {
     return { mealDate, userId: userData?.id || null, meals };
   };
 
-  // ═══ POINT 2: Sync all meals for the selected date ═══
   const syncAllMealsToBackend = async (currentSlotItems) => {
     try {
       const [token, userId] = await AsyncStorage.multiGet(['userToken', 'userId'])

@@ -1,9 +1,3 @@
-/**
- * FoodDetailScreen.jsx - Updated for date-specific storage
- * 
- * Change: Now uses date-specific storage keys
- */
-
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
