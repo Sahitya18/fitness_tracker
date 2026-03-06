@@ -7,14 +7,20 @@ import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API_CONFIG from '../utils/config';
 
-export default function DashboardModal({ visible, onClose }) {
+/**
+ * DashboardModal
+ * 
+ * Props:
+ *  visible  {boolean}  - controls modal visibility
+ *  onClose  {function} - called when modal should close
+ *  streak   {number}   - current streak passed in from HomeScreen (synced, no double-fetching)
+ */
+export default function DashboardModal({ visible, onClose, streak = 1 }) {
   const { signOut, userData } = useAuth();
 
-  // ── Fetched profile data (overrides auth context userData once loaded) ────
   const [tempUserData, setTempUserData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading,      setLoading]      = useState(false);
 
-  // Fetch on every time the modal opens so data is always fresh
   useEffect(() => {
     if (visible) fetchUserProfile();
   }, [visible]);
@@ -28,19 +34,14 @@ export default function DashboardModal({ visible, onClose }) {
         router.replace('/login');
         return;
       }
-      const response = await fetch(`${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.AUTH.PORT}${API_CONFIG.ENDPOINTS.REGISTRATION.GET_PROFILE}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.AUTH.PORT}${API_CONFIG.ENDPOINTS.REGISTRATION.GET_PROFILE}`,
+        { method: 'GET', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } }
+      );
       if (response.ok) {
-        const data = await response.json();
-        setTempUserData(data);
+        setTempUserData(await response.json());
       } else {
-        const errorText = await response.text();
-        console.error('Failed to fetch profile:', errorText);
+        console.error('Failed to fetch profile:', await response.text());
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -49,62 +50,21 @@ export default function DashboardModal({ visible, onClose }) {
     }
   };
 
-  // ── Use fetched data when available, fall back to auth context ────────────
-  // This is the key fix: dashboard shows the name/email from the API response,
-  // not the potentially stale value sitting in AuthContext.
-  const displayName  = tempUserData?.name  || userData?.name  || 'User Name';
-  const displayEmail = tempUserData?.email || userData?.email || 'user@example.com';
+  const displayName  = tempUserData?.name       || userData?.name       || 'User Name';
+  const displayEmail = tempUserData?.email      || userData?.email      || 'user@example.com';
   const displayPic   = tempUserData?.profilePic || userData?.profilePic
     || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&q=80';
 
-  const handleSignOut = () => {
-    signOut();
-    onClose();
-  };
+  const handleSignOut = () => { signOut(); onClose(); };
 
   const menuItems = [
-    {
-      icon: 'account-edit',
-      title: 'Edit Profile',
-      subtitle: 'Update your personal information',
-      onPress: () => { router.push('/user-profile'); onClose(); },
-    },
-    {
-      icon: 'target',
-      title: 'Goals & Targets',
-      subtitle: 'Set your fitness and nutrition goals',
-      onPress: () => { onClose(); },
-    },
-    {
-      icon: 'chart-line',
-      title: 'Progress Analytics',
-      subtitle: 'View your fitness journey progress',
-      onPress: () => { onClose(); },
-    },
-    {
-      icon: 'record',
-      title: 'Body Biometrics',
-      subtitle: 'View your body biometrics',
-      onPress: () => { router.push('/body-biometrics'); onClose(); },
-    },
-    {
-      icon: 'cog',
-      title: 'Settings',
-      subtitle: 'App preferences and notifications',
-      onPress: () => { onClose(); },
-    },
-    {
-      icon: 'help-circle',
-      title: 'Help & Support',
-      subtitle: 'Get help and contact support',
-      onPress: () => { router.push({ pathname: '/support-screen' }); onClose(); },
-    },
-    {
-      icon: 'information',
-      title: 'About',
-      subtitle: 'App version and information',
-      onPress: () => { router.push({ pathname: '/about' }); onClose(); },
-    },
+    { icon: 'account-edit',  title: 'Edit Profile',        subtitle: 'Update your personal information',        onPress: () => { router.push('/user-profile');    onClose(); } },
+    { icon: 'target',        title: 'Goals & Targets',     subtitle: 'Set your fitness and nutrition goals',    onPress: () => { onClose(); } },
+    { icon: 'chart-line',    title: 'Progress Analytics',  subtitle: 'View your fitness journey progress',      onPress: () => { onClose(); } },
+    { icon: 'record',        title: 'Body Biometrics',     subtitle: 'View your body biometrics',               onPress: () => { router.push('/body-biometrics'); onClose(); } },
+    { icon: 'cog',           title: 'Settings',            subtitle: 'App preferences and notifications',       onPress: () => { onClose(); } },
+    { icon: 'help-circle',   title: 'Help & Support',      subtitle: 'Get help and contact support',            onPress: () => { router.push({ pathname: '/support-screen' }); onClose(); } },
+    { icon: 'information',   title: 'About',               subtitle: 'App version and information',             onPress: () => { router.push({ pathname: '/about' }); onClose(); } },
   ];
 
   return (
@@ -125,7 +85,6 @@ export default function DashboardModal({ visible, onClose }) {
             {/* Profile section */}
             <Surface style={styles.profileSection}>
               {loading ? (
-                // Show a subtle skeleton while data loads so layout doesn't jump
                 <View style={styles.loadingRow}>
                   <View style={styles.avatarPlaceholder} />
                   <View style={{ flex: 1 }}>
@@ -137,18 +96,25 @@ export default function DashboardModal({ visible, onClose }) {
                 <View style={styles.profileHeader}>
                   <Avatar.Image size={80} source={{ uri: displayPic }} style={styles.profileAvatar} />
                   <View style={styles.profileInfo}>
-                    {/* ── FIX: name now comes from fetched tempUserData ── */}
                     <Text style={styles.userName}>{displayName}</Text>
                     <Text style={styles.userEmail}>{displayEmail}</Text>
+
+                    {/* ── Stats row — streak comes from HomeScreen prop ── */}
                     <View style={styles.statsRow}>
+                      {/* Streak tile */}
                       <View style={styles.statItem}>
-                        <Text style={styles.statValue}>{tempUserData?.currentStreak ?? 7}</Text>
+                        <View style={styles.streakRow}>
+                          <MaterialCommunityIcons name="lightning-bolt" size={16} color="#FFD700" />
+                          <Text style={[styles.statValue, styles.streakValue]}>{streak}</Text>
+                        </View>
                         <Text style={styles.statLabel}>Day Streak</Text>
                       </View>
+
                       <View style={styles.statItem}>
                         <Text style={styles.statValue}>{tempUserData?.goalProgress ?? '85%'}</Text>
                         <Text style={styles.statLabel}>Goal Progress</Text>
                       </View>
+
                       <View style={styles.statItem}>
                         <Text style={styles.statValue}>{tempUserData?.totalWorkouts ?? 12}</Text>
                         <Text style={styles.statLabel}>Workouts</Text>
@@ -201,7 +167,6 @@ const styles = StyleSheet.create({
   closeButton:   { padding: 5 },
   content:       { flex: 1, padding: 20 },
 
-  // Loading state
   loadingRow:        { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 8 },
   avatarPlaceholder: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#2A2C35' },
   loadingText:       { color: '#8E8E93', fontSize: 13, marginTop: 8 },
@@ -212,20 +177,25 @@ const styles = StyleSheet.create({
   profileInfo:    { flex: 1 },
   userName:       { fontSize: 20, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 4 },
   userEmail:      { fontSize: 14, color: '#999', marginBottom: 15 },
-  statsRow:       { flexDirection: 'row', justifyContent: 'space-between' },
-  statItem:       { alignItems: 'center' },
-  statValue:      { fontSize: 18, fontWeight: 'bold', color: '#4A90E2' },
-  statLabel:      { fontSize: 12, color: '#999', marginTop: 2 },
 
-  sectionTitle:   { fontSize: 18, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 15 },
-  menuSection:    { backgroundColor: '#23243A', borderRadius: 16, padding: 20, marginBottom: 20 },
-  menuItem:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15 },
-  menuItemLeft:   { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  menuItemText:   { marginLeft: 15, flex: 1 },
-  menuItemTitle:  { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
+  statsRow:   { flexDirection: 'row', justifyContent: 'space-between' },
+  statItem:   { alignItems: 'center' },
+  statValue:  { fontSize: 18, fontWeight: 'bold', color: '#4A90E2' },
+  statLabel:  { fontSize: 12, color: '#999', marginTop: 2 },
+
+  // Streak-specific styles inside statsRow
+  streakRow:   { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  streakValue: { color: '#FFD700' },  // golden to match home screen badge
+
+  sectionTitle:    { fontSize: 18, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 15 },
+  menuSection:     { backgroundColor: '#23243A', borderRadius: 16, padding: 20, marginBottom: 20 },
+  menuItem:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15 },
+  menuItemLeft:    { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  menuItemText:    { marginLeft: 15, flex: 1 },
+  menuItemTitle:   { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
   menuItemSubtitle:{ fontSize: 14, color: '#999', marginTop: 2 },
-  divider:        { backgroundColor: '#333', height: 1 },
+  divider:         { backgroundColor: '#333', height: 1 },
 
-  signOutButton:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#2A2A2A', borderRadius: 12, padding: 16, marginTop: 10 },
-  signOutText:    { fontSize: 16, fontWeight: '600', color: '#FF6B6B', marginLeft: 10 },
+  signOutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#2A2A2A', borderRadius: 12, padding: 16, marginTop: 10 },
+  signOutText:   { fontSize: 16, fontWeight: '600', color: '#FF6B6B', marginLeft: 10 },
 });

@@ -1,8 +1,10 @@
 // Centralized configuration for API endpoints
 // Change this IP address when your server IP changes
 const API_CONFIG = {
-  BASE_URL: 'http://192.168.1.11:8080/api',
-  BASE_URL_LOCALHOST: 'http://localhost:',
+  BASE_URL: 'http://192.168.1.21:8080/api',
+  // Use the same LAN IP here so physical devices (Expo Android/iOS) can reach your backend.
+  // Update this IP if your machine's address changes.
+  BASE_URL_LOCALHOST: 'http://192.168.1.21:',
   TIMEOUT: 10000, // 10 seconds
   ENDPOINTS: {
     AUTH: {

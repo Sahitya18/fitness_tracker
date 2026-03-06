@@ -1,11 +1,12 @@
 package com.fitness.register_service.repository;
 
-import com.fitness.register_service.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.fitness.register_service.model.User;
 
 public interface updateUserDetails extends JpaRepository<User, Long> {
 
@@ -27,7 +28,7 @@ public interface updateUserDetails extends JpaRepository<User, Long> {
                 activityLevel = CASE WHEN :field = 'activity_level' THEN :fieldValue ELSE activity_level END,
                 age = CASE WHEN :field = 'age' THEN :fieldValue ELSE age END,
                 workoutPlace = CASE WHEN :field = 'workout_place' THEN :fieldValue ELSE workout_place END,
-                sports = CASE WHEN :field = 'sports' THEN CAST(:fieldValue AS JSON) ELSE sports END
+                sports = CASE WHEN :field = 'sports' THEN :fieldValue ELSE sports END
             WHERE email = :email
             """, nativeQuery = true)
     int updateUserFieldByEmail(@Param("email") String email,

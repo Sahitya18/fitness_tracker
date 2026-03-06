@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Alert, StyleSheet, ScrollView,TextInput, Platform, Dimensions, KeyboardAvoidingView, Text, TouchableOpacity } from 'react-native';
+import { View, Alert, StyleSheet, ScrollView, TextInput, Platform, Dimensions, KeyboardAvoidingView, Text, TouchableOpacity } from 'react-native';
 import { Button, Surface, ProgressBar, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import API_CONFIG from '../utils/config';
@@ -50,9 +50,6 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      console.log('Sending request to:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTRATION.SEND_EMAIL_OTP}`);
-      
-      // Create request options with timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
       
@@ -70,43 +67,22 @@ export default function RegisterScreen() {
         signal: controller.signal,
         mode: 'cors'
       };
-
-      console.log('Request options:', JSON.stringify(requestOptions, null, 2));
       
       const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTRATION.SEND_EMAIL_OTP}`, requestOptions);
       clearTimeout(timeoutId);
-      
-      console.log('Response status:', res.status);
-      console.log('Response headers:', JSON.stringify(Object.fromEntries([...res.headers]), null, 2));
       
       if (res.ok) {
         setEmailOtpSent(true);
         Alert.alert('Success', 'OTP has been sent to your email');
       } else {
         const errorText = await res.text();
-        console.error('Server error:', errorText);
         Alert.alert('Failed', `Server error: ${errorText || 'Failed to send OTP'}`);
       }
     } catch (err) {
-      console.error('Network error details:', {
-        message: err.message,
-        name: err.name,
-        stack: err.stack,
-        cause: err.cause
-      });
-      
       if (err.name === 'AbortError') {
         Alert.alert('Timeout', 'Request timed out. Please check your internet connection and try again.');
       } else {
-        Alert.alert(
-          'Network Error', 
-          `Failed to connect to server. Please check:\n\n` +
-          `1. Your internet connection\n` +
-          `2. The server is running\n\n` +
-          `Technical details:\n${err.message}\n` +
-          `URL: ${API_CONFIG.BASE_URL}\n` +
-          `Platform: ${Platform.OS}`
-        );
+        Alert.alert('Network Error', `Failed to connect to server.\n\nDetails: ${err.message}`);
       }
     } finally {
       setLoading(false);
@@ -146,76 +122,66 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
+    // --- Validation ---
     if (!email || !mobile || !password || !confirmPassword) {
       Alert.alert('Validation', 'Please fill in all required fields');
       return;
     }
-
     if (!validateEmail(email)) {
       Alert.alert('Validation', 'Please enter a valid email address');
       return;
     }
-
     if (!validateMobile(mobile)) {
       Alert.alert('Validation', 'Please enter a valid 10-digit mobile number');
       return;
     }
-
     if (!validatePassword(password)) {
       Alert.alert('Validation', 'Password must be at least 6 characters long');
       return;
     }
-
     if (password !== confirmPassword) {
       Alert.alert('Validation', 'Passwords do not match');
       return;
     }
 
-    // if (!emailVerified) {
-    //   Alert.alert('Validation', 'Please verify email');
-    //   return;
-    // }
-
     setLoading(true);
     try {
-      // const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`, {
-      console.log("REGISTER URL:", `${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.REGISTRATION.PORT}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`);
-      const res = await fetch(`${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.REGISTRATION.PORT}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`, {
-        
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email, 
-          mobile, 
-          password
-        }),
-      });
-      if (res.ok) {
-          console.log('Registration successful for email:', email);
-          if(Platform.OS === 'web'){
-            window.alert("Registration successful!");
-            router.push({
-              pathname: '/profile-setup',
-              params: { email }
-            });
-          }else if(Platform.OS === 'android' || Platform.OS === 'ios'){
-          Alert.alert(
-            'Success', 
-            'Registration successful! Let\'s set up your fitness profile.', 
-            [
-              {
-                text: 'Continue',
-                onPress: () => router.push({
-                  pathname: '/profile-setup',
-                  params: { email }
-                })
-              }
-            ]
-          );
-        } else {
-          const errorText = await res.text();
-          Alert.alert('Failed', errorText);
+      console.log('REGISTER URL:', `${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.REGISTRATION.PORT}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`);
+      
+      const res = await fetch(
+        `${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.REGISTRATION.PORT}${API_CONFIG.ENDPOINTS.REGISTRATION.REGISTER}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, mobile, password }),
         }
+      );
+
+      if (res.ok) {
+        // ✅ SUCCESS — navigate to profile setup
+        console.log('Registration successful for email:', email);
+        const navigateToProfile = () => {
+          router.push({
+            pathname: '/profile-setup',
+            params: { email },
+          });
+        };
+
+        if (Platform.OS === 'web') {
+          window.alert('Registration successful!');
+          navigateToProfile();
+        } else {
+          // android & ios
+          Alert.alert(
+            'Success',
+            "Registration successful! Let's set up your fitness profile.",
+            [{ text: 'Continue', onPress: navigateToProfile }]
+          );
+        }
+      } else {
+        // ❌ SERVER ERROR
+        const errorText = await res.text();
+        Alert.alert('Registration Failed', errorText || 'Something went wrong. Please try again.');
       }
     } catch (err) {
       Alert.alert('Error', err.message);
@@ -287,23 +253,8 @@ export default function RegisterScreen() {
                   autoCapitalize="none"
                   style={[styles.input, { color: currentColors.text }]}
                   placeholderTextColor={currentColors.textTertiary}
-                  // editable={!emailVerified}
                 />
               </View>
-              
-              {/* {!emailVerified && (
-                <Button
-                  mode="contained"
-                  onPress={sendEmailOtp}
-                  loading={loading}
-                  disabled={loading || !validateEmail(email)}
-                  style={[styles.actionButton, { backgroundColor: currentColors.primary }]}
-                  contentStyle={styles.actionButtonContent}
-                  labelStyle={styles.actionButtonLabel}
-                >
-                  Send Email OTP
-                </Button>
-              )} */}
               
               {emailVerified && (
                 <View style={[styles.verifiedContainer, { backgroundColor: currentColors.success + '20' }]}>
@@ -319,49 +270,7 @@ export default function RegisterScreen() {
               )}
             </View>
 
-            {/* OTP Verification Section */}
-            {/* {emailOtpSent && !emailVerified && (
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Enter OTP</Text>
-                <View style={[styles.inputContainer, { 
-                  backgroundColor: 'transparent',
-                  borderColor: currentColors.border
-                }]}>
-                  <MaterialCommunityIcons 
-                    name="key-outline" 
-                    size={20} 
-                    color={currentColors.textSecondary} 
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChangeText={setOtp}
-                    keyboardType="number-pad"
-                    style={[styles.input, { color: currentColors.text }]}
-                    placeholderTextColor={currentColors.textTertiary}
-                    maxLength={6}
-                  />
-                </View>
-                <Button
-                  mode="contained"
-                  onPress={verifyEmailOtp}
-                  loading={loading}
-                  disabled={loading || !otp}
-                  style={[styles.actionButton, { backgroundColor: currentColors.secondary }]}
-                  contentStyle={styles.actionButtonContent}
-                  labelStyle={styles.actionButtonLabel}
-                >
-                  Verify OTP
-                </Button>
-              </View>
-            )} */}
-
-            {/* Additional Information Section */}
-
-            {/* otp section is removed to simplify the flow, we can add it back if needed in future iterations */}
-            {/* <View style={[styles.section, { opacity: emailVerified ? 1 : 0.6 }]}> */}
-            
+            {/* Account Details Section */}
             <View style={[styles.section, { opacity: 1 }]}>
               <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Account Details</Text>
 
@@ -382,10 +291,10 @@ export default function RegisterScreen() {
                   keyboardType="phone-pad"
                   style={[styles.input, { color: currentColors.text }]}
                   placeholderTextColor={currentColors.textTertiary}
-                  // editable={emailVerified}
                   maxLength={10}
                 />
               </View>
+
               <View style={[styles.inputContainer, { 
                 backgroundColor: currentColors.surfaceVariant,
                 borderColor: currentColors.borderLight 
@@ -403,7 +312,6 @@ export default function RegisterScreen() {
                   secureTextEntry={secureTextEntry}
                   style={[styles.input, { color: currentColors.text }]}
                   placeholderTextColor={currentColors.textTertiary}
-                  // editable={emailVerified}
                 />
                 <TouchableOpacity 
                   onPress={() => setSecureTextEntry(!secureTextEntry)}
@@ -416,6 +324,7 @@ export default function RegisterScreen() {
                   />
                 </TouchableOpacity>
               </View>
+
               <View style={[styles.inputContainer, { 
                 backgroundColor: currentColors.surfaceVariant,
                 borderColor: currentColors.borderLight 
@@ -433,7 +342,6 @@ export default function RegisterScreen() {
                   secureTextEntry={showConfirmPassword}
                   style={[styles.input, { color: currentColors.text }]}
                   placeholderTextColor={currentColors.textTertiary}
-                  // editable={emailVerified}
                 />
                 <TouchableOpacity 
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -453,7 +361,6 @@ export default function RegisterScreen() {
               mode="contained"
               onPress={handleRegister}
               loading={loading}
-              // disabled={!emailVerified}
               style={[styles.registerButton, { backgroundColor: currentColors.primary }]}
               contentStyle={styles.registerButtonContent}
               labelStyle={styles.registerButtonLabel}
@@ -553,7 +460,6 @@ const styles = StyleSheet.create({
   },
   subtitleText: {
     fontSize: 14,
-    color: Colors.light.textSecondary,
     textAlign: 'center',
     marginBottom: 20,
   },

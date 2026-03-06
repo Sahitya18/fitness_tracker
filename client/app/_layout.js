@@ -1,56 +1,55 @@
-import { Stack } from 'expo-router';
+import { Stack, router, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../utils/AuthContext';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useEffect } from 'react';
-import { router, useSegments } from 'expo-router';
-import { Slot } from 'expo-router';
 
-// This hook will protect the route access based on user authentication
-function useProtectedRoute(isAuthenticated) {
+function useProtectedRoute(isAuthenticated, isLoading) {
   const segments = useSegments();
 
   useEffect(() => {
-    const inAuthGroup = segments[0] === '(auth)';
-    
-    if (!isAuthenticated && !inAuthGroup) {
-      // Redirect to the login page if not authenticated
+    // Don't redirect while session is still being restored from AsyncStorage
+    if (isLoading) return;
+
+    const onAuthScreen = ['login', 'register', 'forgot-password'].includes(segments[0]);
+
+    if (!isAuthenticated && !onAuthScreen) {
+      // Not logged in → send to login
       router.replace('/login');
-    } else if (isAuthenticated && inAuthGroup) {
-      // Redirect away from auth group pages if authenticated
+    } else if (isAuthenticated && onAuthScreen) {
+      // Already logged in but on an auth screen → send straight to app
       router.replace('/home');
     }
-  }, [isAuthenticated, segments]);
+  }, [isAuthenticated, isLoading, segments]);
 }
 
 function RootLayoutNav() {
   const { isLoading, userToken } = useAuth();
-  useProtectedRoute(!!userToken);
+  useProtectedRoute(!!userToken, isLoading);
 
+  // Block all rendering until AsyncStorage token restore is done —
+  // prevents the login screen flashing before the session is confirmed.
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
+      <View style={styles.splash}>
+        <ActivityIndicator size="large" color="#4A90E2" />
       </View>
     );
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#f5f5f5',
-        },
-        headerTintColor: '#000',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}>
-      <Stack.Screen
-        name="index"
-        options={{
-          headerShown: false,
-        }}
-      />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index"             />
+      <Stack.Screen name="login"             />
+      <Stack.Screen name="register"          />
+      <Stack.Screen name="forgot-password"   />
+      <Stack.Screen name="home"              />
+      <Stack.Screen name="meal-details"      />
+      <Stack.Screen name="food-detail"       />
+      <Stack.Screen name="add-meal-manually" />
+      <Stack.Screen name="user-profile"      />
+      <Stack.Screen name="body-biometrics"   />
+      <Stack.Screen name="support-screen"    />
+      <Stack.Screen name="about"             />
     </Stack>
   );
 }
@@ -58,7 +57,16 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <Slot />
+      <RootLayoutNav />
     </AuthProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  splash: {
+    flex: 1,
+    backgroundColor: '#1A1B1E',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

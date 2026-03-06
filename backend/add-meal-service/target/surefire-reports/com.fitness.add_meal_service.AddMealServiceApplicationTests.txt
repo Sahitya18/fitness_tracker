@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.fitness.add_meal_service.AddMealServiceApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.520 s -- in com.fitness.add_meal_service.AddMealServiceApplicationTests

@@ -1,3 +1,8 @@
+/**
+ * HomeScreen.jsx - NEW APPROACH
+ * Uses timestamp comparison to detect fresh logins
+ */
+
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
@@ -12,6 +17,7 @@ import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-na
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DashboardModal from '../components/DashboardModal';
 import API_CONFIG from '../utils/config';
+import { checkAndUpdateStreak } from '../utils/StreakUtils';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 32;
@@ -25,30 +31,22 @@ const ALL_MEAL_OPTIONS = [
   { mealType: 'dinner',         name: 'Dinner',         icon: 'food-turkey',     time: '7:00 PM',  color: '#E8537A' },
 ];
 
-// Maps API camelCase keys → local snake_case storage keys
 const API_KEY_TO_STORAGE_KEY = {
-  breakfast:      'breakfast',
-  postBreakfast:  'post_breakfast',
-  lunch:          'lunch',
-  postLunch:      'post_lunch',
-  preWorkout:     'pre_workout',
-  dinner:         'dinner',
+  breakfast:     'breakfast',
+  postBreakfast: 'post_breakfast',
+  lunch:         'lunch',
+  postLunch:     'post_lunch',
+  preWorkout:    'pre_workout',
+  dinner:        'dinner',
 };
 
-// Non-meal keys in the API response to skip
-const SKIP_API_KEYS = new Set([
-  'id', 'mealDate', 'createdAt', 'updatedAt', 'totalCalories',
-  'breakfastCalories', 'postBreakfastCalories', 'lunchCalories',
-  'postLunchCalories', 'preWorkoutCalories', 'dinnerCalories',
-]);
-
 const storageKey = (mealType, date) => {
-  const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+  const dateStr = date.toISOString().split('T')[0];
   return `recentMeals_${mealType}_${dateStr}`;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DATE SLIDER
+// DATE SLIDER (keeping existing implementation)
 // ─────────────────────────────────────────────────────────────────────────────
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const ITEM_WIDTH = 52, ITEM_SPACING = 6, ITEM_TOTAL = ITEM_WIDTH + ITEM_SPACING;
@@ -110,7 +108,7 @@ function DateSlider({ selectedDate, onDateChange }) {
   const renderItem    = useCallback(({ item }) => (
     <DateItem item={item} isSelected={selectedKey === item.key} onPress={() => handleSelect(item)} />
   ), [selectedKey, handleSelect]);
-  
+
   const selectedItem = dates.find(d => d.key === selectedKey);
 
   return (
@@ -151,7 +149,37 @@ const dsStyles = StyleSheet.create({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FOOD TRACKER CARD
+// STREAK BADGE
+// ─────────────────────────────────────────────────────────────────────────────
+function StreakBadge({ streak }) {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.2,  duration: 700, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.0,  duration: 700, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+  return (
+    <View style={sbStyles.wrapper}>
+      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+        <MaterialCommunityIcons name="lightning-bolt" size={24} color="#FFD700" />
+      </Animated.View>
+      <Text style={sbStyles.count}>{streak}</Text>
+      <Text style={sbStyles.label}>day{streak !== 1 ? 's' : ''}</Text>
+    </View>
+  );
+}
+
+const sbStyles = StyleSheet.create({
+  wrapper: { width: 46, alignItems: 'center', justifyContent: 'center', gap: 1, paddingVertical: 4 },
+  count:   { color: '#FFD700', fontSize: 15, fontWeight: '900', lineHeight: 17 },
+  label:   { color: 'rgba(255,215,0,0.6)', fontSize: 9, fontWeight: '600', letterSpacing: 0.3 },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FOOD TRACKER CARD (keeping existing implementation)
 // ─────────────────────────────────────────────────────────────────────────────
 const MACRO_CONFIG = [
   { key: 'protein', label: 'Protein', colors: ['#2F6FB5', '#4A90E2'], glow: 'rgba(74,144,226,0.25)', goal: 150 },
@@ -192,20 +220,12 @@ function CalorieRing({ consumed, goal }) {
   const animProg = useRef(new Animated.Value(0)).current;
   const r = 52, cx = 64, cy = 64, circ = 2 * Math.PI * r;
   const [offset, setOffset] = useState(circ);
-
   const isOver = consumed > goal;
-  const normalColors  = { start: '#4A90E2', end: '#7BBCFF' };
-  const overColors    = { start: '#C0392B', end: '#FF6B6B' };
-  const activeColors  = isOver ? overColors : normalColors;
+  const activeColors = isOver ? { start: '#C0392B', end: '#FF6B6B' } : { start: '#4A90E2', end: '#7BBCFF' };
 
   useEffect(() => {
-    Animated.timing(animProg, {
-      toValue:  Math.min(consumed / goal, 1),
-      duration: 1100,
-      useNativeDriver: false,
-    }).start();
+    Animated.timing(animProg, { toValue: Math.min(consumed / goal, 1), duration: 1100, useNativeDriver: false }).start();
   }, [consumed, goal]);
-
   useEffect(() => {
     const id = animProg.addListener(({ value }) => setOffset(circ * (1 - value)));
     return () => animProg.removeListener(id);
@@ -221,15 +241,8 @@ function CalorieRing({ consumed, goal }) {
           </SvgGradient>
         </Defs>
         <Circle cx={cx} cy={cy} r={r} fill="none" stroke="#1E2130" strokeWidth={10} />
-        <Circle
-          cx={cx} cy={cy} r={r}
-          fill="none"
-          stroke="url(#rg)"
-          strokeWidth={10}
-          strokeDasharray={circ}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-        />
+        <Circle cx={cx} cy={cy} r={r} fill="none" stroke="url(#rg)" strokeWidth={10}
+          strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" />
       </Svg>
       <View style={ftStyles.ringOverlay}>
         <Text style={ftStyles.ringCaption}>CALORIES</Text>
@@ -272,8 +285,8 @@ const ftStyles = StyleSheet.create({
   cardTitle:  { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
   badge:      { backgroundColor: 'rgba(74,144,226,0.15)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
   badgeOver:  { backgroundColor: 'rgba(192,57,43,0.15)' },
-  badgeText:      { color: '#4A90E2', fontSize: 11, fontWeight: '600' },
-  badgeTextOver:  { color: '#FF6B6B' },
+  badgeText:     { color: '#4A90E2', fontSize: 11, fontWeight: '600' },
+  badgeTextOver: { color: '#FF6B6B' },
   cardBody:   { flexDirection: 'row', alignItems: 'center', gap: 14 },
   barsCol:    { flex: 1, justifyContent: 'center' },
   macroRow:   { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
@@ -287,17 +300,17 @@ const ftStyles = StyleSheet.create({
   consumed:   { fontSize: 13, fontWeight: '800', lineHeight: 16 },
   slash:      { color: '#3A4050', fontSize: 11, marginHorizontal: 2 },
   goalText:   { color: '#4A5060', fontSize: 10, fontWeight: '500' },
-  ringWrap:     { width: 128, height: 128, position: 'relative', flexShrink: 0 },
-  ringOverlay:  { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
-  ringCaption:  { color: '#7A8499', fontSize: 8, fontWeight: '700', letterSpacing: 0.8, marginBottom: 2 },
-  ringCount:    { color: '#FFFFFF', fontSize: 26, fontWeight: '900', lineHeight: 30 },
-  ringDivider:  { width: 32, height: 1, backgroundColor: '#3A4050', marginVertical: 3 },
-  ringGoal:     { color: '#5A6375', fontSize: 12, fontWeight: '600' },
+  ringWrap:    { width: 128, height: 128, position: 'relative', flexShrink: 0 },
+  ringOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  ringCaption: { color: '#7A8499', fontSize: 8, fontWeight: '700', letterSpacing: 0.8, marginBottom: 2 },
+  ringCount:   { color: '#FFFFFF', fontSize: 26, fontWeight: '900', lineHeight: 30 },
+  ringDivider: { width: 32, height: 1, backgroundColor: '#3A4050', marginVertical: 3 },
+  ringGoal:    { color: '#5A6375', fontSize: 12, fontWeight: '600' },
   ringOverLabel:{ color: '#FF6B6B', fontSize: 9, fontWeight: '800', letterSpacing: 0.5, marginTop: 3 },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HOME SCREEN
+// HOME SCREEN - NEW TIMESTAMP-BASED APPROACH
 // ─────────────────────────────────────────────────────────────────────────────
 const formatTime = (min) => {
   const hh = String(Math.floor(min / 60) % 24).padStart(2, '0');
@@ -310,19 +323,20 @@ export default function HomeScreen() {
   const { returnTab: returnTabParam } = useLocalSearchParams();
   const pendingTabRef = useRef(null);
 
-  const [selectedDate,   setSelectedDate]   = useState(new Date());
-  const [activeTab,      setActiveTab]      = useState('home');
-  const [showDashboard,  setShowDashboard]  = useState(false);
-  const [activeCard,     setActiveCard]     = useState(0);
-  const [numberOfMeals,  setNumberOfMeals]  = useState(5);
+  const [selectedDate,     setSelectedDate]     = useState(new Date());
+  const [activeTab,        setActiveTab]        = useState('home');
+  const [showDashboard,    setShowDashboard]    = useState(false);
+  const [activeCard,       setActiveCard]       = useState(0);
+  const [numberOfMeals,    setNumberOfMeals]    = useState(5);
   const [showMealSelector, setShowMealSelector] = useState(false);
+  const [streak,           setStreak]           = useState(1);
   const activeMealSlots = ALL_MEAL_OPTIONS.slice(0, numberOfMeals);
 
   const [mealCounts,       setMealCounts]       = useState({});
   const [caloriesConsumed, setCaloriesConsumed] = useState(0);
   const [macros,           setMacros]           = useState({ protein: 0, carbs: 0, fats: 0, fiber: 0 });
   const [loading,          setLoading]          = useState(false);
-  
+
   const [caloriesGoal]  = useState(2000);
   const [sleepHours]    = useState(6);
   const [steps]         = useState(8104);
@@ -334,32 +348,54 @@ export default function HomeScreen() {
     { id: 4, image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=200&h=200&fit=crop&q=80', name: 'Fruit Bowl' },
   ]);
 
-  // ═══ POINT 1: Load saved date on mount ═══
+  // ═══ NEW APPROACH: Timestamp-based login detection ═══
   useEffect(() => {
-    const loadSavedDate = async () => {
+    const initializeDate = async () => {
       try {
-        const savedDate = await AsyncStorage.getItem('selectedDate');
-        if (savedDate) {
-          setSelectedDate(new Date(savedDate));
-          console.log('Loaded saved date:', savedDate);
+        const lastLoginTimestamp = await AsyncStorage.getItem('lastLoginTimestamp');
+        const homeScreenInitTimestamp = await AsyncStorage.getItem('homeScreenInitTimestamp');
+        
+        console.log('═══ DATE INITIALIZATION ═══');
+        console.log('Last login timestamp:', lastLoginTimestamp);
+        console.log('HomeScreen init timestamp:', homeScreenInitTimestamp);
+        
+        // If login timestamp is NEWER than HomeScreen init timestamp = FRESH LOGIN
+        if (lastLoginTimestamp && (!homeScreenInitTimestamp || parseInt(lastLoginTimestamp) > parseInt(homeScreenInitTimestamp))) {
+          console.log('✅ FRESH LOGIN DETECTED - Resetting to TODAY');
+          
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          setSelectedDate(today);
+          await AsyncStorage.setItem('selectedDate', today.toISOString());
+          
+          // Mark that HomeScreen has been initialized for this login
+          await AsyncStorage.setItem('homeScreenInitTimestamp', Date.now().toString());
+          
+          console.log('✓ Date set to today:', today.toDateString());
+        } else {
+          console.log('📅 NOT fresh login - Loading saved date');
+          
+          const savedDate = await AsyncStorage.getItem('selectedDate');
+          if (savedDate) {
+            setSelectedDate(new Date(savedDate));
+            console.log('✓ Loaded saved date:', new Date(savedDate).toDateString());
+          } else {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            setSelectedDate(today);
+            await AsyncStorage.setItem('selectedDate', today.toISOString());
+            console.log('✓ No saved date - using today:', today.toDateString());
+          }
         }
+        
+        console.log('═══════════════════════════\n');
       } catch (e) {
-        console.error('Error loading saved date:', e);
+        console.error('❌ Date init error:', e);
       }
     };
-    loadSavedDate();
+    
+    initializeDate();
   }, []);
-
-  // ═══ POINT 1: Save date whenever it changes ═══
-  const handleDateChange = async (date) => {
-    try {
-      setSelectedDate(date);
-      await AsyncStorage.setItem('selectedDate', date.toISOString());
-      console.log('Date changed to:', date.toISOString());
-    } catch (e) {
-      console.error('Error saving date:', e);
-    }
-  };
 
   useEffect(() => {
     AsyncStorage.getItem('numberOfMeals').then(s => { if (s) setNumberOfMeals(parseInt(s)); }).catch(() => {});
@@ -372,183 +408,77 @@ export default function HomeScreen() {
 
   useEffect(() => { if (returnTabParam) pendingTabRef.current = returnTabParam; }, [returnTabParam]);
 
-  // ═══ POINT 2: Fetch date-specific data whenever date or numberOfMeals changes ═══
   useFocusEffect(
     React.useCallback(() => {
-      console.log('=== HOME SCREEN FOCUSED ===');
-      console.log('Selected date:', selectedDate.toISOString());
-      if (pendingTabRef.current) { 
-        setActiveTab(pendingTabRef.current); 
-        pendingTabRef.current = null; 
-      }
+      if (pendingTabRef.current) { setActiveTab(pendingTabRef.current); pendingTabRef.current = null; }
+      checkAndUpdateStreak().then(s => setStreak(s));
       fetchMealDataForDate();
     }, [selectedDate, numberOfMeals])
   );
 
-  // ═══ POINT 2: Fetch meal data from API for selected date ═══
+  const handleDateChange = async (date) => {
+    try { setSelectedDate(date); await AsyncStorage.setItem('selectedDate', date.toISOString()); }
+    catch (e) { console.error(e); }
+  };
+
   const fetchMealDataForDate = async () => {
     try {
       setLoading(true);
-      const dateStr = selectedDate.toISOString().split('T')[0]; // YYYY-MM-DD
-      const token = userToken || await AsyncStorage.getItem('userToken');
-      
-      if (!token) {
-        console.warn('No token found, falling back to local storage');
-        await aggregateMealsFromLocalStorage();
-        return;
-      }
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const token   = userToken || await AsyncStorage.getItem('userToken');
+      if (!token) { await aggregateMealsFromLocalStorage(); return; }
 
-      console.log(`Fetching meals for date: ${dateStr}`);
-      
       const url = `${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.MEALS.PORT}/api/meals/date/${dateStr}`;
-      console.log('API URL:', url);
+      const response = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('API Response:', data);
-        await processMealData(data);
-      } else {
-        console.warn('API failed with status', response.status, '— falling back to local storage');
-        await aggregateMealsFromLocalStorage();
-      }
-    } catch (error) {
-      console.error('Error fetching meal data:', error);
+      if (response.ok) { await processMealData(await response.json()); }
+      else             { await aggregateMealsFromLocalStorage(); }
+    } catch (e) {
+      console.error('fetchMealDataForDate error:', e);
       await aggregateMealsFromLocalStorage();
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  /**
-   * ═══ POINT 2: Process flat API response object ═══
-   *
-   * API shape (flat object, NOT an array):
-   * {
-   *   breakfast:     { mealType, totalCalories, items: [{name, quantity, macros}] },
-   *   postBreakfast: { ... },
-   *   lunch:         { ... },
-   *   postLunch:     { ... },
-   *   preWorkout:    { ... },
-   *   dinner:        { ... },
-   *   totalCalories: 1598,
-   *   mealDate:      "2026-02-04",
-   *   id, createdAt, updatedAt, breakfastCalories, ...
-   * }
-   */
   const processMealData = async (apiData) => {
     try {
       let totalCal = 0, totalProt = 0, totalCarbs = 0, totalFats = 0, totalFiber = 0;
       const counts = {};
-
-      for (const [apiKey, storageSlotKey] of Object.entries(API_KEY_TO_STORAGE_KEY)) {
-        const slotData = apiData[apiKey]; // e.g. apiData.postBreakfast
-
+      for (const [apiKey, slotKey] of Object.entries(API_KEY_TO_STORAGE_KEY)) {
+        const slotData = apiData[apiKey];
         if (!slotData || !Array.isArray(slotData.items) || slotData.items.length === 0) {
-          counts[storageSlotKey] = 0;
-          // Clear stale local storage for this date+slot so MealDetailsScreen
-          // doesn't show old entries when the server says none exist.
-          const key = storageKey(storageSlotKey, selectedDate);
-          await AsyncStorage.setItem(key, JSON.stringify([]));
+          counts[slotKey] = 0;
+          await AsyncStorage.setItem(storageKey(slotKey, selectedDate), JSON.stringify([]));
           continue;
         }
-
         const items = slotData.items;
-        counts[storageSlotKey] = items.length;
-
-        // Transform API items → local storage format used by MealDetailsScreen
-        const transformedMeals = items.map((item, index) => {
-          // Parse numeric part and unit from quantity string e.g. "200g" → 200, "g"
-          const quantityStr = String(item.quantity || '');
-          const weightNum   = parseFloat(quantityStr) || 100;
-          const weightUnit  = quantityStr.replace(/[0-9.\s]/g, '') || 'g';
-
-          return {
-            id:         `api_${apiKey}_${index}`,
-            entryId:    `api_${apiKey}_${index}_${Date.now()}`,
-            mealName:   item.name,
-            weight:     weightNum,
-            weightUnit: weightUnit,
-            calories:   item.macros?.calories ?? 0,
-            protein:    item.macros?.protein  ?? 0,
-            carbs:      item.macros?.carbs    ?? 0,
-            fats:       item.macros?.fat      ?? 0,  // API uses "fat", storage uses "fats"
-            fiber:      item.macros?.fiber    ?? 0,
-            photoUrl:   '',
-            category:   'API',
-          };
+        counts[slotKey] = items.length;
+        const transformed = items.map((item, i) => {
+          const qStr = String(item.quantity || '');
+          return { id: `api_${apiKey}_${i}`, entryId: `api_${apiKey}_${i}_${Date.now()}`, mealName: item.name, weight: parseFloat(qStr) || 100, weightUnit: qStr.replace(/[0-9.\s]/g, '') || 'g', calories: item.macros?.calories ?? 0, protein: item.macros?.protein ?? 0, carbs: item.macros?.carbs ?? 0, fats: item.macros?.fat ?? 0, fiber: item.macros?.fiber ?? 0, photoUrl: '', category: 'API' };
         });
-
-        // Persist to date-specific local storage so MealDetailsScreen can read it
-        const key = storageKey(storageSlotKey, selectedDate);
-        await AsyncStorage.setItem(key, JSON.stringify(transformedMeals));
-
-        // Accumulate totals from API macros
-        items.forEach(item => {
-          totalCal   += item.macros?.calories ?? 0;
-          totalProt  += item.macros?.protein  ?? 0;
-          totalCarbs += item.macros?.carbs    ?? 0;
-          totalFats  += item.macros?.fat      ?? 0;
-          totalFiber += item.macros?.fiber    ?? 0;
-        });
+        await AsyncStorage.setItem(storageKey(slotKey, selectedDate), JSON.stringify(transformed));
+        items.forEach(item => { totalCal += item.macros?.calories ?? 0; totalProt += item.macros?.protein ?? 0; totalCarbs += item.macros?.carbs ?? 0; totalFats += item.macros?.fat ?? 0; totalFiber += item.macros?.fiber ?? 0; });
       }
-
-      console.log('Processed meal counts:', counts);
-      console.log('Total calories:', totalCal);
-
       setMealCounts(counts);
       setCaloriesConsumed(Math.round(totalCal));
-      setMacros({
-        protein: Math.round(totalProt),
-        carbs:   Math.round(totalCarbs),
-        fats:    Math.round(totalFats),
-        fiber:   Math.round(totalFiber),
-      });
-    } catch (error) {
-      console.error('Error processing meal data:', error);
-    }
+      setMacros({ protein: Math.round(totalProt), carbs: Math.round(totalCarbs), fats: Math.round(totalFats), fiber: Math.round(totalFiber) });
+    } catch (e) { console.error('processMealData error:', e); }
   };
 
-  // ═══ POINT 2: Fallback to local storage (date-specific) ═══
   const aggregateMealsFromLocalStorage = async () => {
     try {
       let totalCal = 0, totalProt = 0, totalCarbs = 0, totalFats = 0, totalFiber = 0;
       const counts = {};
-
       for (const slot of ALL_MEAL_OPTIONS.slice(0, numberOfMeals)) {
-        const key = storageKey(slot.mealType, selectedDate);
-        const stored = await AsyncStorage.getItem(key);
-        const meals = stored ? JSON.parse(stored) : [];
-        
+        const stored = await AsyncStorage.getItem(storageKey(slot.mealType, selectedDate));
+        const meals  = stored ? JSON.parse(stored) : [];
         counts[slot.mealType] = meals.length;
-
-        meals.forEach(meal => {
-          totalCal   += parseFloat(meal.calories) || 0;
-          totalProt  += parseFloat(meal.protein)  || 0;
-          totalCarbs += parseFloat(meal.carbs)    || 0;
-          totalFats  += parseFloat(meal.fats)     || 0;
-          totalFiber += parseFloat(meal.fiber)    || 0;
-        });
+        meals.forEach(m => { totalCal += parseFloat(m.calories) || 0; totalProt += parseFloat(m.protein) || 0; totalCarbs += parseFloat(m.carbs) || 0; totalFats += parseFloat(m.fats) || 0; totalFiber += parseFloat(m.fiber) || 0; });
       }
-
       setMealCounts(counts);
       setCaloriesConsumed(Math.round(totalCal));
-      setMacros({
-        protein: Math.round(totalProt),
-        carbs:   Math.round(totalCarbs),
-        fats:    Math.round(totalFats),
-        fiber:   Math.round(totalFiber),
-      });
-    } catch (e) {
-      console.error('Error aggregating meals from local storage:', e);
-    }
+      setMacros({ protein: Math.round(totalProt), carbs: Math.round(totalCarbs), fats: Math.round(totalFats), fiber: Math.round(totalFiber) });
+    } catch (e) { console.error('aggregateMealsFromLocalStorage error:', e); }
   };
 
   const renderGymCard = () => (
@@ -573,11 +503,7 @@ export default function HomeScreen() {
         ))}
       </View>
       <View style={hsStyles.gymSubRow}>
-        {[
-          { val: workoutStats.exercises, label: 'Exercises' },
-          { val: workoutStats.sets,      label: 'Sets'      },
-          { val: workoutStats.reps,      label: 'Total Reps'},
-        ].map(({ val, label }, i) => (
+        {[{ val: workoutStats.exercises, label: 'Exercises' }, { val: workoutStats.sets, label: 'Sets' }, { val: workoutStats.reps, label: 'Total Reps' }].map(({ val, label }, i) => (
           <React.Fragment key={label}>
             {i > 0 && <View style={hsStyles.gymSubDivider} />}
             <View style={hsStyles.gymSubItem}>
@@ -593,14 +519,12 @@ export default function HomeScreen() {
   return (
     <ScrollView style={hsStyles.container} showsVerticalScrollIndicator={false}>
       <Surface style={hsStyles.headerSurface}>
-        <TouchableOpacity onPress={() => setShowDashboard(true)} style={hsStyles.avatarBtn}>
-          <Avatar.Image size={38} source={{ uri: userData?.profilePic || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&q=80' }} />
-        </TouchableOpacity>
+        <StreakBadge streak={streak} />
         <View style={hsStyles.sliderContainer}>
           <DateSlider selectedDate={selectedDate} onDateChange={handleDateChange} />
         </View>
         <TouchableOpacity onPress={() => setShowDashboard(true)} style={hsStyles.avatarBtn}>
-          <Avatar.Image size={38} source={{ uri: userData?.profilePic || 'https://via.placeholder.com/40' }} />
+          <Avatar.Image size={38} source={{ uri: userData?.profilePic || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&q=80' }} />
         </TouchableOpacity>
       </Surface>
 
@@ -612,11 +536,7 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      {loading && (
-        <View style={hsStyles.loadingOverlay}>
-          <Text style={hsStyles.loadingText}>Loading meals...</Text>
-        </View>
-      )}
+      {loading && <View style={hsStyles.loadingOverlay}><Text style={hsStyles.loadingText}>Loading meals…</Text></View>}
 
       {activeTab === 'home' && (
         <View style={hsStyles.cardContainer}>
@@ -638,9 +558,7 @@ export default function HomeScreen() {
           <Surface style={hsStyles.trackerCard}>
             <View style={hsStyles.mealHeader}>
               <Text style={hsStyles.sectionTitle}>
-                {selectedDate.toDateString() === new Date().toDateString() 
-                  ? "Today's Meals" 
-                  : `Meals for ${selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+                {selectedDate.toDateString() === new Date().toDateString() ? "Today's Meals" : `Meals for ${selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
               </Text>
               <TouchableOpacity onPress={() => setShowMealSelector(true)} style={hsStyles.mealConfigBtn}>
                 <MaterialCommunityIcons name="cog" size={20} color="#4A90E2" />
@@ -652,25 +570,13 @@ export default function HomeScreen() {
                 const count = mealCounts[m.mealType] || 0;
                 return (
                   <TouchableOpacity key={m.mealType} style={hsStyles.mealItem}
-                    onPress={() => router.push({
-                      pathname: '/meal-details',
-                      params: {
-                        mealType:     m.mealType,
-                        mealLabel:    m.name,
-                        returnTab:    'kitchen',
-                        selectedDate: selectedDate.toISOString(),
-                      },
-                    })}>
-                    <View style={hsStyles.mealIconWrap}>
-                      <MaterialCommunityIcons name={m.icon} size={20} color={m.color} />
-                    </View>
+                    onPress={() => router.push({ pathname: '/meal-details', params: { mealType: m.mealType, mealLabel: m.name, returnTab: 'kitchen', selectedDate: selectedDate.toISOString() } })}>
+                    <View style={hsStyles.mealIconWrap}><MaterialCommunityIcons name={m.icon} size={20} color={m.color} /></View>
                     <View style={{ flex: 1 }}>
                       <Text style={hsStyles.mealName}>{m.name}</Text>
                       <Text style={hsStyles.mealTime}>{m.time}</Text>
                     </View>
-                    {count > 0
-                      ? <View style={hsStyles.countBadge}><Text style={hsStyles.countText}>{count}</Text></View>
-                      : <View style={hsStyles.statusDot} />}
+                    {count > 0 ? <View style={hsStyles.countBadge}><Text style={hsStyles.countText}>{count}</Text></View> : <View style={hsStyles.statusDot} />}
                   </TouchableOpacity>
                 );
               })}
@@ -737,7 +643,7 @@ export default function HomeScreen() {
       </Modal>
 
       <View style={{ height: 100 }} />
-      <DashboardModal visible={showDashboard} onClose={() => setShowDashboard(false)} />
+      <DashboardModal visible={showDashboard} onClose={() => setShowDashboard(false)} streak={streak} />
     </ScrollView>
   );
 }
@@ -773,43 +679,43 @@ const hsStyles = StyleSheet.create({
   gymSubItem:     { flex: 1, alignItems: 'center' },
   gymSubVal:      { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
   gymSubLabel:    { color: '#8E8E93', fontSize: 10, marginTop: 2 },
-  gymSubDivider:  { width: 1, backgroundColor: '#3A4A', marginVertical: 4 },
+  gymSubDivider:  { width: 1, backgroundColor: '#3A3D4A', marginVertical: 4 },
   pageIndicators: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 8 },
   pageIndicator:  { width: 8, height: 8, borderRadius: 4, backgroundColor: '#3A3B3F', marginHorizontal: 4 },
   activePageIndicator: { backgroundColor: '#4A90E2', width: 24 },
-  mealList:   { gap: 8 },
-  mealItem:   { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 12, backgroundColor: '#1A1B1E', borderRadius: 12 },
-  mealIconWrap:   { width: 38, height: 38, borderRadius: 19, backgroundColor: '#252830', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  mealName:   { color: '#FFFFFF', fontSize: 15, fontWeight: 'bold' },
-  mealTime:   { color: '#8E8E93', fontSize: 12, marginTop: 2 },
-  statusDot:  { width: 10, height: 10, borderRadius: 5, backgroundColor: '#FFA726' },
-  countBadge: { backgroundColor: '#4A90E2', borderRadius: 12, width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
-  countText:  { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
-  statsGrid:  { flexDirection: 'row', gap: 16, marginBottom: 16 },
-  statCard:   { flex: 1, backgroundColor: '#252830', borderRadius: 20, padding: 16 },
-  statHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  statTitle:  { color: '#FFFFFF', fontSize: 16, marginLeft: 8 },
-  sleepGraph: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 60, marginBottom: 8 },
-  sleepBar:   { width: 4, backgroundColor: '#4A90E2', borderRadius: 2 },
-  statValue:  { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
-  stepsWrap:  { alignItems: 'center', marginTop: 8 },
-  stepsCount: { color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' },
-  stepsLabel: { color: '#8E8E93', fontSize: 14 },
+  mealList:    { gap: 8 },
+  mealItem:    { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 12, backgroundColor: '#1A1B1E', borderRadius: 12 },
+  mealIconWrap:{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#252830', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  mealName:    { color: '#FFFFFF', fontSize: 15, fontWeight: 'bold' },
+  mealTime:    { color: '#8E8E93', fontSize: 12, marginTop: 2 },
+  statusDot:   { width: 10, height: 10, borderRadius: 5, backgroundColor: '#FFA726' },
+  countBadge:  { backgroundColor: '#4A90E2', borderRadius: 12, width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  countText:   { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  statsGrid:   { flexDirection: 'row', gap: 16, marginBottom: 16 },
+  statCard:    { flex: 1, backgroundColor: '#252830', borderRadius: 20, padding: 16 },
+  statHeader:  { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  statTitle:   { color: '#FFFFFF', fontSize: 16, marginLeft: 8 },
+  sleepGraph:  { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 60, marginBottom: 8 },
+  sleepBar:    { width: 4, backgroundColor: '#4A90E2', borderRadius: 2 },
+  statValue:   { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
+  stepsWrap:   { alignItems: 'center', marginTop: 8 },
+  stepsCount:  { color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' },
+  stepsLabel:  { color: '#8E8E93', fontSize: 14 },
   suggestionsCard: { backgroundColor: '#252830', borderRadius: 20, padding: 16 },
-  foodItem:   { alignItems: 'center', marginRight: 16 },
-  foodImage:  { width: 100, height: 100, borderRadius: 12, marginBottom: 8 },
-  foodName:   { color: '#FFFFFF', fontSize: 12, textAlign: 'center', width: 100 },
-  modalOverlay:   { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center' },
-  modalContent:   { backgroundColor: '#252830', borderRadius: 20, padding: 24, margin: 20, width: '85%', maxWidth: 400 },
-  modalTitle:     { color: '#FFFFFF', fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
-  modalSubtitle:  { color: '#8E8E93', fontSize: 14, textAlign: 'center', marginBottom: 24 },
-  mealOptionsGrid:{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
-  mealOption:         { flex: 1, minWidth: '45%', backgroundColor: '#1A1B1E', borderRadius: 16, padding: 20, alignItems: 'center', borderWidth: 2, borderColor: '#3A3D4A' },
-  mealOptionActive:   { backgroundColor: 'rgba(74,144,226,0.2)', borderColor: '#4A90E2' },
-  mealOptionNum:          { color: '#FFFFFF', fontSize: 32, fontWeight: 'bold', marginBottom: 4 },
-  mealOptionNumActive:    { color: '#4A90E2' },
-  mealOptionLabel:        { color: '#8E8E93', fontSize: 14, fontWeight: '600' },
-  mealOptionLabelActive:  { color: '#4A90E2' },
+  foodItem:    { alignItems: 'center', marginRight: 16 },
+  foodImage:   { width: 100, height: 100, borderRadius: 12, marginBottom: 8 },
+  foodName:    { color: '#FFFFFF', fontSize: 12, textAlign: 'center', width: 100 },
+  modalOverlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center' },
+  modalContent:    { backgroundColor: '#252830', borderRadius: 20, padding: 24, margin: 20, width: '85%', maxWidth: 400 },
+  modalTitle:      { color: '#FFFFFF', fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
+  modalSubtitle:   { color: '#8E8E93', fontSize: 14, textAlign: 'center', marginBottom: 24 },
+  mealOptionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
+  mealOption:          { flex: 1, minWidth: '45%', backgroundColor: '#1A1B1E', borderRadius: 16, padding: 20, alignItems: 'center', borderWidth: 2, borderColor: '#3A3D4A' },
+  mealOptionActive:    { backgroundColor: 'rgba(74,144,226,0.2)', borderColor: '#4A90E2' },
+  mealOptionNum:           { color: '#FFFFFF', fontSize: 32, fontWeight: 'bold', marginBottom: 4 },
+  mealOptionNumActive:     { color: '#4A90E2' },
+  mealOptionLabel:         { color: '#8E8E93', fontSize: 14, fontWeight: '600' },
+  mealOptionLabelActive:   { color: '#4A90E2' },
   modalCloseBtn:     { backgroundColor: '#4A90E2', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   modalCloseBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
 });

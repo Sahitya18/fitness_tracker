@@ -8,6 +8,7 @@ import { Button, Surface, Text as PaperText, useTheme } from 'react-native-paper
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Shadows } from '../constants/Colors';
 import { useColorScheme } from '../hooks/useColorScheme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -58,7 +59,10 @@ export default function LoginScreen() {
       
       if (res.ok && data.token) {
         // Pass the entire response as user data, it contains all necessary user information
+        // Note: signIn() in AuthContext already sets isFirstLoadAfterLogin flag
         await signIn(data.token, data);
+        console.log('✓ Login successful - navigating to home');
+        
         router.replace('/home');
       } else {
         Alert.alert('Login Failed', data.message || 'Invalid credentials');
