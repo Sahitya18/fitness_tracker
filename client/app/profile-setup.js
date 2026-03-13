@@ -1,723 +1,983 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  Dimensions,
+  Alert,
+  Modal,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Button, ProgressBar, Surface } from 'react-native-paper';
+import { LineChart } from 'react-native-chart-kit';
+import { router, useLocalSearchParams } from 'expo-router';
+import API_CONFIG from '../utils/config';
+import { Colors, Shadows } from '../constants/Colors';
+import { useColorScheme } from '../hooks/useColorScheme';
+import { useAuth } from '../utils/AuthContext';
+
+const { width, height } = Dimensions.get('window');
 
 const GOAL_OPTIONS = [
-  { id: "fat_loss", label: "Fat Loss", icon: "📉", color: "#FF6B35", desc: "Burn fat & get lean" },
-  { id: "maintain", label: "Maintain", icon: "⚖️", color: "#4A90E2", desc: "Stay at current weight" },
-  { id: "gain", label: "Muscle Gain", icon: "📈", color: "#4CAF50", desc: "Build muscle & strength" },
+  { id: 'fat_loss', label: 'Fat Loss', icon: 'trending-down', color: '#FF6B35', desc: 'Burn fat & get lean' },
+  { id: 'maintain', label: 'Maintain', icon: 'scale-balance', color: '#4A90E2', desc: 'Stay at current weight' },
+  { id: 'gain', label: 'Muscle Gain', icon: 'trending-up', color: '#4CAF50', desc: 'Build muscle & strength' },
 ];
 
 const MEAL_PREFERENCES = [
-  { id: "everything", label: "Everything", icon: "🍖" },
-  { id: "vegetarian", label: "Vegetarian", icon: "🥦" },
-  { id: "vegan", label: "Vegan", icon: "🌱" },
-  { id: "keto", label: "Keto", icon: "🥑" },
-  { id: "paleo", label: "Paleo", icon: "🦴" },
+  { id: 'everything', label: 'Everything', icon: 'food' },
+  { id: 'vegetarian', label: 'Vegetarian', icon: 'leaf' },
+  { id: 'vegan', label: 'Vegan', icon: 'sprout' },
+  { id: 'keto', label: 'Keto', icon: 'bowl-mix' },
+  { id: 'paleo', label: 'Paleo', icon: 'food-steak' },
 ];
 
 const ACTIVITY_LEVELS = [
-  { id: "sedentary",  label: "Sedentary",          subtitle: "Office job, little exercise", icon: "🪑", multiplier: 1.2   },
-  { id: "light",     label: "Lightly Active",       subtitle: "1-2 days/week",              icon: "🚶", multiplier: 1.375 },
-  { id: "moderate",  label: "Moderately Active",    subtitle: "3-5 days/week",              icon: "🏃", multiplier: 1.55  },
-  { id: "active",    label: "Very Active",           subtitle: "6-7 days/week",              icon: "⚡", multiplier: 1.725 },
-  { id: "very_active", label: "Extremely Active",   subtitle: "Athlete level",              icon: "🏋️", multiplier: 1.9   },
+  { id: 'sedentary', label: 'Sedentary', subtitle: 'Office job, little exercise', multiplier: 1.2 },
+  { id: 'light', label: 'Lightly Active', subtitle: '1-2 days/week', multiplier: 1.375 },
+  { id: 'moderate', label: 'Moderately Active', subtitle: '3-5 days/week', multiplier: 1.55 },
+  { id: 'active', label: 'Very Active', subtitle: '6-7 days/week', multiplier: 1.725 },
+  { id: 'very_active', label: 'Extremely Active', subtitle: 'Athlete level', multiplier: 1.9 },
 ];
 
 const WORKOUT_PLACES = [
-  { id: "gym",      label: "Gym",      icon: "🏋️" },
-  { id: "home",     label: "Home",     icon: "🏠" },
-  { id: "outdoors", label: "Outdoors", icon: "🌲" },
-  { id: "mixed",    label: "Mixed",    icon: "🔀" },
+  { id: 'gym', label: 'Gym', icon: 'dumbbell' },
+  { id: 'home', label: 'Home', icon: 'home-variant' },
+  { id: 'outdoors', label: 'Outdoors', icon: 'pine-tree' },
+  { id: 'mixed', label: 'Mixed', icon: 'shuffle-variant' },
 ];
 
 const SPORTS = [
-  { id: "running",    label: "Running",    icon: "🏃" },
-  { id: "cycling",   label: "Cycling",    icon: "🚴" },
-  { id: "swimming",  label: "Swimming",   icon: "🏊" },
-  { id: "yoga",      label: "Yoga",       icon: "🧘" },
-  { id: "basketball",label: "Basketball", icon: "🏀" },
-  { id: "football",  label: "Football",   icon: "⚽" },
-  { id: "tennis",    label: "Tennis",     icon: "🎾" },
-  { id: "none",      label: "No Sports",  icon: "❌" },
+  { id: 'running', label: 'Running', icon: 'run' },
+  { id: 'cycling', label: 'Cycling', icon: 'bike' },
+  { id: 'swimming', label: 'Swimming', icon: 'swim' },
+  { id: 'yoga', label: 'Yoga', icon: 'yoga' },
+  { id: 'basketball', label: 'Basketball', icon: 'basketball' },
+  { id: 'football', label: 'Football', icon: 'soccer' },
+  { id: 'tennis', label: 'Tennis', icon: 'tennis' },
 ];
 
+function toNum(v) {
+  const n = Number(String(v ?? '').trim());
+  return Number.isFinite(n) ? n : 0;
+}
+
 // ── Calorie formulas (Mifflin-St Jeor) ───────────────────────────────────────
-function calcBMR(weight, height, age, gender) {
-  const w = parseFloat(weight), h = parseFloat(height), a = parseFloat(age);
+function calcBMR(weight, heightCm, age, gender) {
+  const w = toNum(weight);
+  const h = toNum(heightCm);
+  const a = toNum(age);
   if (!w || !h || !a) return 0;
   const base = 10 * w + 6.25 * h - 5 * a;
-  return gender === "Female" ? base - 161 : base + 5;
+  return gender === 'Female' ? base - 161 : base + 5;
 }
 function calcTDEE(bmr, activityId) {
   const lvl = ACTIVITY_LEVELS.find(l => l.id === activityId);
   return Math.round(bmr * (lvl?.multiplier || 1.2));
 }
 function calcGoalCalories(tdee, goal) {
-  if (goal === "fat_loss") return tdee - 500;
-  if (goal === "gain")     return tdee + 300;
+  if (goal === 'fat_loss') return tdee - 500;
+  if (goal === 'gain') return tdee + 300;
   return tdee;
 }
 function calcMacros(calories, goal) {
   const splits = {
-    fat_loss: { p: 0.35, c: 0.35, f: 0.30 },
-    gain:     { p: 0.30, c: 0.45, f: 0.25 },
-    maintain: { p: 0.30, c: 0.40, f: 0.30 },
+    fat_loss: { p: 0.35, c: 0.35, f: 0.3 },
+    gain: { p: 0.3, c: 0.45, f: 0.25 },
+    maintain: { p: 0.3, c: 0.4, f: 0.3 },
   };
   const sp = splits[goal] || splits.maintain;
   return {
     protein: Math.round((calories * sp.p) / 4),
-    carbs:   Math.round((calories * sp.c) / 4),
-    fat:     Math.round((calories * sp.f) / 9),
+    carbs: Math.round((calories * sp.c) / 4),
+    fat: Math.round((calories * sp.f) / 9),
   };
 }
 
-// ── Weight journey mock API ───────────────────────────────────────────────────
+// ── Journey (start month → goal month) ───────────────────────────────────────
 function mockJourneyAPI(curW, tgtW, goal, ratePerMonth) {
   const months = [];
   const today = new Date();
-  const n = Math.ceil(Math.abs(curW - tgtW) / ratePerMonth);
+  const n = Math.ceil(Math.abs(curW - tgtW) / Math.max(ratePerMonth, 0.01));
   for (let i = 0; i <= Math.min(n, 12); i++) {
-    const d = new Date(today); d.setMonth(d.getMonth() + i);
-    const label = d.toLocaleString("default", { month: "short" }) + " '" + d.getFullYear().toString().slice(2);
-    const w = goal === "fat_loss"
-      ? Math.max(tgtW, curW - ratePerMonth * i)
-      : Math.min(tgtW, curW + ratePerMonth * i);
-    months.push({ label, weight: parseFloat(w.toFixed(1)) });
+    const d = new Date(today);
+    d.setMonth(d.getMonth() + i);
+    const label = d.toLocaleString('default', { month: 'short' }) + " '" + d.getFullYear().toString().slice(2);
+    const w = goal === 'fat_loss' ? Math.max(tgtW, curW - ratePerMonth * i) : Math.min(tgtW, curW + ratePerMonth * i);
+    months.push({ label, weight: Number(w.toFixed(1)) });
   }
   return { months, startMonth: months[0]?.label, goalMonth: months[months.length - 1]?.label };
 }
 
-// ── WeightJourneyGraph ────────────────────────────────────────────────────────
-function WeightJourneyGraph({ currentWeight, targetWeight, goal, weightGoalRate }) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
+function WeightJourneyGraph({ currentWeight, targetWeight, goal, weightGoalRate, colors }) {
+  const cur = toNum(currentWeight);
+  const tgt = toNum(targetWeight);
+  const weekly = toNum(weightGoalRate);
 
-  useEffect(() => {
-    if (!currentWeight || !targetWeight) { setData(null); return; }
-    setLoading(true);
-    const t = setTimeout(() => {
-      const rate = parseFloat(weightGoalRate) * 4.33;
-      setData(mockJourneyAPI(parseFloat(currentWeight), parseFloat(targetWeight), goal, rate || 4));
-      setLoading(false);
-    }, 700);
-    return () => clearTimeout(t);
-  }, [currentWeight, targetWeight, goal, weightGoalRate]);
+  if (!cur || !tgt) {
+    return (
+      <View style={styles.graphEmpty}>
+        <Text style={[styles.graphEmptyText, { color: colors.textSecondary }]}>
+          Enter current & target weight to see your journey
+        </Text>
+      </View>
+    );
+  }
 
-  if (!currentWeight || !targetWeight)
-    return <div style={{ textAlign: "center", color: "#555", padding: "14px 0", fontSize: 12 }}>Enter current & target weight to see your journey</div>;
-  if (loading)
-    return <div style={{ textAlign: "center", color: "#4A90E2", padding: "14px 0", fontSize: 12 }}>⏳ Calculating journey...</div>;
-  if (!data) return null;
-
-  const { months } = data;
-  const ws = months.map(m => m.weight);
-  const minW = Math.min(...ws) - 2, maxW = Math.max(...ws) + 2, range = maxW - minW;
-  const gH = 108, gW = 300, pL = 34, pR = 10, pT = 8, pB = 26;
-  const iW = gW - pL - pR, iH = gH - pT - pB;
-  const pts = months.map((m, i) => ({
-    x: pL + (i / Math.max(months.length - 1, 1)) * iW,
-    y: pT + ((maxW - m.weight) / range) * iH,
-    ...m,
-  }));
-  const pathD = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-  const areaD = `${pathD} L ${pts[pts.length-1].x} ${pT+iH} L ${pL} ${pT+iH} Z`;
-  const color = goal === "fat_loss" ? "#FF6B35" : "#4CAF50";
+  const monthlyRate = weekly * 4.33;
+  const data = mockJourneyAPI(cur, tgt, goal, monthlyRate || 4);
+  const labels = data.months.map((m, idx) => {
+    // avoid crowding labels
+    if (idx === 0 || idx === data.months.length - 1) return m.label;
+    return idx % 2 === 0 ? m.label : '';
+  });
+  const weights = data.months.map(m => m.weight);
+  const accent = goal === 'fat_loss' ? '#FF6B35' : '#4CAF50';
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 6 }}>
-        <span style={{ color: "#666" }}>Start <b style={{ color: "#aaa" }}>{data.startMonth}</b></span>
-        <span style={{ color: "#666" }}>Goal <b style={{ color }}>{data.goalMonth}</b></span>
-      </div>
-      <svg width="100%" viewBox={`0 0 ${gW} ${gH}`} style={{ overflow: "visible" }}>
-        <defs>
-          <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-            <stop offset="100%" stopColor={color} stopOpacity="0.02" />
-          </linearGradient>
-        </defs>
-        {[0, 0.5, 1].map((t, i) => (
-          <g key={i}>
-            <line x1={pL} y1={pT+t*iH} x2={pL+iW} y2={pT+t*iH} stroke="#252830" strokeWidth="1"/>
-            <text x={pL-4} y={pT+t*iH+4} textAnchor="end" fontSize="9" fill="#444">{(maxW-t*range).toFixed(0)}</text>
-          </g>
-        ))}
-        <path d={areaD} fill="url(#wg)" />
-        <path d={pathD} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        {pts.filter((_, i) => i === 0 || i === pts.length - 1).map((p, i) => (
-          <g key={i}>
-            <circle cx={p.x} cy={p.y} r="5" fill={color} stroke="#13151a" strokeWidth="2" />
-            <text x={p.x} y={p.y-9} textAnchor="middle" fontSize="9" fill={color} fontWeight="700">{p.weight}</text>
-          </g>
-        ))}
-        <text x={pL}    y={gH} textAnchor="middle" fontSize="8" fill="#444">{pts[0]?.label}</text>
-        <text x={pL+iW} y={gH} textAnchor="middle" fontSize="8" fill="#444">{pts[pts.length-1]?.label}</text>
-      </svg>
-      <div style={{ display: "flex", justifyContent: "space-between", background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "9px 12px", marginTop: 8 }}>
-        {[
-          { label: "Current", val: `${currentWeight} kg`, color: "#ccc" },
-          { label: goal === "fat_loss" ? "To lose" : "To gain", val: `${Math.abs(parseFloat(currentWeight)-parseFloat(targetWeight)).toFixed(1)} kg`, color },
-          { label: "Target", val: `${targetWeight} kg`, color },
-        ].map(item => (
-          <div key={item.label} style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: "#555", marginBottom: 2 }}>{item.label}</div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: item.color }}>{item.val}</div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <View>
+      <View style={styles.graphHeader}>
+        <Text style={[styles.graphHeaderText, { color: colors.textSecondary }]}>
+          Start <Text style={[styles.graphHeaderBold, { color: colors.text }]}>{data.startMonth}</Text>
+        </Text>
+        <Text style={[styles.graphHeaderText, { color: colors.textSecondary }]}>
+          Goal <Text style={[styles.graphHeaderBold, { color: accent }]}>{data.goalMonth}</Text>
+        </Text>
+      </View>
+
+      <LineChart
+        data={{
+          labels,
+          datasets: [{ data: weights, color: (o = 1) => `rgba(74, 144, 226, ${o})`, strokeWidth: 3 }],
+        }}
+        width={width - 40}
+        height={220}
+        yAxisSuffix="kg"
+        chartConfig={{
+          backgroundColor: colors.card,
+          backgroundGradientFrom: colors.card,
+          backgroundGradientTo: colors.card,
+          decimalPlaces: 1,
+          color: (opacity = 1) => (goal === 'fat_loss' ? `rgba(255,107,53,${opacity})` : `rgba(76,175,80,${opacity})`),
+          labelColor: (opacity = 1) => `rgba(140, 148, 163, ${opacity})`,
+          propsForDots: { r: '5', strokeWidth: '2', stroke: accent },
+          propsForBackgroundLines: { strokeDasharray: '', stroke: colors.border },
+        }}
+        bezier
+        style={styles.graphChart}
+      />
+    </View>
   );
 }
 
-// ── CalorieCard with count-up animation ──────────────────────────────────────
-function CalorieCard({ label, calories, accent, description, macros, isHighlight }) {
-  const [displayed, setDisplayed] = useState(0);
-  useEffect(() => {
-    let start = null;
-    const step = ts => {
-      if (!start) start = ts;
-      const p = Math.min((ts - start) / 950, 1);
-      setDisplayed(Math.round(calories * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [calories]);
-
+function CalorieCard({ label, calories, accent, description, macros, highlight, colors }) {
   return (
-    <div style={{
-      background: isHighlight ? `linear-gradient(135deg, ${accent}18, ${accent}08)` : "#1a1c24",
-      border: `${isHighlight ? 2 : 1}px solid ${isHighlight ? accent + "55" : "#252830"}`,
-      borderRadius: 16, padding: "16px", marginBottom: 12,
-    }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: macros ? 10 : 0 }}>
-        <div style={{ flex: 1, marginRight: 12 }}>
-          <div style={{ fontSize: 11, color: isHighlight ? accent : "#666", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-            {label}
-          </div>
-          <div style={{ fontSize: 11, color: "#444", lineHeight: 1.5 }}>{description}</div>
-        </div>
-        <div style={{ textAlign: "right", flexShrink: 0 }}>
-          <div style={{ fontSize: 30, fontWeight: 900, color: isHighlight ? accent : "#999", letterSpacing: -1.5, lineHeight: 1 }}>
-            {displayed.toLocaleString()}
-          </div>
-          <div style={{ fontSize: 10, color: "#444", marginTop: 2 }}>kcal / day</div>
-        </div>
-      </div>
-      {macros && (
-        <div style={{ display: "flex", gap: 8, paddingTop: 10, borderTop: "1px solid #252830" }}>
+    <View
+      style={[
+        styles.calCard,
+        {
+          borderColor: highlight ? accent + '80' : colors.borderLight,
+          backgroundColor: highlight ? accent + '12' : colors.surfaceVariant,
+        },
+      ]}
+    >
+      <View style={styles.calRow}>
+        <View style={{ flex: 1, paddingRight: 10 }}>
+          <Text style={[styles.calLabel, { color: highlight ? accent : colors.textSecondary }]}>{label}</Text>
+          <Text style={[styles.calDesc, { color: colors.textSecondary }]}>{description}</Text>
+        </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={[styles.calValue, { color: highlight ? accent : colors.text }]}>{Math.round(calories)}</Text>
+          <Text style={[styles.calUnit, { color: colors.textSecondary }]}>kcal/day</Text>
+        </View>
+      </View>
+
+      {!!macros && (
+        <View style={[styles.macroRow, { borderTopColor: colors.border }]}>
           {[
-            { label: "Protein", val: `${macros.protein}g`, color: "#4A90E2" },
-            { label: "Carbs",   val: `${macros.carbs}g`,   color: "#F5A623" },
-            { label: "Fat",     val: `${macros.fat}g`,     color: "#FF6B35" },
+            { k: 'Protein', v: `${macros.protein}g`, c: '#4A90E2' },
+            { k: 'Carbs', v: `${macros.carbs}g`, c: '#F5A623' },
+            { k: 'Fat', v: `${macros.fat}g`, c: '#FF6B35' },
           ].map(m => (
-            <div key={m.label} style={{
-              flex: 1, textAlign: "center",
-              background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: "8px 4px",
-            }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: m.color }}>{m.val}</div>
-              <div style={{ fontSize: 10, color: "#444", marginTop: 2 }}>{m.label}</div>
-            </div>
+            <View key={m.k} style={styles.macroBox}>
+              <Text style={[styles.macroVal, { color: m.c }]}>{m.v}</Text>
+              <Text style={[styles.macroKey, { color: colors.textSecondary }]}>{m.k}</Text>
+            </View>
           ))}
-        </div>
+        </View>
       )}
-    </div>
+    </View>
   );
 }
 
-// ── WelcomeScreen ─────────────────────────────────────────────────────────────
-function WelcomeScreen({ name, onContinue }) {
-  const [stars] = useState(() => Array.from({ length: 18 }, (_, i) => ({
-    id: i, x: Math.random()*100, y: Math.random()*100,
-    size: Math.random()*3+2, delay: Math.random(),
-  })));
-  useEffect(() => { const t = setTimeout(onContinue, 4000); return () => clearTimeout(t); }, []);
+function WelcomeOverlay({ visible, name }) {
   return (
-    <div style={{
-      position: "absolute", inset: 0, background: "linear-gradient(135deg,#0d1117,#1A1B1E)",
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      zIndex: 100, overflow: "hidden",
-    }}>
-      {stars.map(s => (
-        <div key={s.id} style={{
-          position: "absolute", left: `${s.x}%`, top: `${s.y}%`,
-          width: s.size, height: s.size, borderRadius: "50%",
-          background: "#FFD700", opacity: 0.5,
-          animation: `twinkle 1.5s ${s.delay}s infinite alternate`,
-        }} />
-      ))}
-      <div style={{ textAlign: "center", padding: 36, animation: "popIn .6s cubic-bezier(.34,1.56,.64,1) forwards" }}>
-        <div style={{ fontSize: 76, marginBottom: 18, animation: "bounce 1s .6s infinite alternate" }}>🎉</div>
-        <div style={{ fontSize: 30, fontWeight: 900, color: "#fff", marginBottom: 10 }}>Welcome to FitMe!</div>
-        <div style={{ fontSize: 15, color: "#777", marginBottom: 24, lineHeight: 1.7 }}>
-          Your journey starts now,<br/>
-          <span style={{ color: "#4A90E2", fontWeight: 700 }}>{name}!</span>
-        </div>
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 24 }}>
-          {["⭐","⭐","⭐"].map((s,i) => (
-            <span key={i} style={{ fontSize: 26, animation: `starPop .4s ${.8+i*.15}s both` }}>{s}</span>
-          ))}
-        </div>
-        <div style={{ fontSize: 12, color: "#333" }}>Taking you to your dashboard...</div>
-      </div>
-      <style>{`
-        @keyframes popIn  { from{opacity:0;transform:scale(.5)} to{opacity:1;transform:scale(1)} }
-        @keyframes bounce { from{transform:translateY(0)}       to{transform:translateY(-10px)} }
-        @keyframes twinkle{ from{opacity:.15}                   to{opacity:.8} }
-        @keyframes starPop{ from{opacity:0;transform:scale(0)}  to{opacity:1;transform:scale(1)} }
-      `}</style>
-    </div>
+    <Modal transparent animationType="fade" visible={visible}>
+      <View style={styles.welcomeOverlay}>
+        <LinearGradient colors={['#0d1117', '#1A1B1E']} style={styles.welcomeGradient}>
+          <Text style={styles.welcomeEmoji}>🎉</Text>
+          <Text style={styles.welcomeTitle}>Welcome to FitMe!</Text>
+          <Text style={styles.welcomeSub}>
+            Your journey starts now,{'\n'}
+            <Text style={styles.welcomeName}>{name || 'there'}!</Text>
+          </Text>
+          <Text style={styles.welcomeFooter}>Taking you to your dashboard...</Text>
+        </LinearGradient>
+      </View>
+    </Modal>
   );
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
 export default function ProfileSetupScreen() {
+  const params = useLocalSearchParams();
+  const { userData } = useAuth();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme || 'light'];
+
+  const email = typeof params?.email === 'string' ? params.email : (userData?.email || userData?.user?.email);
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
 
   const [fd, setFd] = useState({
-    firstName: "", lastName: "",
-    goal: "",
-    weightLossGoal: "1", weightGainGoal: "0.5",
-    mealPreference: "", activityLevel: "",
-    height: "", weight: "", targetWeight: "",
-    gender: "", age: "",
-    workoutPlace: "", sports: [],
+    firstName: '',
+    lastName: '',
+    goal: '',
+    weightLossGoal: '1',
+    weightGainGoal: '0.5',
+    mealPreference: '',
+    activityLevel: '',
+    height: '',
+    weight: '',
+    targetWeight: '',
+    gender: '',
+    age: '',
+    workoutPlace: '',
+    sports: [],
   });
+
   const upd = (k, v) => setFd(p => ({ ...p, [k]: v }));
 
   // Step order: 1→2→4→5→6→7→8(calories, always)→3(weight goal, conditional)
-  const visibleSteps = (() => {
+  const visibleSteps = useMemo(() => {
     const base = [1, 2, 4, 5, 6, 7, 8];
-    if (fd.goal === "fat_loss" || fd.goal === "gain") base.push(3);
+    if (fd.goal === 'fat_loss' || fd.goal === 'gain') base.push(3);
     return base;
-  })();
-  const stepIdx   = visibleSteps.indexOf(currentStep);
-  const totalSteps = visibleSteps.length;
-  const progress   = (stepIdx + 1) / totalSteps;
-  const isLast     = stepIdx === totalSteps - 1;
+  }, [fd.goal]);
 
-  const handleNext = () => {
-    if (stepIdx < totalSteps - 1) setCurrentStep(visibleSteps[stepIdx + 1]);
-    else setShowWelcome(true);
+  const stepIdx = visibleSteps.indexOf(currentStep);
+  const totalSteps = visibleSteps.length;
+  const progress = (stepIdx + 1) / totalSteps;
+  const isLast = stepIdx === totalSteps - 1;
+
+  const bmr = calcBMR(fd.weight, fd.height, fd.age, fd.gender);
+  const tdee = calcTDEE(bmr, fd.activityLevel);
+  const goalCals = calcGoalCalories(tdee, fd.goal);
+  const goalMacros = calcMacros(goalCals, fd.goal);
+  const maintMacros = calcMacros(tdee, 'maintain');
+  const activityInfo = ACTIVITY_LEVELS.find(a => a.id === fd.activityLevel);
+
+  useEffect(() => {
+    if (showWelcome) {
+      const t = setTimeout(() => {
+        setShowWelcome(false);
+        router.replace('/home');
+      }, 2500);
+      return () => clearTimeout(t);
+    }
+  }, [showWelcome]);
+
+  const validateCurrentStep = () => {
+    if (!email) {
+      Alert.alert('Error', 'Email missing. Please register again.');
+      return false;
+    }
+
+    if (currentStep === 1) {
+      if (!fd.firstName.trim()) return Alert.alert('Validation', 'Please enter first name'), false;
+      return true;
+    }
+    if (currentStep === 2) {
+      if (!fd.goal) return Alert.alert('Validation', 'Please select your goal'), false;
+      return true;
+    }
+    if (currentStep === 4) {
+      if (!fd.mealPreference) return Alert.alert('Validation', 'Please select a meal preference'), false;
+      return true;
+    }
+    if (currentStep === 5) {
+      if (!fd.activityLevel) return Alert.alert('Validation', 'Please select activity level'), false;
+      return true;
+    }
+    if (currentStep === 6) {
+      const h = toNum(fd.height);
+      const w = toNum(fd.weight);
+      const a = toNum(fd.age);
+      if (!fd.gender) return Alert.alert('Validation', 'Please select gender'), false;
+      if (h < 100 || h > 250) return Alert.alert('Validation', 'Height must be between 100 and 250 cm'), false;
+      if (w < 30 || w > 300) return Alert.alert('Validation', 'Weight must be between 30 and 300 kg'), false;
+      if (a < 5 || a > 120) return Alert.alert('Validation', 'Age must be valid'), false;
+      if ((fd.goal === 'fat_loss' || fd.goal === 'gain') && !toNum(fd.targetWeight)) {
+        return Alert.alert('Validation', 'Please enter target weight'), false;
+      }
+      return true;
+    }
+    if (currentStep === 7) {
+      if (!fd.workoutPlace) return Alert.alert('Validation', 'Please select workout place'), false;
+      return true;
+    }
+    if (currentStep === 8) {
+      // calories step is informational; allow continue
+      return true;
+    }
+    if (currentStep === 3) {
+      if (!toNum(fd.targetWeight)) return Alert.alert('Validation', 'Please enter target weight'), false;
+      return true;
+    }
+    return true;
   };
+
+  const handleNext = async () => {
+    if (!validateCurrentStep()) return;
+
+    if (!isLast) {
+      setCurrentStep(visibleSteps[stepIdx + 1]);
+      return;
+    }
+
+    // last step → submit profile then show welcome → home
+    if (submitting) return;
+    setSubmitting(true);
+
+    try {
+      const payload = {
+        email,
+        firstName: fd.firstName.trim(),
+        lastName: fd.lastName.trim(),
+        gender: fd.gender,
+        height: toNum(fd.height),
+        weight: toNum(fd.weight),
+        targetWeight: toNum(fd.targetWeight),
+        goal: fd.goal,
+        mealPreference: fd.mealPreference,
+        activityLevel: fd.activityLevel,
+        age: Math.round(toNum(fd.age)),
+        workoutPlace: fd.workoutPlace,
+        sports: fd.sports,
+      };
+
+      const url =
+        `${API_CONFIG.BASE_URL_LOCALHOST}` +
+        `${API_CONFIG.ENDPOINTS.REGISTRATION.PORT}` +
+        `${API_CONFIG.ENDPOINTS.REGISTRATION.CREATE_PROFILE}`;
+
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setShowWelcome(true);
+      } else {
+        const txt = await res.text();
+        Alert.alert('Profile Setup Failed', txt || 'Something went wrong. Please try again.');
+      }
+    } catch (e) {
+      Alert.alert('Error', e?.message || 'Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleBack = () => {
     if (stepIdx > 0) setCurrentStep(visibleSteps[stepIdx - 1]);
   };
 
-  // Derived calorie data
-  const bmr          = calcBMR(fd.weight, fd.height, fd.age, fd.gender);
-  const tdee         = calcTDEE(bmr, fd.activityLevel);
-  const goalCals     = calcGoalCalories(tdee, fd.goal);
-  const goalMacros   = calcMacros(goalCals, fd.goal);
-  const maintMacros  = calcMacros(tdee, "maintain");
-  const activityInfo = ACTIVITY_LEVELS.find(a => a.id === fd.activityLevel);
+  const toggleSport = (id) => {
+    setFd(p => {
+      const has = p.sports.includes(id);
+      return { ...p, sports: has ? p.sports.filter(x => x !== id) : [...p.sports, id] };
+    });
+  };
 
   const weightLossOpts = [
-    { value: "0.5", label: "0.5 kg/week", subtitle: "Slow & Steady", icon: "🐢" },
-    { value: "1",   label: "1 kg/week",   subtitle: "Recommended",   icon: "👍" },
-    { value: "1.5", label: "1.5 kg/week", subtitle: "Aggressive",    icon: "🔥" },
+    { value: '0.5', label: '0.5 kg/week', subtitle: 'Slow & steady', icon: 'turtle' },
+    { value: '1', label: '1 kg/week', subtitle: 'Recommended', icon: 'thumb-up' },
+    { value: '1.5', label: '1.5 kg/week', subtitle: 'Aggressive', icon: 'fire' },
   ];
   const weightGainOpts = [
-    { value: "0.25", label: "0.25 kg/week", subtitle: "Lean Bulk",   icon: "🌱" },
-    { value: "0.5",  label: "0.5 kg/week",  subtitle: "Recommended", icon: "👍" },
-    { value: "0.75", label: "0.75 kg/week", subtitle: "Fast Bulk",   icon: "⚡" },
+    { value: '0.25', label: '0.25 kg/week', subtitle: 'Lean bulk', icon: 'sprout' },
+    { value: '0.5', label: '0.5 kg/week', subtitle: 'Recommended', icon: 'thumb-up' },
+    { value: '0.75', label: '0.75 kg/week', subtitle: 'Fast bulk', icon: 'flash' },
   ];
 
   const renderStep = () => {
     switch (currentStep) {
+      case 1:
+        return (
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>What should we call you?</Text>
+            <TextInput
+              placeholder="First Name"
+              placeholderTextColor={colors.textTertiary}
+              value={fd.firstName}
+              onChangeText={(t) => upd('firstName', t)}
+              style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+            />
+            <TextInput
+              placeholder="Last Name"
+              placeholderTextColor={colors.textTertiary}
+              value={fd.lastName}
+              onChangeText={(t) => upd('lastName', t)}
+              style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+            />
+          </View>
+        );
 
-      case 1: return (
-        <div style={sx.step}>
-          <div style={sx.icon}>👤</div>
-          <div style={sx.title}>What should we call you?</div>
-          <input style={sx.input} placeholder="First Name" value={fd.firstName} onChange={e=>upd("firstName",e.target.value)}/>
-          <input style={sx.input} placeholder="Last Name"  value={fd.lastName}  onChange={e=>upd("lastName",e.target.value)}/>
-        </div>
-      );
-
-      case 2: return (
-        <div style={sx.step}>
-          <div style={sx.icon}>🎯</div>
-          <div style={sx.title}>What's your goal?</div>
-          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-            {GOAL_OPTIONS.map(opt => (
-              <button key={opt.id} onClick={()=>upd("goal",opt.id)} style={{
-                ...sx.listItem,
-                borderColor: fd.goal===opt.id ? opt.color : "#252830",
-                background:  fd.goal===opt.id ? opt.color+"15" : "#1a1c24",
-                cursor:"pointer", textAlign:"left",
-              }}>
-                <span style={{fontSize:30,marginRight:14}}>{opt.icon}</span>
-                <div style={{flex:1}}>
-                  <div style={{color: fd.goal===opt.id ? opt.color:"#ddd", fontWeight:700,fontSize:15}}>{opt.label}</div>
-                  <div style={{color:"#555",fontSize:12,marginTop:2}}>{opt.desc}</div>
-                </div>
-                {fd.goal===opt.id && <span style={{color:opt.color,fontSize:18}}>✓</span>}
-              </button>
-            ))}
-          </div>
-        </div>
-      );
-
-      case 4: return (
-        <div style={sx.step}>
-          <div style={sx.icon}>🍽️</div>
-          <div style={sx.title}>Meal Preference</div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:10,justifyContent:"center"}}>
-            {MEAL_PREFERENCES.map(opt => (
-              <button key={opt.id} onClick={()=>upd("mealPreference",opt.id)} style={{
-                ...sx.chip,
-                borderColor: fd.mealPreference===opt.id ? "#4A90E2":"#252830",
-                background:  fd.mealPreference===opt.id ? "rgba(74,144,226,0.15)":"#1a1c24",
-                cursor:"pointer",
-              }}>
-                <span style={{fontSize:20}}>{opt.icon}</span>
-                <span style={{color: fd.mealPreference===opt.id?"#4A90E2":"#888",fontWeight:600,fontSize:13}}>{opt.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      );
-
-      case 5: return (
-        <div style={sx.step}>
-          <div style={sx.icon}>🏃</div>
-          <div style={sx.title}>Activity Level</div>
-          <div style={{display:"flex",flexDirection:"column",gap:10}}>
-            {ACTIVITY_LEVELS.map(opt => (
-              <button key={opt.id} onClick={()=>upd("activityLevel",opt.id)} style={{
-                ...sx.listItem,
-                borderColor: fd.activityLevel===opt.id?"#4A90E2":"#252830",
-                background:  fd.activityLevel===opt.id?"rgba(74,144,226,0.1)":"#1a1c24",
-                cursor:"pointer",textAlign:"left",
-              }}>
-                <span style={{fontSize:22,marginRight:12}}>{opt.icon}</span>
-                <div style={{flex:1}}>
-                  <div style={{color: fd.activityLevel===opt.id?"#4A90E2":"#ddd",fontWeight:600,fontSize:14}}>{opt.label}</div>
-                  <div style={{color:"#555",fontSize:12}}>{opt.subtitle}</div>
-                </div>
-                {fd.activityLevel===opt.id && <span style={{color:"#4A90E2"}}>✓</span>}
-              </button>
-            ))}
-          </div>
-        </div>
-      );
-
-      case 6: return (
-        <div style={sx.step}>
-          <div style={sx.icon}>📋</div>
-          <div style={sx.title}>Personal Information</div>
-          <div style={{display:"flex",gap:10}}>
-            <div style={{flex:1}}>
-              <div style={sx.label}>Height (cm)</div>
-              <input style={sx.input} placeholder="170" type="number" value={fd.height} onChange={e=>upd("height",e.target.value)}/>
-            </div>
-            <div style={{flex:1}}>
-              <div style={sx.label}>Weight (kg)</div>
-              <input style={sx.input} placeholder="70"  type="number" value={fd.weight} onChange={e=>upd("weight",e.target.value)}/>
-            </div>
-          </div>
-          <div style={sx.label}>Gender</div>
-          <div style={{display:"flex",gap:10,marginBottom:14}}>
-            {["Male","Female","Other"].map(g=>(
-              <button key={g} onClick={()=>upd("gender",g)} style={{
-                flex:1,padding:"12px 0",borderRadius:10,cursor:"pointer",
-                border:`1px solid ${fd.gender===g?"#4A90E2":"#252830"}`,
-                background: fd.gender===g?"rgba(74,144,226,0.15)":"#1a1c24",
-                color: fd.gender===g?"#4A90E2":"#666",fontWeight:600,fontSize:14,
-              }}>{g}</button>
-            ))}
-          </div>
-          <div style={sx.label}>Age</div>
-          <input style={sx.input} placeholder="25" type="number" value={fd.age} onChange={e=>upd("age",e.target.value)}/>
-        </div>
-      );
-
-      case 7: return (
-        <div style={sx.step}>
-          <div style={sx.icon}>💪</div>
-          <div style={sx.title}>Workout Preference</div>
-          <div style={{color:"#555",fontSize:12,marginBottom:12,textTransform:"uppercase",letterSpacing:0.5}}>Where do you prefer to workout?</div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:10,marginBottom:24}}>
-            {WORKOUT_PLACES.map(opt=>(
-              <button key={opt.id} onClick={()=>upd("workoutPlace",opt.id)} style={{
-                ...sx.chip,
-                borderColor: fd.workoutPlace===opt.id?"#4A90E2":"#252830",
-                background:  fd.workoutPlace===opt.id?"rgba(74,144,226,0.15)":"#1a1c24",
-                cursor:"pointer",
-              }}>
-                <span style={{fontSize:20}}>{opt.icon}</span>
-                <span style={{color:fd.workoutPlace===opt.id?"#4A90E2":"#777",fontWeight:600,fontSize:13}}>{opt.label}</span>
-              </button>
-            ))}
-          </div>
-          <div style={{color:"#555",fontSize:12,marginBottom:12,textTransform:"uppercase",letterSpacing:0.5}}>Sports you enjoy? <span style={{color:"#333"}}>(optional)</span></div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-            {SPORTS.map(sport=>{
-              const sel=fd.sports.includes(sport.id);
+      case 2:
+        return (
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>What's your goal?</Text>
+            {GOAL_OPTIONS.map(opt => {
+              const selected = fd.goal === opt.id;
               return (
-                <button key={sport.id} onClick={()=>{
-                  const arr=sel?fd.sports.filter(x=>x!==sport.id):[...fd.sports,sport.id];
-                  upd("sports",arr);
-                }} style={{
-                  display:"flex",alignItems:"center",gap:6,
-                  background:sel?"#4A90E2":"#1a1c24",
-                  border:`1px solid ${sel?"#4A90E2":"#252830"}`,
-                  borderRadius:20,padding:"7px 13px",cursor:"pointer",
-                }}>
-                  <span style={{fontSize:14}}>{sport.icon}</span>
-                  <span style={{color:sel?"#fff":"#666",fontSize:12,fontWeight:600}}>{sport.label}</span>
-                </button>
+                <TouchableOpacity
+                  key={opt.id}
+                  onPress={() => upd('goal', opt.id)}
+                  activeOpacity={0.85}
+                  style={[
+                    styles.optionCard,
+                    {
+                      borderColor: selected ? opt.color : colors.borderLight,
+                      backgroundColor: selected ? opt.color + '12' : colors.card,
+                    },
+                  ]}
+                >
+                  <MaterialCommunityIcons name={opt.icon} size={24} color={selected ? opt.color : colors.textSecondary} />
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={[styles.optionTitle, { color: selected ? opt.color : colors.text }]}>{opt.label}</Text>
+                    <Text style={[styles.optionSub, { color: colors.textSecondary }]}>{opt.desc}</Text>
+                  </View>
+                  <MaterialCommunityIcons name={selected ? 'check-circle' : 'circle-outline'} size={20} color={selected ? opt.color : colors.border} />
+                </TouchableOpacity>
               );
             })}
-          </div>
-        </div>
-      );
+          </View>
+        );
 
-      // ── Step 8: Calorie Summary ─────────────────────────────────────────
+      case 4:
+        return (
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Meal preference</Text>
+            <View style={styles.chipsWrap}>
+              {MEAL_PREFERENCES.map(opt => {
+                const selected = fd.mealPreference === opt.id;
+                return (
+                  <TouchableOpacity
+                    key={opt.id}
+                    onPress={() => upd('mealPreference', opt.id)}
+                    activeOpacity={0.85}
+                    style={[
+                      styles.chip,
+                      {
+                        borderColor: selected ? colors.primary : colors.borderLight,
+                        backgroundColor: selected ? colors.primary + '12' : colors.card,
+                      },
+                    ]}
+                  >
+                    <MaterialCommunityIcons name={opt.icon} size={18} color={selected ? colors.primary : colors.textSecondary} />
+                    <Text style={[styles.chipText, { color: selected ? colors.primary : colors.textSecondary }]}>{opt.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        );
+
+      case 5:
+        return (
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Activity level</Text>
+            {ACTIVITY_LEVELS.map(opt => {
+              const selected = fd.activityLevel === opt.id;
+              return (
+                <TouchableOpacity
+                  key={opt.id}
+                  onPress={() => upd('activityLevel', opt.id)}
+                  activeOpacity={0.85}
+                  style={[
+                    styles.optionCard,
+                    {
+                      borderColor: selected ? colors.primary : colors.borderLight,
+                      backgroundColor: selected ? colors.primary + '12' : colors.card,
+                    },
+                  ]}
+                >
+                  <MaterialCommunityIcons name="walk" size={22} color={selected ? colors.primary : colors.textSecondary} />
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={[styles.optionTitle, { color: selected ? colors.primary : colors.text }]}>{opt.label}</Text>
+                    <Text style={[styles.optionSub, { color: colors.textSecondary }]}>{opt.subtitle}</Text>
+                  </View>
+                  <MaterialCommunityIcons name={selected ? 'check-circle' : 'circle-outline'} size={20} color={selected ? colors.primary : colors.border} />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        );
+
+      case 6:
+        return (
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Personal information</Text>
+
+            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Gender</Text>
+            <View style={styles.row}>
+              {['Male', 'Female', 'Other'].map(g => {
+                const selected = fd.gender === g;
+                return (
+                  <TouchableOpacity
+                    key={g}
+                    onPress={() => upd('gender', g)}
+                    activeOpacity={0.85}
+                    style={[
+                      styles.genderBtn,
+                      {
+                        borderColor: selected ? colors.primary : colors.borderLight,
+                        backgroundColor: selected ? colors.primary + '12' : colors.card,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.genderText, { color: selected ? colors.primary : colors.textSecondary }]}>{g}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <View style={styles.twoCol}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Height (cm)</Text>
+                <TextInput
+                  placeholder="170"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                  value={fd.height}
+                  onChangeText={(t) => upd('height', t)}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+                />
+              </View>
+              <View style={{ width: 12 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Weight (kg)</Text>
+                <TextInput
+                  placeholder="70"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                  value={fd.weight}
+                  onChangeText={(t) => upd('weight', t)}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+                />
+              </View>
+            </View>
+
+            <View style={styles.twoCol}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Age</Text>
+                <TextInput
+                  placeholder="25"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                  value={fd.age}
+                  onChangeText={(t) => upd('age', t)}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+                />
+              </View>
+              <View style={{ width: 12 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Target Weight (kg)</Text>
+                <TextInput
+                  placeholder="65"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                  value={fd.targetWeight}
+                  onChangeText={(t) => upd('targetWeight', t)}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+                />
+              </View>
+            </View>
+          </View>
+        );
+
+      case 7:
+        return (
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Workout preferences</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Where do you prefer to workout?</Text>
+            <View style={styles.chipsWrap}>
+              {WORKOUT_PLACES.map(opt => {
+                const selected = fd.workoutPlace === opt.id;
+                return (
+                  <TouchableOpacity
+                    key={opt.id}
+                    onPress={() => upd('workoutPlace', opt.id)}
+                    activeOpacity={0.85}
+                    style={[
+                      styles.chip,
+                      {
+                        borderColor: selected ? colors.primary : colors.borderLight,
+                        backgroundColor: selected ? colors.primary + '12' : colors.card,
+                      },
+                    ]}
+                  >
+                    <MaterialCommunityIcons name={opt.icon} size={18} color={selected ? colors.primary : colors.textSecondary} />
+                    <Text style={[styles.chipText, { color: selected ? colors.primary : colors.textSecondary }]}>{opt.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <Text style={[styles.sectionLabel, { color: colors.textSecondary, marginTop: 12 }]}>Sports you enjoy (optional)</Text>
+            <View style={styles.chipsWrap}>
+              {SPORTS.map(s => {
+                const selected = fd.sports.includes(s.id);
+                return (
+                  <TouchableOpacity
+                    key={s.id}
+                    onPress={() => toggleSport(s.id)}
+                    activeOpacity={0.85}
+                    style={[
+                      styles.chip,
+                      {
+                        borderColor: selected ? colors.secondary : colors.borderLight,
+                        backgroundColor: selected ? colors.secondary + '12' : colors.card,
+                      },
+                    ]}
+                  >
+                    <MaterialCommunityIcons name={s.icon} size={18} color={selected ? colors.secondary : colors.textSecondary} />
+                    <Text style={[styles.chipText, { color: selected ? colors.secondary : colors.textSecondary }]}>{s.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        );
+
       case 8: {
-        const canCalc = fd.weight && fd.height && fd.age && fd.activityLevel && fd.gender;
-        const goalColor = fd.goal==="fat_loss"?"#FF6B35":fd.goal==="gain"?"#4CAF50":"#4A90E2";
-        const goalLabel = fd.goal==="fat_loss"?"Fat Loss Target":fd.goal==="gain"?"Muscle Gain Target":"Maintenance";
+        const canCalc = !!(fd.weight && fd.height && fd.age && fd.activityLevel && fd.gender);
+        const goalColor = fd.goal === 'fat_loss' ? '#FF6B35' : fd.goal === 'gain' ? '#4CAF50' : '#4A90E2';
 
         return (
-          <div style={sx.step}>
-            <div style={sx.icon}>🔥</div>
-            <div style={sx.title}>Your Calorie Targets</div>
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Your calorie targets</Text>
 
             {!canCalc ? (
-              <div style={{
-                background:"#1a1c24",border:"1px solid #252830",borderRadius:14,
-                padding:20,textAlign:"center",color:"#555",fontSize:13,lineHeight:1.6,
-              }}>
-                ⚠️ Please complete your<br/>personal information first<br/>
-                <span style={{color:"#333",fontSize:11}}>(height, weight, age, gender & activity)</span>
-              </div>
+              <View style={[styles.infoBox, { backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}>
+                <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+                  Please complete your personal information first (height, weight, age, gender & activity).
+                </Text>
+              </View>
             ) : (
               <>
-                {/* BMR / TDEE pills */}
-                <div style={{display:"flex",gap:8,marginBottom:14}}>
+                <View style={styles.pillsRow}>
                   {[
-                    {label:"BMR",  val:`${Math.round(bmr)} kcal`,  tip:"Base Metabolic Rate — calories at rest"},
-                    {label:"TDEE", val:`${tdee} kcal`,             tip:`Maintenance × ${activityInfo?.multiplier} (${activityInfo?.label})`},
-                  ].map(item=>(
-                    <div key={item.label} style={{
-                      flex:1,background:"#1a1c24",border:"1px solid #252830",
-                      borderRadius:12,padding:"11px 10px",textAlign:"center",
-                    }}>
-                      <div style={{fontSize:10,color:"#555",textTransform:"uppercase",letterSpacing:1}}>{item.label}</div>
-                      <div style={{fontSize:18,fontWeight:900,color:"#999",margin:"4px 0"}}>{item.val}</div>
-                      <div style={{fontSize:9,color:"#3a3d48",lineHeight:1.4}}>{item.tip}</div>
-                    </div>
+                    { k: 'BMR', v: `${Math.round(bmr)} kcal`, s: 'Calories at rest' },
+                    { k: 'TDEE', v: `${tdee} kcal`, s: `Maintenance × ${activityInfo?.multiplier}` },
+                  ].map(p => (
+                    <View key={p.k} style={[styles.pill, { backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}>
+                      <Text style={[styles.pillKey, { color: colors.textSecondary }]}>{p.k}</Text>
+                      <Text style={[styles.pillVal, { color: colors.text }]}>{p.v}</Text>
+                      <Text style={[styles.pillSub, { color: colors.textSecondary }]}>{p.s}</Text>
+                    </View>
                   ))}
-                </div>
+                </View>
 
-                {/* Maintenance card */}
                 <CalorieCard
                   label="Maintenance Calories"
                   calories={tdee}
                   accent="#4A90E2"
-                  description="Calories to stay at your current weight with no change"
-                  macros={fd.goal==="maintain" ? maintMacros : null}
-                  isHighlight={fd.goal==="maintain"}
+                  description="Calories to stay at your current weight"
+                  macros={fd.goal === 'maintain' ? maintMacros : null}
+                  highlight={fd.goal === 'maintain'}
+                  colors={colors}
                 />
 
-                {/* Goal calories card */}
-                {fd.goal!=="maintain" && (
+                {fd.goal !== 'maintain' && (
                   <CalorieCard
-                    label={goalLabel}
+                    label={fd.goal === 'fat_loss' ? 'Fat Loss Target' : 'Muscle Gain Target'}
                     calories={goalCals}
                     accent={goalColor}
-                    description={
-                      fd.goal==="fat_loss"
-                        ? `Maintenance − 500 kcal · creates a safe caloric deficit`
-                        : `Maintenance + 300 kcal · lean surplus for muscle growth`
-                    }
+                    description={fd.goal === 'fat_loss' ? 'Maintenance − 500 kcal deficit' : 'Maintenance + 300 kcal surplus'}
                     macros={goalMacros}
-                    isHighlight={true}
+                    highlight
+                    colors={colors}
                   />
-                )}
-
-                {/* Diff callout */}
-                {fd.goal!=="maintain" && (
-                  <div style={{
-                    display:"flex",alignItems:"center",gap:10,
-                    background: goalColor+"10",border:`1px solid ${goalColor}28`,
-                    borderRadius:12,padding:"12px 14px",
-                  }}>
-                    <span style={{fontSize:18}}>{fd.goal==="fat_loss"?"📉":"📈"}</span>
-                    <div>
-                      <div style={{fontSize:12,color:goalColor,fontWeight:700,marginBottom:2}}>
-                        {fd.goal==="fat_loss" ? "500 kcal daily deficit" : "300 kcal daily surplus"}
-                      </div>
-                      <div style={{fontSize:11,color:"#444"}}>
-                        {fd.goal==="fat_loss"
-                          ? "Safe pace · ~0.5 kg loss per week on average"
-                          : "Lean bulk · minimises fat gain while building muscle"}
-                      </div>
-                    </div>
-                  </div>
                 )}
               </>
             )}
-          </div>
+          </View>
         );
       }
 
-      // ── Step 3: Weight goal + journey (conditional, always last) ──────────
       case 3: {
-        const isLoss   = fd.goal==="fat_loss";
-        const opts     = isLoss ? weightLossOpts : weightGainOpts;
-        const rateKey  = isLoss ? "weightLossGoal" : "weightGainGoal";
-        const selRate  = fd[rateKey];
-        const accent   = isLoss ? "#FF6B35" : "#4CAF50";
+        const isLoss = fd.goal === 'fat_loss';
+        const opts = isLoss ? weightLossOpts : weightGainOpts;
+        const rateKey = isLoss ? 'weightLossGoal' : 'weightGainGoal';
+        const selRate = fd[rateKey];
+        const accent = isLoss ? '#FF6B35' : '#4CAF50';
 
         return (
-          <div style={sx.step}>
-            <div style={sx.icon}>⚖️</div>
-            <div style={sx.title}>{isLoss?"Weight Loss Goal":"Weight Gain Goal"}</div>
-            <div style={{color:"#555",fontSize:13,marginBottom:18,textAlign:"center"}}>
-              How fast do you want to {isLoss?"lose":"gain"} weight?
-            </div>
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>{isLoss ? 'Weight loss goal' : 'Weight gain goal'}</Text>
+            <Text style={[styles.optionSub, { color: colors.textSecondary, marginBottom: 8 }]}>
+              How fast do you want to {isLoss ? 'lose' : 'gain'} weight?
+            </Text>
 
-            <div style={{display:"flex",gap:8,marginBottom:22}}>
-              {opts.map(opt=>(
-                <button key={opt.value} onClick={()=>upd(rateKey,opt.value)} style={{
-                  flex:1,
-                  background: selRate===opt.value ? accent+"18":"#1a1c24",
-                  border:`2px solid ${selRate===opt.value?accent:"#252830"}`,
-                  borderRadius:14,padding:"13px 6px",cursor:"pointer",
-                  display:"flex",flexDirection:"column",alignItems:"center",gap:5,
-                }}>
-                  <span style={{fontSize:22}}>{opt.icon}</span>
-                  <span style={{color:selRate===opt.value?accent:"#bbb",fontWeight:700,fontSize:12}}>{opt.label}</span>
-                  <span style={{color:selRate===opt.value?accent:"#444",fontSize:10}}>{opt.subtitle}</span>
-                </button>
-              ))}
-            </div>
+            <View style={styles.rateRow}>
+              {opts.map(opt => {
+                const selected = selRate === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    onPress={() => upd(rateKey, opt.value)}
+                    activeOpacity={0.85}
+                    style={[
+                      styles.rateCard,
+                      {
+                        borderColor: selected ? accent : colors.borderLight,
+                        backgroundColor: selected ? accent + '12' : colors.card,
+                      },
+                    ]}
+                  >
+                    <MaterialCommunityIcons name={opt.icon} size={22} color={selected ? accent : colors.textSecondary} />
+                    <Text style={[styles.rateLabel, { color: selected ? accent : colors.text }]}>{opt.label}</Text>
+                    <Text style={[styles.rateSub, { color: colors.textSecondary }]}>{opt.subtitle}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
-            <div style={{display:"flex",gap:10,marginBottom:16}}>
-              <div style={{flex:1}}>
-                <div style={sx.label}>Current Weight (kg)</div>
-                <input style={sx.input} placeholder="e.g. 80" type="number"
-                  value={fd.weight} onChange={e=>upd("weight",e.target.value)}/>
-              </div>
-              <div style={{flex:1}}>
-                <div style={sx.label}>Target Weight (kg)</div>
-                <input style={sx.input} placeholder={isLoss?"e.g. 70":"e.g. 85"} type="number"
-                  value={fd.targetWeight} onChange={e=>upd("targetWeight",e.target.value)}/>
-              </div>
-            </div>
+            <View style={styles.twoCol}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Current Weight (kg)</Text>
+                <TextInput
+                  placeholder="80"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                  value={fd.weight}
+                  onChangeText={(t) => upd('weight', t)}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+                />
+              </View>
+              <View style={{ width: 12 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Target Weight (kg)</Text>
+                <TextInput
+                  placeholder={isLoss ? '70' : '85'}
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                  value={fd.targetWeight}
+                  onChangeText={(t) => upd('targetWeight', t)}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+                />
+              </View>
+            </View>
 
-            <div style={{background:"#1a1c24",borderRadius:16,padding:14,border:`1px solid ${accent}22`}}>
-              <div style={{color:"#aaa",fontWeight:700,fontSize:12,marginBottom:12}}>📊 Your Weight Journey</div>
+            <View style={[styles.graphBox, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
+              <Text style={[styles.graphTitle, { color: colors.text }]}>Your weight journey</Text>
               <WeightJourneyGraph
                 currentWeight={fd.weight}
                 targetWeight={fd.targetWeight}
                 goal={fd.goal}
                 weightGoalRate={selRate}
+                colors={colors}
               />
-            </div>
-          </div>
+            </View>
+          </View>
         );
       }
 
-      default: return null;
+      default:
+        return null;
     }
   };
 
   return (
-    <div style={{
-      display:"flex",justifyContent:"center",alignItems:"flex-start",
-      minHeight:"100vh",background:"#0a0b0f",padding:"20px 0",
-      fontFamily:"'SF Pro Display',-apple-system,BlinkMacSystemFont,sans-serif",
-    }}>
-      <div style={{
-        width:390,background:"#13151a",borderRadius:44,
-        boxShadow:"0 40px 80px rgba(0,0,0,0.8),0 0 0 1px #1e2028",
-        overflow:"hidden",position:"relative",minHeight:760,
-        display:"flex",flexDirection:"column",
-      }}>
-        {/* Header */}
-        <div style={{
-          background:"linear-gradient(160deg,#111827,#0d1117)",
-          borderBottom:"1px solid #1a1e28",
-          padding:"50px 18px 16px",
-          display:"flex",alignItems:"center",gap:12,
-        }}>
-          <button onClick={handleBack} style={{
-            width:34,height:34,borderRadius:9,
-            border:`1px solid ${stepIdx>0?"#1e2a3a":"transparent"}`,
-            background:stepIdx>0?"#141c28":"transparent",
-            cursor:stepIdx>0?"pointer":"default",
-            color:stepIdx>0?"#5a7fa8":"transparent",fontSize:16,
-            display:"flex",alignItems:"center",justifyContent:"center",
-          }}>←</button>
-          <div style={{flex:1}}>
-            <div style={{height:5,background:"rgba(255,255,255,0.05)",borderRadius:3,overflow:"hidden",marginBottom:5}}>
-              <div style={{
-                height:"100%",borderRadius:3,
-                background:"linear-gradient(90deg,#4A90E2,#64b3f4)",
-                width:`${progress*100}%`,transition:"width 0.4s ease",
-              }}/>
-            </div>
-            <div style={{color:"#364a5f",fontSize:11,textAlign:"center",fontWeight:600}}>
-              Step {stepIdx+1} of {totalSteps}
-            </div>
-          </div>
-          <div style={{width:34}}/>
-        </div>
+    <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <LinearGradient colors={[colors.primary, colors.secondary]} style={styles.headerGradient}>
+          <View style={styles.headerContent}>
+            <View style={[styles.headerIconWrap, { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
+              <MaterialCommunityIcons name="account-details" size={42} color="white" />
+            </View>
+            <Text style={styles.headerTitle}>Profile Setup</Text>
+            <Text style={styles.headerSubtitle}>Step {stepIdx + 1} of {totalSteps}</Text>
+          </View>
+        </LinearGradient>
 
-        {/* Content */}
-        <div style={{flex:1,overflowY:"auto",padding:"20px 18px 0"}}>
-          {renderStep()}
-        </div>
+        <View style={styles.formContainer}>
+          <Surface style={[styles.formCard, { backgroundColor: colors.card }, Shadows.medium]}>
+            <ProgressBar progress={progress} color={colors.primary} style={styles.progress} />
 
-        {/* Footer */}
-        <div style={{padding:"14px 18px 28px"}}>
-          <button onClick={handleNext} style={{
-            width:"100%",padding:"16px",borderRadius:14,border:"none",
-            background:"linear-gradient(135deg,#4A90E2,#2d68c4)",
-            color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",
-            display:"flex",alignItems:"center",justifyContent:"center",gap:8,
-            boxShadow:"0 8px 24px rgba(74,144,226,0.25)",
-          }}>
-            {isLast?"Complete Setup 🎉":"Continue →"}
-          </button>
-        </div>
+            <View style={{ marginTop: 14 }}>{renderStep()}</View>
 
-        {showWelcome && (
-          <WelcomeScreen name={fd.firstName||"there"} onContinue={()=>setShowWelcome(false)}/>
-        )}
-      </div>
+            <View style={styles.footerRow}>
+              <Button
+                mode="outlined"
+                onPress={handleBack}
+                disabled={stepIdx === 0 || submitting}
+                style={[styles.backBtn, { borderColor: colors.border }]}
+                labelStyle={{ color: colors.textSecondary }}
+              >
+                Back
+              </Button>
 
-      <style>{`
-        *{box-sizing:border-box;}
-        input:focus{outline:none;border-color:#4A90E2!important;}
-        ::-webkit-scrollbar{width:3px;}
-        ::-webkit-scrollbar-track{background:#13151a;}
-        ::-webkit-scrollbar-thumb{background:#252830;border-radius:2px;}
-      `}</style>
-    </div>
+              <Button
+                mode="contained"
+                onPress={handleNext}
+                loading={submitting}
+                disabled={submitting}
+                style={[styles.nextBtn, { backgroundColor: colors.primary }]}
+                contentStyle={styles.nextBtnContent}
+                labelStyle={styles.nextBtnLabel}
+              >
+                {isLast ? 'Complete Setup' : 'Continue'}
+              </Button>
+            </View>
+          </Surface>
+        </View>
+
+        <View style={{ height: 30 }} />
+      </ScrollView>
+
+      <WelcomeOverlay visible={showWelcome} name={fd.firstName} />
+    </KeyboardAvoidingView>
   );
 }
 
-const sx = {
-  step:  {minHeight:420,paddingBottom:20},
-  icon:  {fontSize:52,textAlign:"center",marginBottom:10},
-  title: {fontSize:23,fontWeight:800,color:"#e0e2ec",textAlign:"center",marginBottom:22,letterSpacing:-.5},
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  scroll: { flexGrow: 1 },
+
+  headerGradient: {
+    height: height * 0.28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  headerContent: { alignItems: 'center', paddingHorizontal: 20 },
+  headerIconWrap: {
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    ...Shadows.small,
+  },
+  headerTitle: { fontSize: 28, fontWeight: 'bold', color: 'white', marginBottom: 6 },
+  headerSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.9)' },
+
+  formContainer: { flex: 1, paddingHorizontal: 20, marginTop: -30 },
+  formCard: { borderRadius: 20, padding: 16, marginBottom: 20 },
+  progress: { height: 8, borderRadius: 4 },
+
+  step: { paddingBottom: 8 },
+  stepTitle: { fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 14 },
+
   input: {
-    width:"100%",background:"#1a1c24",border:"1px solid #252830",
-    borderRadius:11,padding:"13px 14px",fontSize:15,color:"#d8dae8",
-    marginBottom:14,display:"block",
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    marginBottom: 12,
   },
-  label: {color:"#444",fontSize:11,fontWeight:700,marginBottom:6,textTransform:"uppercase",letterSpacing:.6},
-  listItem:{
-    width:"100%",display:"flex",alignItems:"center",
-    borderRadius:12,padding:"13px 14px",border:"1px solid #252830",background:"#1a1c24",
+
+  optionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 10,
   },
-  chip:{
-    display:"flex",alignItems:"center",gap:8,
-    borderRadius:12,padding:"11px 14px",
-    border:"1px solid #252830",background:"#1a1c24",
+  optionTitle: { fontSize: 15, fontWeight: '800' },
+  optionSub: { fontSize: 12, lineHeight: 16, marginTop: 2 },
+
+  sectionLabel: { fontSize: 12, fontWeight: '800', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.7 },
+
+  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
   },
-};
+  chipText: { fontSize: 13, fontWeight: '800' },
+
+  row: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  genderBtn: { flex: 1, paddingVertical: 12, borderWidth: 1, borderRadius: 12, alignItems: 'center' },
+  genderText: { fontSize: 13, fontWeight: '800' },
+
+  twoCol: { flexDirection: 'row', marginTop: 8 },
+
+  footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 },
+  backBtn: { borderRadius: 12, minWidth: 110 },
+  nextBtn: { borderRadius: 12, minWidth: 150 },
+  nextBtnContent: { paddingVertical: 6 },
+  nextBtnLabel: { fontSize: 15, fontWeight: '800', color: 'white' },
+
+  pillsRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
+  pill: { flex: 1, borderWidth: 1, borderRadius: 14, padding: 12, alignItems: 'center' },
+  pillKey: { fontSize: 10, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
+  pillVal: { fontSize: 18, fontWeight: '900', marginTop: 4 },
+  pillSub: { fontSize: 10, marginTop: 2, textAlign: 'center' },
+
+  calCard: { borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 12 },
+  calRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  calLabel: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
+  calDesc: { fontSize: 12, lineHeight: 16 },
+  calValue: { fontSize: 30, fontWeight: '900', lineHeight: 34 },
+  calUnit: { fontSize: 10, fontWeight: '700', marginTop: 2 },
+
+  macroRow: { flexDirection: 'row', gap: 8, marginTop: 12, paddingTop: 12, borderTopWidth: 1 },
+  macroBox: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.03)' },
+  macroVal: { fontSize: 16, fontWeight: '900' },
+  macroKey: { fontSize: 10, fontWeight: '800', marginTop: 2 },
+
+  infoBox: { borderWidth: 1, borderRadius: 14, padding: 14 },
+  infoText: { fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700' },
+
+  rateRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
+  rateCard: { flex: 1, borderWidth: 1, borderRadius: 14, padding: 12, alignItems: 'center', gap: 4 },
+  rateLabel: { fontSize: 12, fontWeight: '900', textAlign: 'center' },
+  rateSub: { fontSize: 10, fontWeight: '700', textAlign: 'center' },
+
+  graphBox: { borderWidth: 1, borderRadius: 16, padding: 14, marginTop: 4 },
+  graphTitle: { fontSize: 14, fontWeight: '900', marginBottom: 10 },
+  graphHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  graphHeaderText: { fontSize: 11, fontWeight: '700' },
+  graphHeaderBold: { fontSize: 11, fontWeight: '900' },
+  graphChart: { borderRadius: 16 },
+  graphEmpty: { paddingVertical: 20, alignItems: 'center' },
+  graphEmptyText: { fontSize: 12, fontWeight: '700' },
+
+  welcomeOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'center', alignItems: 'center' },
+  welcomeGradient: { width: '88%', borderRadius: 22, paddingVertical: 26, paddingHorizontal: 20, alignItems: 'center' },
+  welcomeEmoji: { fontSize: 64, marginBottom: 8 },
+  welcomeTitle: { fontSize: 26, fontWeight: '900', color: '#fff', marginBottom: 10 },
+  welcomeSub: { fontSize: 15, color: '#aab3c2', textAlign: 'center', lineHeight: 22, marginBottom: 16 },
+  welcomeName: { color: '#4A90E2', fontWeight: '900' },
+  welcomeFooter: { fontSize: 12, color: '#667085', fontWeight: '800' },
+});

@@ -7,6 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Shadows } from '../constants/Colors';
 import { useColorScheme } from '../hooks/useColorScheme';
+import { useAuth } from '../utils/AuthContext';
 
 const { height } = Dimensions.get('window');
 
@@ -14,6 +15,7 @@ export default function RegisterScreen() {
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const currentColors = Colors[colorScheme || 'light'];
+  const { signIn } = useAuth();
   
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -158,26 +160,35 @@ export default function RegisterScreen() {
       );
 
       if (res.ok) {
-        // ✅ SUCCESS — navigate to profile setup
+        // ✅ SUCCESS — first go to profile setup screen
         console.log('Registration successful for email:', email);
-        const navigateToProfile = () => {
-          router.push({
-            pathname: '/profile-setup',
-            params: { email },
-          });
-        };
+        router.replace({
+          pathname: '/profile-setup',
+          params: { email, fromRegister: '1' },
+        });
 
-        if (Platform.OS === 'web') {
-          window.alert('Registration successful!');
-          navigateToProfile();
-        } else {
-          // android & ios
-          Alert.alert(
-            'Success',
-            "Registration successful! Let's set up your fitness profile.",
-            [{ text: 'Continue', onPress: navigateToProfile }]
-          );
-        }
+        // ✅ Then, in the background, try to auto-login so that after setup we can land on /home.
+        (async () => {
+          try {
+            const loginRes = await fetch(
+              `${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.AUTH.PORT}${API_CONFIG.ENDPOINTS.AUTH.LOGIN}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify({ email, password }),
+              }
+            );
+            const loginData = await loginRes.json().catch(() => ({}));
+
+            if (loginRes.ok && loginData?.token) {
+              await signIn(loginData.token, loginData);
+            } else {
+              console.warn('Auto-login failed after register:', loginData);
+            }
+          } catch (e) {
+            console.warn('Auto-login error after register:', e?.message || e);
+          }
+        })();
       } else {
         // ❌ SERVER ERROR
         const errorText = await res.text();

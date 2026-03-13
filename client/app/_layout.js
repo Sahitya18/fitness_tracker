@@ -10,9 +10,14 @@ function useProtectedRoute(isAuthenticated, isLoading) {
     // Don't redirect while session is still being restored from AsyncStorage
     if (isLoading) return;
 
+    // Auth screens: if you're already logged in, you shouldn't be here.
     const onAuthScreen = ['login', 'register', 'forgot-password'].includes(segments[0]);
 
-    if (!isAuthenticated && !onAuthScreen) {
+    // Onboarding screens: allowed even if not authenticated; also allowed even if authenticated
+    // (we auto-login on register, then collect profile data).
+    const onOnboardingScreen = ['profile-setup', 'goal'].includes(segments[0]);
+
+    if (!isAuthenticated && !(onAuthScreen || onOnboardingScreen)) {
       // Not logged in → send to login
       router.replace('/login');
     } else if (isAuthenticated && onAuthScreen) {
@@ -42,6 +47,8 @@ function RootLayoutNav() {
       <Stack.Screen name="login"             />
       <Stack.Screen name="register"          />
       <Stack.Screen name="forgot-password"   />
+      <Stack.Screen name="profile-setup"     />
+      <Stack.Screen name="goal"              />
       <Stack.Screen name="home"              />
       <Stack.Screen name="meal-details"      />
       <Stack.Screen name="food-detail"       />
