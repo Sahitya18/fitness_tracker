@@ -1,0 +1,1 @@
+[engine:junit-jupiter]/[class:com.fitness.add_meal_service.AddMealServiceApplicationTests]/[method:contextLoads()]

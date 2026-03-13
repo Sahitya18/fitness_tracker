@@ -1,14 +1,12 @@
 package com.fitness.register_service.config;
 
-import org.springframework.beans.factory.annotation.Configurable;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.List;
 
 @Configuration
 public class CorsConfig {
@@ -21,7 +19,8 @@ public class CorsConfig {
                 "http://localhost:8082",
                 "http://192.168.1.14:8082",
                 "http://122.177.246.43",
-                "http://122.177.242.229"
+                "http://122.177.242.229",
+                "http://122.177.241.211"
         ));
 
         config.setAllowedMethods(List.of(

@@ -1,0 +1,15 @@
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\config\CorsConfig.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\config\SecurityConfig.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\controller\RegistrationController.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\controller\UpdateProfile.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\dto\RegisterRequest.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\dto\UpdateProfileRequest.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\dto\UpdateRequest.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\model\User.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\RegisterServiceApplication.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\repository\updateUserDetails.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\repository\UserRepository.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\service\OtpService.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\service\RegistrationService.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\service\UpdateService.java
+D:\projects\fitness_tracker\backend\register-service\src\main\java\com\fitness\register_service\util\PasswordEncryptor.java

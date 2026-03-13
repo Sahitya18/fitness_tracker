@@ -1,0 +1,12 @@
+D:\projects\fitness_tracker\backend\auth-service\src\main\java\com\fitness\auth_service\AuthServiceApplication.java
+D:\projects\fitness_tracker\backend\auth-service\src\main\java\com\fitness\auth_service\config\CorsConfig.java
+D:\projects\fitness_tracker\backend\auth-service\src\main\java\com\fitness\auth_service\config\SecurityConfig.java
+D:\projects\fitness_tracker\backend\auth-service\src\main\java\com\fitness\auth_service\controller\AuthController.java
+D:\projects\fitness_tracker\backend\auth-service\src\main\java\com\fitness\auth_service\controller\UserProfileController.java
+D:\projects\fitness_tracker\backend\auth-service\src\main\java\com\fitness\auth_service\dto\LoginRequest.java
+D:\projects\fitness_tracker\backend\auth-service\src\main\java\com\fitness\auth_service\dto\LoginResponse.java
+D:\projects\fitness_tracker\backend\auth-service\src\main\java\com\fitness\auth_service\dto\UserProfileResponse.java
+D:\projects\fitness_tracker\backend\auth-service\src\main\java\com\fitness\auth_service\model\User.java
+D:\projects\fitness_tracker\backend\auth-service\src\main\java\com\fitness\auth_service\repository\UserRepository.java
+D:\projects\fitness_tracker\backend\auth-service\src\main\java\com\fitness\auth_service\service\AuthService.java
+D:\projects\fitness_tracker\backend\auth-service\src\main\java\com\fitness\auth_service\util\JwtUtil.java

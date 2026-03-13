@@ -1,51 +1,54 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, TextInput,
-  Animated, Dimensions, ScrollView, Alert, Platform,
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  Dimensions,
+  Alert,
+  Modal,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Button, ProgressBar, Surface } from 'react-native-paper';
+import { LineChart } from 'react-native-chart-kit';
 import { router, useLocalSearchParams } from 'expo-router';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import API_CONFIG from '../utils/config';
+import { Colors, Shadows } from '../constants/Colors';
+import { useColorScheme } from '../hooks/useColorScheme';
+import { useAuth } from '../utils/AuthContext';
 
 const { width, height } = Dimensions.get('window');
 
-const STEPS = [
-  { id: 1, title: 'What should we call you?' },
-  { id: 2, title: 'What\'s your goal?' },
-  { id: 3, title: 'Meal Preference' },
-  { id: 4, title: 'Activity Goal' },
-  { id: 5, title: 'Personal Information' },
-  { id: 6, title: 'Workout Preference' },
-];
-
 const GOAL_OPTIONS = [
-  { id: 'fat_loss', label: 'Fat Loss', icon: 'trending-down', color: '#FF6B35' },
-  { id: 'maintain', label: 'Maintain', icon: 'minus', color: '#4A90E2' },
-  { id: 'gain', label: 'Muscle Gain', icon: 'trending-up', color: '#4CAF50' },
+  { id: 'fat_loss', label: 'Fat Loss', icon: 'trending-down', color: '#FF6B35', desc: 'Burn fat & get lean' },
+  { id: 'maintain', label: 'Maintain', icon: 'scale-balance', color: '#4A90E2', desc: 'Stay at current weight' },
+  { id: 'gain', label: 'Muscle Gain', icon: 'trending-up', color: '#4CAF50', desc: 'Build muscle & strength' },
 ];
 
 const MEAL_PREFERENCES = [
   { id: 'everything', label: 'Everything', icon: 'food' },
-  { id: 'vegetarian', label: 'Vegetarian', icon: 'food-apple' },
-  { id: 'vegan', label: 'Vegan', icon: 'leaf' },
-  { id: 'keto', label: 'Keto', icon: 'nutrition' },
-  { id: 'paleo', label: 'Paleo', icon: 'food-drumstick' },
+  { id: 'vegetarian', label: 'Vegetarian', icon: 'leaf' },
+  { id: 'vegan', label: 'Vegan', icon: 'sprout' },
+  { id: 'keto', label: 'Keto', icon: 'bowl-mix' },
+  { id: 'paleo', label: 'Paleo', icon: 'food-steak' },
 ];
 
 const ACTIVITY_LEVELS = [
-  { id: 'sedentary', label: 'Sedentary', subtitle: 'Office job, little exercise', icon: 'seat' },
-  { id: 'light', label: 'Lightly Active', subtitle: '1-2 days/week', icon: 'walk' },
-  { id: 'moderate', label: 'Moderately Active', subtitle: '3-5 days/week', icon: 'run' },
-  { id: 'active', label: 'Very Active', subtitle: '6-7 days/week', icon: 'run-fast' },
-  { id: 'very_active', label: 'Extremely Active', subtitle: 'Athlete level', icon: 'arm-flex' },
+  { id: 'sedentary', label: 'Sedentary', subtitle: 'Office job, little exercise', multiplier: 1.2 },
+  { id: 'light', label: 'Lightly Active', subtitle: '1-2 days/week', multiplier: 1.375 },
+  { id: 'moderate', label: 'Moderately Active', subtitle: '3-5 days/week', multiplier: 1.55 },
+  { id: 'active', label: 'Very Active', subtitle: '6-7 days/week', multiplier: 1.725 },
+  { id: 'very_active', label: 'Extremely Active', subtitle: 'Athlete level', multiplier: 1.9 },
 ];
 
 const WORKOUT_PLACES = [
   { id: 'gym', label: 'Gym', icon: 'dumbbell' },
-  { id: 'home', label: 'Home', icon: 'home' },
+  { id: 'home', label: 'Home', icon: 'home-variant' },
   { id: 'outdoors', label: 'Outdoors', icon: 'pine-tree' },
   { id: 'mixed', label: 'Mixed', icon: 'shuffle-variant' },
 ];
@@ -53,453 +56,752 @@ const WORKOUT_PLACES = [
 const SPORTS = [
   { id: 'running', label: 'Running', icon: 'run' },
   { id: 'cycling', label: 'Cycling', icon: 'bike' },
-  { id: 'swimming', label: 'Swimming', icon: 'pool' },
+  { id: 'swimming', label: 'Swimming', icon: 'swim' },
   { id: 'yoga', label: 'Yoga', icon: 'yoga' },
   { id: 'basketball', label: 'Basketball', icon: 'basketball' },
   { id: 'football', label: 'Football', icon: 'soccer' },
   { id: 'tennis', label: 'Tennis', icon: 'tennis' },
-  { id: 'none', label: 'No Sports', icon: 'close' },
 ];
 
+function toNum(v) {
+  const n = Number(String(v ?? '').trim());
+  return Number.isFinite(n) ? n : 0;
+}
+
+// ── Calorie formulas (Mifflin-St Jeor) ───────────────────────────────────────
+function calcBMR(weight, heightCm, age, gender) {
+  const w = toNum(weight);
+  const h = toNum(heightCm);
+  const a = toNum(age);
+  if (!w || !h || !a) return 0;
+  const base = 10 * w + 6.25 * h - 5 * a;
+  return gender === 'Female' ? base - 161 : base + 5;
+}
+function calcTDEE(bmr, activityId) {
+  const lvl = ACTIVITY_LEVELS.find(l => l.id === activityId);
+  return Math.round(bmr * (lvl?.multiplier || 1.2));
+}
+function calcGoalCalories(tdee, goal) {
+  if (goal === 'fat_loss') return tdee - 500;
+  if (goal === 'gain') return tdee + 300;
+  return tdee;
+}
+function calcMacros(calories, goal) {
+  const splits = {
+    fat_loss: { p: 0.35, c: 0.35, f: 0.3 },
+    gain: { p: 0.3, c: 0.45, f: 0.25 },
+    maintain: { p: 0.3, c: 0.4, f: 0.3 },
+  };
+  const sp = splits[goal] || splits.maintain;
+  return {
+    protein: Math.round((calories * sp.p) / 4),
+    carbs: Math.round((calories * sp.c) / 4),
+    fat: Math.round((calories * sp.f) / 9),
+  };
+}
+
+// ── Journey (start month → goal month) ───────────────────────────────────────
+function mockJourneyAPI(curW, tgtW, goal, ratePerMonth) {
+  const months = [];
+  const today = new Date();
+  const n = Math.ceil(Math.abs(curW - tgtW) / Math.max(ratePerMonth, 0.01));
+  for (let i = 0; i <= Math.min(n, 12); i++) {
+    const d = new Date(today);
+    d.setMonth(d.getMonth() + i);
+    const label = d.toLocaleString('default', { month: 'short' }) + " '" + d.getFullYear().toString().slice(2);
+    const w = goal === 'fat_loss' ? Math.max(tgtW, curW - ratePerMonth * i) : Math.min(tgtW, curW + ratePerMonth * i);
+    months.push({ label, weight: Number(w.toFixed(1)) });
+  }
+  return { months, startMonth: months[0]?.label, goalMonth: months[months.length - 1]?.label };
+}
+
+function WeightJourneyGraph({ currentWeight, targetWeight, goal, weightGoalRate, colors }) {
+  const cur = toNum(currentWeight);
+  const tgt = toNum(targetWeight);
+  const weekly = toNum(weightGoalRate);
+
+  if (!cur || !tgt) {
+    return (
+      <View style={styles.graphEmpty}>
+        <Text style={[styles.graphEmptyText, { color: colors.textSecondary }]}>
+          Enter current & target weight to see your journey
+        </Text>
+      </View>
+    );
+  }
+
+  const monthlyRate = weekly * 4.33;
+  const data = mockJourneyAPI(cur, tgt, goal, monthlyRate || 4);
+  const labels = data.months.map((m, idx) => {
+    // avoid crowding labels
+    if (idx === 0 || idx === data.months.length - 1) return m.label;
+    return idx % 2 === 0 ? m.label : '';
+  });
+  const weights = data.months.map(m => m.weight);
+  const accent = goal === 'fat_loss' ? '#FF6B35' : '#4CAF50';
+
+  return (
+    <View>
+      <View style={styles.graphHeader}>
+        <Text style={[styles.graphHeaderText, { color: colors.textSecondary }]}>
+          Start <Text style={[styles.graphHeaderBold, { color: colors.text }]}>{data.startMonth}</Text>
+        </Text>
+        <Text style={[styles.graphHeaderText, { color: colors.textSecondary }]}>
+          Goal <Text style={[styles.graphHeaderBold, { color: accent }]}>{data.goalMonth}</Text>
+        </Text>
+      </View>
+
+      <LineChart
+        data={{
+          labels,
+          datasets: [{ data: weights, color: (o = 1) => `rgba(74, 144, 226, ${o})`, strokeWidth: 3 }],
+        }}
+        width={width - 40}
+        height={220}
+        yAxisSuffix="kg"
+        chartConfig={{
+          backgroundColor: colors.card,
+          backgroundGradientFrom: colors.card,
+          backgroundGradientTo: colors.card,
+          decimalPlaces: 1,
+          color: (opacity = 1) => (goal === 'fat_loss' ? `rgba(255,107,53,${opacity})` : `rgba(76,175,80,${opacity})`),
+          labelColor: (opacity = 1) => `rgba(140, 148, 163, ${opacity})`,
+          propsForDots: { r: '5', strokeWidth: '2', stroke: accent },
+          propsForBackgroundLines: { strokeDasharray: '', stroke: colors.border },
+        }}
+        bezier
+        style={styles.graphChart}
+      />
+    </View>
+  );
+}
+
+function CalorieCard({ label, calories, accent, description, macros, highlight, colors }) {
+  return (
+    <View
+      style={[
+        styles.calCard,
+        {
+          borderColor: highlight ? accent + '80' : colors.borderLight,
+          backgroundColor: highlight ? accent + '12' : colors.surfaceVariant,
+        },
+      ]}
+    >
+      <View style={styles.calRow}>
+        <View style={{ flex: 1, paddingRight: 10 }}>
+          <Text style={[styles.calLabel, { color: highlight ? accent : colors.textSecondary }]}>{label}</Text>
+          <Text style={[styles.calDesc, { color: colors.textSecondary }]}>{description}</Text>
+        </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={[styles.calValue, { color: highlight ? accent : colors.text }]}>{Math.round(calories)}</Text>
+          <Text style={[styles.calUnit, { color: colors.textSecondary }]}>kcal/day</Text>
+        </View>
+      </View>
+
+      {!!macros && (
+        <View style={[styles.macroRow, { borderTopColor: colors.border }]}>
+          {[
+            { k: 'Protein', v: `${macros.protein}g`, c: '#4A90E2' },
+            { k: 'Carbs', v: `${macros.carbs}g`, c: '#F5A623' },
+            { k: 'Fat', v: `${macros.fat}g`, c: '#FF6B35' },
+          ].map(m => (
+            <View key={m.k} style={styles.macroBox}>
+              <Text style={[styles.macroVal, { color: m.c }]}>{m.v}</Text>
+              <Text style={[styles.macroKey, { color: colors.textSecondary }]}>{m.k}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function WelcomeOverlay({ visible, name }) {
+  return (
+    <Modal transparent animationType="fade" visible={visible}>
+      <View style={styles.welcomeOverlay}>
+        <LinearGradient colors={['#0d1117', '#1A1B1E']} style={styles.welcomeGradient}>
+          <Text style={styles.welcomeEmoji}>🎉</Text>
+          <Text style={styles.welcomeTitle}>Welcome to FitMe!</Text>
+          <Text style={styles.welcomeSub}>
+            Your journey starts now,{'\n'}
+            <Text style={styles.welcomeName}>{name || 'there'}!</Text>
+          </Text>
+          <Text style={styles.welcomeFooter}>Taking you to your dashboard...</Text>
+        </LinearGradient>
+      </View>
+    </Modal>
+  );
+}
+
 export default function ProfileSetupScreen() {
-  const { email } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const { userData } = useAuth();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme || 'light'];
+
+  const email = typeof params?.email === 'string' ? params.email : (userData?.email || userData?.user?.email);
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const welcomeScale = useRef(new Animated.Value(0)).current;
-  const welcomeOpacity = useRef(new Animated.Value(0)).current;
-
-  const [formData, setFormData] = useState({
+  const [fd, setFd] = useState({
     firstName: '',
     lastName: '',
     goal: '',
+    weightLossGoal: '1',
+    weightGainGoal: '0.5',
     mealPreference: '',
     activityLevel: '',
     height: '',
     weight: '',
-    targetWeight:'',
+    targetWeight: '',
     gender: '',
     age: '',
-    dateOfBirth: new Date(),
     workoutPlace: '',
     sports: [],
   });
 
+  const upd = (k, v) => setFd(p => ({ ...p, [k]: v }));
+
+  // Step order: 1→2→4→5→6→7→8(calories, always)→3(weight goal, conditional)
+  const visibleSteps = useMemo(() => {
+    const base = [1, 2, 4, 5, 6, 7, 8];
+    if (fd.goal === 'fat_loss' || fd.goal === 'gain') base.push(3);
+    return base;
+  }, [fd.goal]);
+
+  const stepIdx = visibleSteps.indexOf(currentStep);
+  const totalSteps = visibleSteps.length;
+  const progress = (stepIdx + 1) / totalSteps;
+  const isLast = stepIdx === totalSteps - 1;
+
+  const bmr = calcBMR(fd.weight, fd.height, fd.age, fd.gender);
+  const tdee = calcTDEE(bmr, fd.activityLevel);
+  const goalCals = calcGoalCalories(tdee, fd.goal);
+  const goalMacros = calcMacros(goalCals, fd.goal);
+  const maintMacros = calcMacros(tdee, 'maintain');
+  const activityInfo = ACTIVITY_LEVELS.find(a => a.id === fd.activityLevel);
+
   useEffect(() => {
-    animateStep();
-  }, [currentStep]);
-
-  const animateStep = () => {
-    slideAnim.setValue(30);
-    Animated.spring(slideAnim, {
-      toValue: 0,
-      tension: 50,
-      friction: 7,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const progress = currentStep / STEPS.length;
-
-  const handleNext = () => {
-    // Validation
-    if (currentStep === 1 && (!formData.firstName || !formData.lastName)) {
-      Alert.alert('Required', 'Please enter your name');
-      return;
+    if (showWelcome) {
+      const t = setTimeout(() => {
+        setShowWelcome(false);
+        router.replace('/home');
+      }, 2500);
+      return () => clearTimeout(t);
     }
-    if (currentStep === 2 && !formData.goal) {
-      Alert.alert('Required', 'Please select your goal');
-      return;
+  }, [showWelcome]);
+
+  const validateCurrentStep = () => {
+    if (!email) {
+      Alert.alert('Error', 'Email missing. Please register again.');
+      return false;
     }
-    if (currentStep === 3 && !formData.mealPreference) {
-      Alert.alert('Required', 'Please select a meal preference');
-      return;
+
+    if (currentStep === 1) {
+      if (!fd.firstName.trim()) return Alert.alert('Validation', 'Please enter first name'), false;
+      return true;
     }
-    if (currentStep === 4 && !formData.activityLevel) {
-      Alert.alert('Required', 'Please select your activity level');
-      return;
+    if (currentStep === 2) {
+      if (!fd.goal) return Alert.alert('Validation', 'Please select your goal'), false;
+      return true;
+    }
+    if (currentStep === 4) {
+      if (!fd.mealPreference) return Alert.alert('Validation', 'Please select a meal preference'), false;
+      return true;
     }
     if (currentStep === 5) {
-      if (!formData.height || !formData.weight || !formData.targetWeight || !formData.gender || !formData.age) {
-        Alert.alert('Required', 'Please fill all personal information');
-        return;
-      }
+      if (!fd.activityLevel) return Alert.alert('Validation', 'Please select activity level'), false;
+      return true;
     }
-    if (currentStep === 6 && !formData.workoutPlace) {
-      Alert.alert('Required', 'Please select a workout preference');
+    if (currentStep === 6) {
+      const h = toNum(fd.height);
+      const w = toNum(fd.weight);
+      const a = toNum(fd.age);
+      if (!fd.gender) return Alert.alert('Validation', 'Please select gender'), false;
+      if (h < 100 || h > 250) return Alert.alert('Validation', 'Height must be between 100 and 250 cm'), false;
+      if (w < 30 || w > 300) return Alert.alert('Validation', 'Weight must be between 30 and 300 kg'), false;
+      if (a < 5 || a > 120) return Alert.alert('Validation', 'Age must be valid'), false;
+      if ((fd.goal === 'fat_loss' || fd.goal === 'gain') && !toNum(fd.targetWeight)) {
+        return Alert.alert('Validation', 'Please enter target weight'), false;
+      }
+      return true;
+    }
+    if (currentStep === 7) {
+      if (!fd.workoutPlace) return Alert.alert('Validation', 'Please select workout place'), false;
+      return true;
+    }
+    if (currentStep === 8) {
+      // calories step is informational; allow continue
+      return true;
+    }
+    if (currentStep === 3) {
+      if (!toNum(fd.targetWeight)) return Alert.alert('Validation', 'Please enter target weight'), false;
+      return true;
+    }
+    return true;
+  };
+
+  const handleNext = async () => {
+    if (!validateCurrentStep()) return;
+
+    if (!isLast) {
+      setCurrentStep(visibleSteps[stepIdx + 1]);
       return;
     }
 
-    if (currentStep === 6) {
-      handleSubmit();
-    } else {
-      setCurrentStep(currentStep + 1);
+    // last step → submit profile then show welcome → home
+    if (submitting) return;
+    setSubmitting(true);
+
+    try {
+      const payload = {
+        email,
+        firstName: fd.firstName.trim(),
+        lastName: fd.lastName.trim(),
+        gender: fd.gender,
+        height: toNum(fd.height),
+        weight: toNum(fd.weight),
+        targetWeight: toNum(fd.targetWeight),
+        goal: fd.goal,
+        mealPreference: fd.mealPreference,
+        activityLevel: fd.activityLevel,
+        age: Math.round(toNum(fd.age)),
+        workoutPlace: fd.workoutPlace,
+        sports: fd.sports,
+      };
+
+      const url =
+        `${API_CONFIG.BASE_URL_LOCALHOST}` +
+        `${API_CONFIG.ENDPOINTS.REGISTRATION.PORT}` +
+        `${API_CONFIG.ENDPOINTS.REGISTRATION.CREATE_PROFILE}`;
+
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setShowWelcome(true);
+      } else {
+        const txt = await res.text();
+        Alert.alert('Profile Setup Failed', txt || 'Something went wrong. Please try again.');
+      }
+    } catch (e) {
+      Alert.alert('Error', e?.message || 'Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    if (stepIdx > 0) setCurrentStep(visibleSteps[stepIdx - 1]);
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      const token = await AsyncStorage.getItem('userToken');
-      const response = await fetch(`${API_CONFIG.BASE_URL_LOCALHOST}${API_CONFIG.ENDPOINTS.REGISTRATION.PORT}${API_CONFIG.ENDPOINTS.REGISTRATION.CREATE_PROFILE}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...formData,
-          email,
-          dateOfBirth: formData.dateOfBirth.toISOString(),
-        }),
-      });
-
-      if (response.ok) {
-        showWelcomeAnimation();
-      } else {
-        const error = await response.text();
-        Alert.alert('Error', error || 'Failed to complete profile');
-      }
-    } catch (error) {
-      console.error('Profile setup error:', error);
-      Alert.alert('Error', 'Unable to complete profile. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  const toggleSport = (id) => {
+    setFd(p => {
+      const has = p.sports.includes(id);
+      return { ...p, sports: has ? p.sports.filter(x => x !== id) : [...p.sports, id] };
+    });
   };
 
-  const showWelcomeAnimation = () => {
-    setShowWelcome(true);
-    Animated.parallel([
-      Animated.spring(welcomeScale, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-      Animated.timing(welcomeOpacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    setTimeout(() => {
-      router.replace('/home');
-    }, 3000);
-  };
-
-  const toggleSport = (sportId) => {
-    setFormData(prev => ({
-      ...prev,
-      sports: prev.sports.includes(sportId)
-        ? prev.sports.filter(s => s !== sportId)
-        : [...prev.sports, sportId],
-    }));
-  };
+  const weightLossOpts = [
+    { value: '0.5', label: '0.5 kg/week', subtitle: 'Slow & steady', icon: 'turtle' },
+    { value: '1', label: '1 kg/week', subtitle: 'Recommended', icon: 'thumb-up' },
+    { value: '1.5', label: '1.5 kg/week', subtitle: 'Aggressive', icon: 'fire' },
+  ];
+  const weightGainOpts = [
+    { value: '0.25', label: '0.25 kg/week', subtitle: 'Lean bulk', icon: 'sprout' },
+    { value: '0.5', label: '0.5 kg/week', subtitle: 'Recommended', icon: 'thumb-up' },
+    { value: '0.75', label: '0.75 kg/week', subtitle: 'Fast bulk', icon: 'flash' },
+  ];
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
-          <View style={styles.stepContainer}>
-            <MaterialCommunityIcons name="account-circle" size={80} color="#4A90E2" style={styles.stepIcon} />
-            <Text style={styles.stepTitle}>{STEPS[0].title}</Text>
-            
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>What should we call you?</Text>
             <TextInput
-              style={styles.input}
               placeholder="First Name"
-              placeholderTextColor="#666"
-              value={formData.firstName}
-              onChangeText={(text) => setFormData({ ...formData, firstName: text })}
+              placeholderTextColor={colors.textTertiary}
+              value={fd.firstName}
+              onChangeText={(t) => upd('firstName', t)}
+              style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
             />
-            
             <TextInput
-              style={styles.input}
               placeholder="Last Name"
-              placeholderTextColor="#666"
-              value={formData.lastName}
-              onChangeText={(text) => setFormData({ ...formData, lastName: text })}
+              placeholderTextColor={colors.textTertiary}
+              value={fd.lastName}
+              onChangeText={(t) => upd('lastName', t)}
+              style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
             />
           </View>
         );
 
       case 2:
         return (
-          <View style={styles.stepContainer}>
-            <MaterialCommunityIcons name="target" size={80} color="#4A90E2" style={styles.stepIcon} />
-            <Text style={styles.stepTitle}>{STEPS[1].title}</Text>
-            
-            <View style={styles.optionsGrid}>
-              {GOAL_OPTIONS.map((option) => (
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>What's your goal?</Text>
+            {GOAL_OPTIONS.map(opt => {
+              const selected = fd.goal === opt.id;
+              return (
                 <TouchableOpacity
-                  key={option.id}
+                  key={opt.id}
+                  onPress={() => upd('goal', opt.id)}
+                  activeOpacity={0.85}
                   style={[
                     styles.optionCard,
-                    formData.goal === option.id && styles.optionCardSelected,
+                    {
+                      borderColor: selected ? opt.color : colors.borderLight,
+                      backgroundColor: selected ? opt.color + '12' : colors.card,
+                    },
                   ]}
-                  onPress={() => setFormData({ ...formData, goal: option.id })}
                 >
-                  <MaterialCommunityIcons
-                    name={option.icon}
-                    size={40}
-                    color={formData.goal === option.id ? option.color : '#666'}
-                  />
-                  <Text style={[
-                    styles.optionLabel,
-                    formData.goal === option.id && { color: option.color },
-                  ]}>
-                    {option.label}
-                  </Text>
+                  <MaterialCommunityIcons name={opt.icon} size={24} color={selected ? opt.color : colors.textSecondary} />
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={[styles.optionTitle, { color: selected ? opt.color : colors.text }]}>{opt.label}</Text>
+                    <Text style={[styles.optionSub, { color: colors.textSecondary }]}>{opt.desc}</Text>
+                  </View>
+                  <MaterialCommunityIcons name={selected ? 'check-circle' : 'circle-outline'} size={20} color={selected ? opt.color : colors.border} />
                 </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        );
-
-      case 3:
-        return (
-          <View style={styles.stepContainer}>
-            <MaterialCommunityIcons name="food" size={80} color="#4A90E2" style={styles.stepIcon} />
-            <Text style={styles.stepTitle}>{STEPS[2].title}</Text>
-            
-            <View style={styles.optionsGrid}>
-              {MEAL_PREFERENCES.map((option) => (
-                <TouchableOpacity
-                  key={option.id}
-                  style={[
-                    styles.optionCard,
-                    formData.mealPreference === option.id && styles.optionCardSelected,
-                  ]}
-                  onPress={() => setFormData({ ...formData, mealPreference: option.id })}
-                >
-                  <MaterialCommunityIcons
-                    name={option.icon}
-                    size={32}
-                    color={formData.mealPreference === option.id ? '#4A90E2' : '#666'}
-                  />
-                  <Text style={[
-                    styles.optionLabel,
-                    formData.mealPreference === option.id && styles.optionLabelSelected,
-                  ]}>
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+              );
+            })}
           </View>
         );
 
       case 4:
         return (
-          <View style={styles.stepContainer}>
-            <MaterialCommunityIcons name="run-fast" size={80} color="#4A90E2" style={styles.stepIcon} />
-            <Text style={styles.stepTitle}>{STEPS[3].title}</Text>
-            
-            <View style={styles.listContainer}>
-              {ACTIVITY_LEVELS.map((option) => (
-                <TouchableOpacity
-                  key={option.id}
-                  style={[
-                    styles.listItem,
-                    formData.activityLevel === option.id && styles.listItemSelected,
-                  ]}
-                  onPress={() => setFormData({ ...formData, activityLevel: option.id })}
-                >
-                  <MaterialCommunityIcons
-                    name={option.icon}
-                    size={28}
-                    color={formData.activityLevel === option.id ? '#4A90E2' : '#666'}
-                  />
-                  <View style={styles.listItemText}>
-                    <Text style={[
-                      styles.listItemLabel,
-                      formData.activityLevel === option.id && styles.listItemLabelSelected,
-                    ]}>
-                      {option.label}
-                    </Text>
-                    <Text style={styles.listItemSubtitle}>{option.subtitle}</Text>
-                  </View>
-                  {formData.activityLevel === option.id && (
-                    <MaterialCommunityIcons name="check-circle" size={24} color="#4A90E2" />
-                  )}
-                </TouchableOpacity>
-              ))}
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Meal preference</Text>
+            <View style={styles.chipsWrap}>
+              {MEAL_PREFERENCES.map(opt => {
+                const selected = fd.mealPreference === opt.id;
+                return (
+                  <TouchableOpacity
+                    key={opt.id}
+                    onPress={() => upd('mealPreference', opt.id)}
+                    activeOpacity={0.85}
+                    style={[
+                      styles.chip,
+                      {
+                        borderColor: selected ? colors.primary : colors.borderLight,
+                        backgroundColor: selected ? colors.primary + '12' : colors.card,
+                      },
+                    ]}
+                  >
+                    <MaterialCommunityIcons name={opt.icon} size={18} color={selected ? colors.primary : colors.textSecondary} />
+                    <Text style={[styles.chipText, { color: selected ? colors.primary : colors.textSecondary }]}>{opt.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
         );
 
       case 5:
         return (
-          <View style={styles.stepContainer}>
-            <MaterialCommunityIcons name="account-details" size={80} color="#4A90E2" style={styles.stepIcon} />
-            <Text style={styles.stepTitle}>{STEPS[4].title}</Text>
-            
-            <View style={styles.inputRow}>
-              <View style={styles.inputHalf}>
-                <Text style={styles.inputLabel}>Height (cm)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="170"
-                  placeholderTextColor="#666"
-                  keyboardType="numeric"
-                  value={formData.height}
-                  onChangeText={(text) => setFormData({ ...formData, height: text })}
-                />
-              </View>
-              
-              <View style={styles.inputHalf}>
-                <Text style={styles.inputLabel}>Weight (kg)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="70"
-                  placeholderTextColor="#666"
-                  keyboardType="numeric"
-                  value={formData.weight}
-                  onChangeText={(text) => setFormData({ ...formData, weight: text })}
-                />
-              </View>
-
-              <View style={styles.inputHalf}>
-                <Text style={styles.inputLabel}>Target Weight (kg)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="70"
-                  placeholderTextColor="#666"
-                  keyboardType="numeric"
-                  value={formData.targetWeight}
-                  onChangeText={(text) => setFormData({ ...formData, targetWeight: text })}
-                />
-              </View> 
-            </View>
-
-            <Text style={styles.inputLabel}>Gender</Text>
-            <View style={styles.genderRow}>
-              {['Male', 'Female', 'Other'].map((g) => (
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Activity level</Text>
+            {ACTIVITY_LEVELS.map(opt => {
+              const selected = fd.activityLevel === opt.id;
+              return (
                 <TouchableOpacity
-                  key={g}
+                  key={opt.id}
+                  onPress={() => upd('activityLevel', opt.id)}
+                  activeOpacity={0.85}
                   style={[
-                    styles.genderButton,
-                    formData.gender === g && styles.genderButtonSelected,
+                    styles.optionCard,
+                    {
+                      borderColor: selected ? colors.primary : colors.borderLight,
+                      backgroundColor: selected ? colors.primary + '12' : colors.card,
+                    },
                   ]}
-                  onPress={() => setFormData({ ...formData, gender: g })}
                 >
-                  <Text style={[
-                    styles.genderButtonText,
-                    formData.gender === g && styles.genderButtonTextSelected,
-                  ]}>
-                    {g}
-                  </Text>
+                  <MaterialCommunityIcons name="walk" size={22} color={selected ? colors.primary : colors.textSecondary} />
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={[styles.optionTitle, { color: selected ? colors.primary : colors.text }]}>{opt.label}</Text>
+                    <Text style={[styles.optionSub, { color: colors.textSecondary }]}>{opt.subtitle}</Text>
+                  </View>
+                  <MaterialCommunityIcons name={selected ? 'check-circle' : 'circle-outline'} size={20} color={selected ? colors.primary : colors.border} />
                 </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={styles.inputLabel}>Age</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="25"
-              placeholderTextColor="#666"
-              keyboardType="numeric"
-              value={formData.age}
-              onChangeText={(text) => setFormData({ ...formData, age: text })}
-            />
-
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <MaterialCommunityIcons name="calendar" size={20} color="#4A90E2" />
-              <Text style={styles.dateButtonText}>
-                {formData.dateOfBirth.toLocaleDateString()}
-              </Text>
-            </TouchableOpacity>
-
-            {showDatePicker && (
-              <DateTimePicker
-                value={formData.dateOfBirth}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={(event, date) => {
-                  setShowDatePicker(false);
-                  if (date) {
-                    setFormData({ ...formData, dateOfBirth: date });
-                  }
-                }}
-                maximumDate={new Date()}
-                minimumDate={new Date(1900, 0, 1)}
-              />
-            )}
+              );
+            })}
           </View>
         );
 
       case 6:
         return (
-          <View style={styles.stepContainer}>
-            <MaterialCommunityIcons name="dumbbell" size={80} color="#4A90E2" style={styles.stepIcon} />
-            <Text style={styles.stepTitle}>{STEPS[5].title}</Text>
-            
-            <Text style={styles.sectionLabel}>Where do you prefer to workout?</Text>
-            <View style={styles.optionsGrid}>
-              {WORKOUT_PLACES.map((option) => (
-                <TouchableOpacity
-                  key={option.id}
-                  style={[
-                    styles.optionCard,
-                    formData.workoutPlace === option.id && styles.optionCardSelected,
-                  ]}
-                  onPress={() => setFormData({ ...formData, workoutPlace: option.id })}
-                >
-                  <MaterialCommunityIcons
-                    name={option.icon}
-                    size={32}
-                    color={formData.workoutPlace === option.id ? '#4A90E2' : '#666'}
-                  />
-                  <Text style={[
-                    styles.optionLabel,
-                    formData.workoutPlace === option.id && styles.optionLabelSelected,
-                  ]}>
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Personal information</Text>
+
+            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Gender</Text>
+            <View style={styles.row}>
+              {['Male', 'Female', 'Other'].map(g => {
+                const selected = fd.gender === g;
+                return (
+                  <TouchableOpacity
+                    key={g}
+                    onPress={() => upd('gender', g)}
+                    activeOpacity={0.85}
+                    style={[
+                      styles.genderBtn,
+                      {
+                        borderColor: selected ? colors.primary : colors.borderLight,
+                        backgroundColor: selected ? colors.primary + '12' : colors.card,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.genderText, { color: selected ? colors.primary : colors.textSecondary }]}>{g}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
-            <Text style={styles.sectionLabel}>Any sports you enjoy?</Text>
-            <View style={styles.sportsGrid}>
-              {SPORTS.map((sport) => (
-                <TouchableOpacity
-                  key={sport.id}
-                  style={[
-                    styles.sportChip,
-                    formData.sports.includes(sport.id) && styles.sportChipSelected,
-                  ]}
-                  onPress={() => toggleSport(sport.id)}
-                >
-                  <MaterialCommunityIcons
-                    name={sport.icon}
-                    size={20}
-                    color={formData.sports.includes(sport.id) ? '#fff' : '#666'}
-                  />
-                  <Text style={[
-                    styles.sportChipText,
-                    formData.sports.includes(sport.id) && styles.sportChipTextSelected,
-                  ]}>
-                    {sport.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            <View style={styles.twoCol}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Height (cm)</Text>
+                <TextInput
+                  placeholder="170"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                  value={fd.height}
+                  onChangeText={(t) => upd('height', t)}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+                />
+              </View>
+              <View style={{ width: 12 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Weight (kg)</Text>
+                <TextInput
+                  placeholder="70"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                  value={fd.weight}
+                  onChangeText={(t) => upd('weight', t)}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+                />
+              </View>
+            </View>
+
+            <View style={styles.twoCol}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Age</Text>
+                <TextInput
+                  placeholder="25"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                  value={fd.age}
+                  onChangeText={(t) => upd('age', t)}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+                />
+              </View>
+              <View style={{ width: 12 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Target Weight (kg)</Text>
+                <TextInput
+                  placeholder="65"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                  value={fd.targetWeight}
+                  onChangeText={(t) => upd('targetWeight', t)}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+                />
+              </View>
             </View>
           </View>
         );
+
+      case 7:
+        return (
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Workout preferences</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Where do you prefer to workout?</Text>
+            <View style={styles.chipsWrap}>
+              {WORKOUT_PLACES.map(opt => {
+                const selected = fd.workoutPlace === opt.id;
+                return (
+                  <TouchableOpacity
+                    key={opt.id}
+                    onPress={() => upd('workoutPlace', opt.id)}
+                    activeOpacity={0.85}
+                    style={[
+                      styles.chip,
+                      {
+                        borderColor: selected ? colors.primary : colors.borderLight,
+                        backgroundColor: selected ? colors.primary + '12' : colors.card,
+                      },
+                    ]}
+                  >
+                    <MaterialCommunityIcons name={opt.icon} size={18} color={selected ? colors.primary : colors.textSecondary} />
+                    <Text style={[styles.chipText, { color: selected ? colors.primary : colors.textSecondary }]}>{opt.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <Text style={[styles.sectionLabel, { color: colors.textSecondary, marginTop: 12 }]}>Sports you enjoy (optional)</Text>
+            <View style={styles.chipsWrap}>
+              {SPORTS.map(s => {
+                const selected = fd.sports.includes(s.id);
+                return (
+                  <TouchableOpacity
+                    key={s.id}
+                    onPress={() => toggleSport(s.id)}
+                    activeOpacity={0.85}
+                    style={[
+                      styles.chip,
+                      {
+                        borderColor: selected ? colors.secondary : colors.borderLight,
+                        backgroundColor: selected ? colors.secondary + '12' : colors.card,
+                      },
+                    ]}
+                  >
+                    <MaterialCommunityIcons name={s.icon} size={18} color={selected ? colors.secondary : colors.textSecondary} />
+                    <Text style={[styles.chipText, { color: selected ? colors.secondary : colors.textSecondary }]}>{s.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        );
+
+      case 8: {
+        const canCalc = !!(fd.weight && fd.height && fd.age && fd.activityLevel && fd.gender);
+        const goalColor = fd.goal === 'fat_loss' ? '#FF6B35' : fd.goal === 'gain' ? '#4CAF50' : '#4A90E2';
+
+        return (
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Your calorie targets</Text>
+
+            {!canCalc ? (
+              <View style={[styles.infoBox, { backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}>
+                <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+                  Please complete your personal information first (height, weight, age, gender & activity).
+                </Text>
+              </View>
+            ) : (
+              <>
+                <View style={styles.pillsRow}>
+                  {[
+                    { k: 'BMR', v: `${Math.round(bmr)} kcal`, s: 'Calories at rest' },
+                    { k: 'TDEE', v: `${tdee} kcal`, s: `Maintenance × ${activityInfo?.multiplier}` },
+                  ].map(p => (
+                    <View key={p.k} style={[styles.pill, { backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}>
+                      <Text style={[styles.pillKey, { color: colors.textSecondary }]}>{p.k}</Text>
+                      <Text style={[styles.pillVal, { color: colors.text }]}>{p.v}</Text>
+                      <Text style={[styles.pillSub, { color: colors.textSecondary }]}>{p.s}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <CalorieCard
+                  label="Maintenance Calories"
+                  calories={tdee}
+                  accent="#4A90E2"
+                  description="Calories to stay at your current weight"
+                  macros={fd.goal === 'maintain' ? maintMacros : null}
+                  highlight={fd.goal === 'maintain'}
+                  colors={colors}
+                />
+
+                {fd.goal !== 'maintain' && (
+                  <CalorieCard
+                    label={fd.goal === 'fat_loss' ? 'Fat Loss Target' : 'Muscle Gain Target'}
+                    calories={goalCals}
+                    accent={goalColor}
+                    description={fd.goal === 'fat_loss' ? 'Maintenance − 500 kcal deficit' : 'Maintenance + 300 kcal surplus'}
+                    macros={goalMacros}
+                    highlight
+                    colors={colors}
+                  />
+                )}
+              </>
+            )}
+          </View>
+        );
+      }
+
+      case 3: {
+        const isLoss = fd.goal === 'fat_loss';
+        const opts = isLoss ? weightLossOpts : weightGainOpts;
+        const rateKey = isLoss ? 'weightLossGoal' : 'weightGainGoal';
+        const selRate = fd[rateKey];
+        const accent = isLoss ? '#FF6B35' : '#4CAF50';
+
+        return (
+          <View style={styles.step}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>{isLoss ? 'Weight loss goal' : 'Weight gain goal'}</Text>
+            <Text style={[styles.optionSub, { color: colors.textSecondary, marginBottom: 8 }]}>
+              How fast do you want to {isLoss ? 'lose' : 'gain'} weight?
+            </Text>
+
+            <View style={styles.rateRow}>
+              {opts.map(opt => {
+                const selected = selRate === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    onPress={() => upd(rateKey, opt.value)}
+                    activeOpacity={0.85}
+                    style={[
+                      styles.rateCard,
+                      {
+                        borderColor: selected ? accent : colors.borderLight,
+                        backgroundColor: selected ? accent + '12' : colors.card,
+                      },
+                    ]}
+                  >
+                    <MaterialCommunityIcons name={opt.icon} size={22} color={selected ? accent : colors.textSecondary} />
+                    <Text style={[styles.rateLabel, { color: selected ? accent : colors.text }]}>{opt.label}</Text>
+                    <Text style={[styles.rateSub, { color: colors.textSecondary }]}>{opt.subtitle}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <View style={styles.twoCol}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Current Weight (kg)</Text>
+                <TextInput
+                  placeholder="80"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                  value={fd.weight}
+                  onChangeText={(t) => upd('weight', t)}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+                />
+              </View>
+              <View style={{ width: 12 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Target Weight (kg)</Text>
+                <TextInput
+                  placeholder={isLoss ? '70' : '85'}
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                  value={fd.targetWeight}
+                  onChangeText={(t) => upd('targetWeight', t)}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceVariant, borderColor: colors.borderLight }]}
+                />
+              </View>
+            </View>
+
+            <View style={[styles.graphBox, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
+              <Text style={[styles.graphTitle, { color: colors.text }]}>Your weight journey</Text>
+              <WeightJourneyGraph
+                currentWeight={fd.weight}
+                targetWeight={fd.targetWeight}
+                goal={fd.goal}
+                weightGoalRate={selRate}
+                colors={colors}
+              />
+            </View>
+          </View>
+        );
+      }
 
       default:
         return null;
@@ -507,379 +809,175 @@ export default function ProfileSetupScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <LinearGradient colors={['#4A90E2', '#357ABD']} style={styles.header}>
-        <TouchableOpacity
-          onPress={handleBack}
-          style={styles.backButton}
-          disabled={currentStep === 1}
-        >
-          <MaterialCommunityIcons
-            name="arrow-left"
-            size={24}
-            color={currentStep === 1 ? 'transparent' : '#fff'}
-          />
-        </TouchableOpacity>
-        
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <Animated.View
-              style={[
-                styles.progressFill,
-                {
-                  width: `${progress * 100}%`,
-                },
-              ]}
-            />
+    <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <LinearGradient colors={[colors.primary, colors.secondary]} style={styles.headerGradient}>
+          <View style={styles.headerContent}>
+            <View style={[styles.headerIconWrap, { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
+              <MaterialCommunityIcons name="account-details" size={42} color="white" />
+            </View>
+            <Text style={styles.headerTitle}>Profile Setup</Text>
+            <Text style={styles.headerSubtitle}>Step {stepIdx + 1} of {totalSteps}</Text>
           </View>
-          <Text style={styles.progressText}>Step {currentStep} of {STEPS.length}</Text>
-        </View>
-        
-        <View style={styles.backButton} />
-      </LinearGradient>
+        </LinearGradient>
 
-      {/* Content */}
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View
-          style={{
-            transform: [{ translateY: slideAnim }],
-          }}
-        >
-          {renderStep()}
-        </Animated.View>
+        <View style={styles.formContainer}>
+          <Surface style={[styles.formCard, { backgroundColor: colors.card }, Shadows.medium]}>
+            <ProgressBar progress={progress} color={colors.primary} style={styles.progress} />
+
+            <View style={{ marginTop: 14 }}>{renderStep()}</View>
+
+            <View style={styles.footerRow}>
+              <Button
+                mode="outlined"
+                onPress={handleBack}
+                disabled={stepIdx === 0 || submitting}
+                style={[styles.backBtn, { borderColor: colors.border }]}
+                labelStyle={{ color: colors.textSecondary }}
+              >
+                Back
+              </Button>
+
+              <Button
+                mode="contained"
+                onPress={handleNext}
+                loading={submitting}
+                disabled={submitting}
+                style={[styles.nextBtn, { backgroundColor: colors.primary }]}
+                contentStyle={styles.nextBtnContent}
+                labelStyle={styles.nextBtnLabel}
+              >
+                {isLast ? 'Complete Setup' : 'Continue'}
+              </Button>
+            </View>
+          </Surface>
+        </View>
+
+        <View style={{ height: 30 }} />
       </ScrollView>
 
-      {/* Next Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.nextButton, loading && styles.nextButtonDisabled]}
-          onPress={handleNext}
-          disabled={loading}
-        >
-          <Text style={styles.nextButtonText}>
-            {loading ? 'Saving...' : currentStep === 6 ? 'Complete' : 'Next'}
-          </Text>
-          <MaterialCommunityIcons name="arrow-right" size={20} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Welcome Modal */}
-      {showWelcome && (
-        <View style={styles.welcomeOverlay}>
-          <Animated.View
-            style={[
-              styles.welcomeModal,
-              {
-                transform: [{ scale: welcomeScale }],
-                opacity: welcomeOpacity,
-              },
-            ]}
-          >
-            <View style={styles.successIconContainer}>
-              <MaterialCommunityIcons name="check-circle" size={80} color="#4CAF50" />
-            </View>
-            <Text style={styles.welcomeTitle}>Welcome to FitMe!</Text>
-            <Text style={styles.welcomeSubtitle}>
-              Your fitness journey starts now, {formData.firstName}!
-            </Text>
-            <View style={styles.welcomeStars}>
-              {[1, 2, 3].map((i) => (
-                <MaterialCommunityIcons key={i} name="star" size={24} color="#FFD700" />
-              ))}
-            </View>
-          </Animated.View>
-        </View>
-      )}
-    </View>
+      <WelcomeOverlay visible={showWelcome} name={fd.firstName} />
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1A1B1E',
-  },
-  header: {
-    paddingTop: 50,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
+  container: { flex: 1 },
+  scroll: { flexGrow: 1 },
+
+  headerGradient: {
+    height: height * 0.28,
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
-  backButton: {
-    width: 40,
-    height: 40,
+  headerContent: { alignItems: 'center', paddingHorizontal: 20 },
+  headerIconWrap: {
+    width: 82,
+    height: 82,
+    borderRadius: 41,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  progressContainer: {
-    flex: 1,
-    marginHorizontal: 20,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 4,
-  },
-  progressText: {
-    color: '#fff',
-    fontSize: 12,
-    marginTop: 8,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 24,
-  },
-  stepContainer: {
-    minHeight: height * 0.6,
-  },
-  stepIcon: {
-    alignSelf: 'center',
-    marginBottom: 24,
-  },
-  stepTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 32,
-  },
-  input: {
-    backgroundColor: '#252830',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: '#fff',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  optionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'center',
-  },
-  optionCard: {
-    width: (width - 72) / 2,
-    backgroundColor: '#252830',
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#333',
-  },
-  optionCardSelected: {
-    borderColor: '#4A90E2',
-    backgroundColor: 'rgba(74,144,226,0.1)',
-  },
-  optionLabel: {
-    color: '#999',
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 12,
-    textAlign: 'center',
-  },
-  optionLabelSelected: {
-    color: '#4A90E2',
-  },
-  listContainer: {
-    gap: 12,
-  },
-  listItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#252830',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  listItemSelected: {
-    borderColor: '#4A90E2',
-    backgroundColor: 'rgba(74,144,226,0.1)',
-  },
-  listItemText: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  listItemLabel: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  listItemLabelSelected: {
-    color: '#4A90E2',
-  },
-  listItemSubtitle: {
-    color: '#666',
-    fontSize: 13,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  inputHalf: {
-    flex: 1,
-  },
-  inputLabel: {
-    color: '#999',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  genderRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  genderButton: {
-    flex: 1,
-    backgroundColor: '#252830',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  genderButtonSelected: {
-    borderColor: '#4A90E2',
-    backgroundColor: 'rgba(74,144,226,0.1)',
-  },
-  genderButtonText: {
-    color: '#999',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  genderButtonTextSelected: {
-    color: '#4A90E2',
-  },
-  dateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#252830',
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  dateButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  sectionLabel: {
-    color: '#999',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 16,
-    marginTop: 8,
-  },
-  sportsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  sportChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#252830',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  sportChipSelected: {
-    backgroundColor: '#4A90E2',
-    borderColor: '#4A90E2',
-  },
-  sportChipText: {
-    color: '#999',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  sportChipTextSelected: {
-    color: '#fff',
-  },
-  footer: {
-    padding: 20,
-    paddingBottom: 32,
-  },
-  nextButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#4A90E2',
-    borderRadius: 16,
-    padding: 18,
-    gap: 8,
-  },
-  nextButtonDisabled: {
-    opacity: 0.6,
-  },
-  nextButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  welcomeOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  welcomeModal: {
-    backgroundColor: '#252830',
-    borderRadius: 24,
-    padding: 40,
-    alignItems: 'center',
-    width: width * 0.85,
-  },
-  successIconContainer: {
-    marginBottom: 24,
-  },
-  welcomeTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
     marginBottom: 12,
-    textAlign: 'center',
+    ...Shadows.small,
   },
-  welcomeSubtitle: {
+  headerTitle: { fontSize: 28, fontWeight: 'bold', color: 'white', marginBottom: 6 },
+  headerSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.9)' },
+
+  formContainer: { flex: 1, paddingHorizontal: 20, marginTop: -30 },
+  formCard: { borderRadius: 20, padding: 16, marginBottom: 20 },
+  progress: { height: 8, borderRadius: 4 },
+
+  step: { paddingBottom: 8 },
+  stepTitle: { fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 14 },
+
+  input: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     fontSize: 16,
-    color: '#999',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 24,
+    marginBottom: 12,
   },
-  welcomeStars: {
+
+  optionCard: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 10,
   },
+  optionTitle: { fontSize: 15, fontWeight: '800' },
+  optionSub: { fontSize: 12, lineHeight: 16, marginTop: 2 },
+
+  sectionLabel: { fontSize: 12, fontWeight: '800', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.7 },
+
+  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  chipText: { fontSize: 13, fontWeight: '800' },
+
+  row: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  genderBtn: { flex: 1, paddingVertical: 12, borderWidth: 1, borderRadius: 12, alignItems: 'center' },
+  genderText: { fontSize: 13, fontWeight: '800' },
+
+  twoCol: { flexDirection: 'row', marginTop: 8 },
+
+  footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 },
+  backBtn: { borderRadius: 12, minWidth: 110 },
+  nextBtn: { borderRadius: 12, minWidth: 150 },
+  nextBtnContent: { paddingVertical: 6 },
+  nextBtnLabel: { fontSize: 15, fontWeight: '800', color: 'white' },
+
+  pillsRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
+  pill: { flex: 1, borderWidth: 1, borderRadius: 14, padding: 12, alignItems: 'center' },
+  pillKey: { fontSize: 10, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
+  pillVal: { fontSize: 18, fontWeight: '900', marginTop: 4 },
+  pillSub: { fontSize: 10, marginTop: 2, textAlign: 'center' },
+
+  calCard: { borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 12 },
+  calRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  calLabel: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
+  calDesc: { fontSize: 12, lineHeight: 16 },
+  calValue: { fontSize: 30, fontWeight: '900', lineHeight: 34 },
+  calUnit: { fontSize: 10, fontWeight: '700', marginTop: 2 },
+
+  macroRow: { flexDirection: 'row', gap: 8, marginTop: 12, paddingTop: 12, borderTopWidth: 1 },
+  macroBox: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.03)' },
+  macroVal: { fontSize: 16, fontWeight: '900' },
+  macroKey: { fontSize: 10, fontWeight: '800', marginTop: 2 },
+
+  infoBox: { borderWidth: 1, borderRadius: 14, padding: 14 },
+  infoText: { fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700' },
+
+  rateRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
+  rateCard: { flex: 1, borderWidth: 1, borderRadius: 14, padding: 12, alignItems: 'center', gap: 4 },
+  rateLabel: { fontSize: 12, fontWeight: '900', textAlign: 'center' },
+  rateSub: { fontSize: 10, fontWeight: '700', textAlign: 'center' },
+
+  graphBox: { borderWidth: 1, borderRadius: 16, padding: 14, marginTop: 4 },
+  graphTitle: { fontSize: 14, fontWeight: '900', marginBottom: 10 },
+  graphHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  graphHeaderText: { fontSize: 11, fontWeight: '700' },
+  graphHeaderBold: { fontSize: 11, fontWeight: '900' },
+  graphChart: { borderRadius: 16 },
+  graphEmpty: { paddingVertical: 20, alignItems: 'center' },
+  graphEmptyText: { fontSize: 12, fontWeight: '700' },
+
+  welcomeOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'center', alignItems: 'center' },
+  welcomeGradient: { width: '88%', borderRadius: 22, paddingVertical: 26, paddingHorizontal: 20, alignItems: 'center' },
+  welcomeEmoji: { fontSize: 64, marginBottom: 8 },
+  welcomeTitle: { fontSize: 26, fontWeight: '900', color: '#fff', marginBottom: 10 },
+  welcomeSub: { fontSize: 15, color: '#aab3c2', textAlign: 'center', lineHeight: 22, marginBottom: 16 },
+  welcomeName: { color: '#4A90E2', fontWeight: '900' },
+  welcomeFooter: { fontSize: 12, color: '#667085', fontWeight: '800' },
 });

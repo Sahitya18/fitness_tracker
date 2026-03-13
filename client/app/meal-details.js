@@ -311,7 +311,29 @@ export default function MealDetailsScreen() {
       </View>
 
       <View style={styles.buttonContainer}>
-        <ScannerComponent onTextExtracted={(text) => setSearchQuery(text)} />
+        <ScannerComponent
+          onNutritionExtracted={(nutrition, rawText) => {
+            // Navigate directly to add-meal-manually with pre-filled nutrition data
+            router.push({
+              pathname: '/add-meal-manually',
+              params: {
+                mealType,
+                mealLabel,
+                returnTab: returnTab || 'kitchen',
+                selectedDate: selectedDate,
+                // Pre-fill from OCR scan:
+                prefillName:     nutrition.productName || '',
+                prefillCalories: nutrition.calories    !== '' ? String(nutrition.calories) : '',
+                prefillProtein:  nutrition.protein     !== '' ? String(nutrition.protein)  : '',
+                prefillCarbs:    nutrition.carbs       !== '' ? String(nutrition.carbs)    : '',
+                prefillFats:     nutrition.fat         !== '' ? String(nutrition.fat)      : '',
+                prefillFiber:    nutrition.fiber       !== '' ? String(nutrition.fiber)    : '',
+                prefillWeight:   nutrition.servingSize !== '' ? String(nutrition.servingSize) : '',
+                prefillUnit:     nutrition.servingUnit || 'g',
+              },
+            });
+          }}
+        />
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => {
